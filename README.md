@@ -1,36 +1,27 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🚀 DeepDive Learn (Frontend Repository)
 
-## Getting Started
+Welcome to the **DeepDive Learn** project! This repository contains the Frontend (Next.js) for the gamified Python learning platform. 
 
-First, run the development server:
+We are building a University-Scale, Distributed Interactive Learning Platform with a **Monolithic FastAPI Backend** running on Port 8000.
 
+## ⚠️ Important Note for Frontend Developer
+The backend is **currently in development** and is NOT ready yet. You are tasked with building the UI/UX first using Mock Data based on the API contracts.
+
+### 📚 Essential Reading Before You Code
+Please carefully read the following files in the `/docs` folder before writing any code:
+1. `docs/implementation_plan.md` (The complete architecture spec for the system).
+2. `docs/guideline.md` (Your specific responsibilities and the exact API endpoints you need to call).
+
+## 🤖 AI Agent Instructions (Cursor / Copilot)
+If you are using an AI Coding Agent (like Cursor IDE), please copy and paste the following prompt to give your AI the exact context it needs to build the UI flawlessly:
+
+> **"Read the `docs/guideline.md` and the UI rules in `docs/skills/duolingo-ux-reference.md` and `docs/skills/nextjs-starter.md`. Act as Developer 1 (Frontend). We are building a Duolingo-style learning platform. The backend is not ready yet, so please create the UI using Mock Data based on the API contracts in the guideline. Strictly use Next.js 14 App Router, Tailwind CSS, Zustand, and shadcn/ui."**
+
+---
+
+### Running the App Locally
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+The app will start at `http://localhost:3000`.
