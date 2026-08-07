@@ -47,33 +47,30 @@ export default function SubmissionsPage() {
     <div className="pb-20">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-2xl font-extrabold text-[#4B4B4B]">Submissions</h1>
-        <p className="text-sm font-semibold text-[#AFAFAF] mt-1">
-          Student တွေရဲ့ code submission မှတ်တမ်းအားလုံး
-        </p>
+        <h1 className="text-2xl font-extrabold text-[#1C1D20]">Submissions</h1>
       </div>
 
       {/* Quick Stats */}
       <div className="flex gap-4 mb-6">
-        <div className="bg-white border-2 border-[#E5E5E5] rounded-xl px-5 py-3 flex items-center gap-3">
-          <FileText size={20} className="text-[#1CB0F6]" />
+        <div className="bg-white border-2 border-[#1C1D2033] rounded-xl px-5 py-3 flex items-center gap-3">
+          <FileText size={20} className="text-[#0ba2b3]" />
           <div>
-            <p className="text-lg font-extrabold text-[#4B4B4B]">{allSubmissions.length}</p>
-            <p className="text-xs font-bold text-[#AFAFAF]">Total</p>
+            <p className="text-lg font-extrabold text-[#1C1D20]">{allSubmissions.length}</p>
+            <p className="text-xs font-bold text-[#1C1D20]">Total</p>
           </div>
         </div>
-        <div className="bg-white border-2 border-[#E5E5E5] rounded-xl px-5 py-3 flex items-center gap-3">
-          <CheckCircle size={20} className="text-[#58CC02]" />
+        <div className="bg-white border-2 border-[#1C1D2033] rounded-xl px-5 py-3 flex items-center gap-3">
+          <CheckCircle size={20} className="text-[#0ba2b3]" />
           <div>
-            <p className="text-lg font-extrabold text-[#58CC02]">{passCount}</p>
-            <p className="text-xs font-bold text-[#AFAFAF]">Passed</p>
+            <p className="text-lg font-extrabold text-[#0ba2b3]">{passCount}</p>
+            <p className="text-xs font-bold text-[#1C1D20]">Passed</p>
           </div>
         </div>
-        <div className="bg-white border-2 border-[#E5E5E5] rounded-xl px-5 py-3 flex items-center gap-3">
-          <XCircle size={20} className="text-[#FF4B4B]" />
+        <div className="bg-white border-2 border-[#1C1D2033] rounded-xl px-5 py-3 flex items-center gap-3">
+          <XCircle size={20} className="text-[#FC4B0B]" />
           <div>
-            <p className="text-lg font-extrabold text-[#FF4B4B]">{failCount}</p>
-            <p className="text-xs font-bold text-[#AFAFAF]">Failed</p>
+            <p className="text-lg font-extrabold text-[#FC4B0B]">{failCount}</p>
+            <p className="text-xs font-bold text-[#1C1D20]">Failed</p>
           </div>
         </div>
       </div>
@@ -81,30 +78,29 @@ export default function SubmissionsPage() {
       {/* Filters */}
       <div className="flex items-center gap-4 mb-6">
         <div className="flex-1 relative">
-          <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#AFAFAF]" />
+          <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#1C1D20]" />
           <input
             type="text"
             placeholder="Search student or lesson..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-11 pr-4 py-3 rounded-xl border-2 border-[#E5E5E5] bg-white text-sm font-semibold text-[#4B4B4B] outline-none focus:border-[#CE82FF] transition-colors"
+            className="w-full pl-11 pr-4 py-3 rounded-xl border-2 border-[#1C1D2033] bg-white text-sm font-semibold text-[#1C1D20] outline-none focus:border-[#0ba2b3] transition-colors"
           />
         </div>
         <div className="flex items-center gap-2">
-          <Filter size={16} className="text-[#AFAFAF]" />
+          <Filter size={16} className="text-[#1C1D20]" />
           {(['all', 'pass', 'fail'] as const).map((f) => (
             <button
               key={f}
               onClick={() => setFilter(f)}
-              className={`px-4 py-2 rounded-xl text-xs font-extrabold uppercase tracking-wide transition-colors ${
-                filter === f
+              className={`px-4 py-2 rounded-xl text-xs font-extrabold uppercase tracking-wide transition-colors ${filter === f
                   ? f === 'pass'
-                    ? 'bg-[#58CC02] text-white'
+                    ? 'bg-[#0ba2b3] text-white'
                     : f === 'fail'
-                    ? 'bg-[#FF4B4B] text-white'
-                    : 'bg-[#CE82FF] text-white'
-                  : 'bg-white border-2 border-[#E5E5E5] text-[#777777] hover:bg-[#F7F7F7]'
-              }`}
+                      ? 'bg-[#FC4B0B] text-white'
+                      : 'bg-[#0ba2b3] text-white'
+                  : 'bg-white border-2 border-[#1C1D2033] text-[#1C1D20] hover:bg-[#F8F8F8]'
+                }`}
             >
               {f}
             </button>
@@ -113,9 +109,9 @@ export default function SubmissionsPage() {
       </div>
 
       {/* Submissions Table */}
-      <div className="bg-white rounded-2xl border-2 border-[#E5E5E5] overflow-hidden">
+      <div className="bg-white rounded-2xl border-2 border-[#1C1D2033] overflow-hidden">
         {/* Table Header */}
-        <div className="grid grid-cols-12 px-6 py-3 bg-[#F7F7F7] border-b-2 border-[#E5E5E5] text-xs font-extrabold uppercase tracking-wider text-[#AFAFAF]">
+        <div className="grid grid-cols-12 px-6 py-3 bg-[#F8F8F8] border-b-2 border-[#1C1D2033] text-xs font-extrabold uppercase tracking-wider text-[#1C1D20]">
           <div className="col-span-1">Status</div>
           <div className="col-span-3">Student</div>
           <div className="col-span-4">Lesson</div>
@@ -132,32 +128,32 @@ export default function SubmissionsPage() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: idx * 0.03 }}
-              className="grid grid-cols-12 items-center px-6 py-3.5 border-b border-[#F7F7F7] hover:bg-[#FAFAFA] transition-colors"
+              className="grid grid-cols-12 items-center px-6 py-3.5 border-b border-[#F8F8F8] hover:bg-[#FAFAFA] transition-colors"
             >
               <div className="col-span-1">
                 {sub.status === 'pass' ? (
-                  <CheckCircle size={18} className="text-[#58CC02]" />
+                  <CheckCircle size={18} className="text-[#0ba2b3]" />
                 ) : (
-                  <XCircle size={18} className="text-[#FF4B4B]" />
+                  <XCircle size={18} className="text-[#FC4B0B]" />
                 )}
               </div>
-              <div className="col-span-3 font-bold text-[#4B4B4B] text-sm">{sub.student}</div>
-              <div className="col-span-4 text-sm font-semibold text-[#777777] truncate">{sub.lesson}</div>
-              <div className="col-span-2 text-xs font-semibold text-[#AFAFAF] flex items-center gap-1">
+              <div className="col-span-3 font-bold text-[#1C1D20] text-sm">{sub.student}</div>
+              <div className="col-span-4 text-sm font-semibold text-[#1C1D20] truncate">{sub.lesson}</div>
+              <div className="col-span-2 text-xs font-semibold text-[#1C1D20] flex items-center gap-1">
                 <Clock size={12} />
                 {sub.time.split(' ')[1]}
               </div>
               <div className="col-span-1">
                 {sub.xp > 0 ? (
-                  <span className="text-xs font-extrabold text-[#58CC02]">+{sub.xp}</span>
+                  <span className="text-xs font-extrabold text-[#0ba2b3]">+{sub.xp}</span>
                 ) : (
-                  <span className="text-xs font-bold text-[#AFAFAF]">—</span>
+                  <span className="text-xs font-bold text-[#1C1D20]">—</span>
                 )}
               </div>
               <div className="col-span-1 text-center">
                 <button
                   onClick={() => setViewingId(sub.id)}
-                  className="text-[#1CB0F6] hover:text-[#1899D6] transition-colors"
+                  className="text-[#0ba2b3] hover:text-[#1e91a3] transition-colors"
                 >
                   <Eye size={18} />
                 </button>
@@ -166,7 +162,7 @@ export default function SubmissionsPage() {
           ))
         ) : (
           <div className="px-6 py-12 text-center">
-            <p className="text-sm font-bold text-[#AFAFAF]">No submissions found</p>
+            <p className="text-sm font-bold text-[#1C1D20]">No submissions found</p>
           </div>
         )}
       </div>
@@ -180,24 +176,24 @@ export default function SubmissionsPage() {
             className="bg-white rounded-2xl w-full max-w-2xl max-h-[80vh] overflow-y-auto"
           >
             {/* Modal Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b-2 border-[#E5E5E5]">
+            <div className="flex items-center justify-between px-6 py-4 border-b-2 border-[#1C1D2033]">
               <div>
-                <h3 className="font-extrabold text-[#4B4B4B]">{viewingSub.student}</h3>
-                <p className="text-sm font-semibold text-[#AFAFAF]">{viewingSub.lesson}</p>
+                <h3 className="font-extrabold text-[#1C1D20]">{viewingSub.student}</h3>
+                <p className="text-sm font-semibold text-[#1C1D20]">{viewingSub.lesson}</p>
               </div>
               <div className="flex items-center gap-3">
                 {viewingSub.status === 'pass' ? (
-                  <span className="text-xs font-extrabold bg-green-50 text-[#58CC02] px-3 py-1 rounded-full border border-green-200">
+                  <span className="text-xs font-extrabold bg-[#F0F8FF] text-[#0ba2b3] px-3 py-1 rounded-full border border-[#1e91a3]">
                     PASS
                   </span>
                 ) : (
-                  <span className="text-xs font-extrabold bg-red-50 text-[#FF4B4B] px-3 py-1 rounded-full border border-red-200">
+                  <span className="text-xs font-extrabold bg-red-50 text-[#FC4B0B] px-3 py-1 rounded-full border border-red-200">
                     FAIL
                   </span>
                 )}
                 <button
                   onClick={() => setViewingId(null)}
-                  className="text-[#AFAFAF] hover:text-[#4B4B4B] transition-colors"
+                  className="text-[#1C1D20] hover:text-[#1C1D20] transition-colors"
                 >
                   <X size={22} strokeWidth={3} />
                 </button>
@@ -205,8 +201,8 @@ export default function SubmissionsPage() {
             </div>
 
             {/* Submitted Code */}
-            <div className="px-6 py-5 border-b-2 border-[#E5E5E5]">
-              <h4 className="text-xs font-extrabold uppercase tracking-wider text-[#AFAFAF] mb-3">
+            <div className="px-6 py-5 border-b-2 border-[#1C1D2033]">
+              <h4 className="text-xs font-extrabold uppercase tracking-wider text-[#1C1D20] mb-3">
                 Submitted Code
               </h4>
               <pre className="bg-gray-900 text-green-400 p-4 rounded-xl text-sm font-mono overflow-x-auto whitespace-pre-wrap">
@@ -216,14 +212,13 @@ export default function SubmissionsPage() {
 
             {/* Output */}
             <div className="px-6 py-5">
-              <h4 className="text-xs font-extrabold uppercase tracking-wider text-[#AFAFAF] mb-3">
+              <h4 className="text-xs font-extrabold uppercase tracking-wider text-[#1C1D20] mb-3">
                 Output
               </h4>
-              <pre className={`p-4 rounded-xl text-sm font-mono border ${
-                viewingSub.status === 'pass'
+              <pre className={`p-4 rounded-xl text-sm font-mono border ${viewingSub.status === 'pass'
                   ? 'bg-[#E8F5E9] text-[#2E7D32] border-green-200'
                   : 'bg-[#FFEBEE] text-[#C62828] border-red-200'
-              }`}>
+                }`}>
                 {viewingSub.output || '(no output)'}
               </pre>
             </div>

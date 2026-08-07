@@ -82,3 +82,18 @@ export interface UserProgress {
   completedLessonIds: string[];
   currentLessonId: string | null;
 }
+
+export type Difficulty = 'easy' | 'medium' | 'hard';
+
+export interface Challenge {
+  id: string;
+  title: string;
+  creatorName: string;
+  difficulty: Difficulty;
+  xpReward: number;
+  goal: number; // e.g., complete 5 lessons
+  contentBlocks: ContentBlock[];
+  constraints: string[];
+  initialCode: string;
+  expectedOutput: string;
+}

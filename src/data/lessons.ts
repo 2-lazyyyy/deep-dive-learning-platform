@@ -248,41 +248,4 @@ export const units: Unit[] = [
   },
 ];
 
-// Helper: flat array of all lessons
-export function getAllLessons() {
-  return units.flatMap((unit) =>
-    unit.modules.flatMap((mod) =>
-      mod.lessons.map((lesson) => ({
-        ...lesson,
-        unitTitle: unit.title,
-        moduleTitle: mod.title,
-      }))
-    )
-  );
-}
-
-// Helper: find lesson by ID
-export function getLessonById(id: string) {
-  for (const unit of units) {
-    for (const mod of unit.modules) {
-      const lesson = mod.lessons.find((l) => l.id === id);
-      if (lesson) {
-        return {
-          ...lesson,
-          unitTitle: unit.title,
-          moduleTitle: mod.title,
-          unitId: unit.id,
-        };
-      }
-    }
-  }
-  return null;
-}
-
-// Helper: next lesson
-export function getNextLessonId(currentId: string): string | null {
-  const all = getAllLessons();
-  const idx = all.findIndex((l) => l.id === currentId);
-  if (idx === -1 || idx === all.length - 1) return null;
-  return all[idx + 1].id;
-}
+// Helper functions moved to useLessonStore to support dynamic data

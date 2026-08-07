@@ -16,24 +16,24 @@ export const HeartsModal = ({ onClose }: { onClose: () => void }) => {
       >
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-[#AFAFAF] hover:text-[#4B4B4B] transition-colors"
+          className="absolute top-4 right-4 text-[#1C1D20] hover:text-[#1C1D20] transition-colors"
         >
           <X size={24} strokeWidth={3} />
         </button>
 
         <div className="w-24 h-24 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6 relative">
-          <Heart size={48} className="text-[#FF4B4B]" fill="currentColor" />
+          <Heart size={48} className="text-[#FC4B0B]" fill="currentColor" />
           <motion.div
             animate={{ scale: [1, 1.2, 1], opacity: [1, 0, 1] }}
             transition={{ repeat: Infinity, duration: 1.5 }}
-            className="absolute inset-0 border-4 border-[#FF4B4B] rounded-full"
+            className="absolute inset-0 border-4 border-[#FC4B0B] rounded-full"
           />
         </div>
 
-        <h2 className="text-2xl font-extrabold text-[#4B4B4B] mb-2">
+        <h2 className="text-2xl font-extrabold text-[#1C1D20] mb-2">
           You ran out of hearts!
         </h2>
-        <p className="text-[#AFAFAF] font-bold mb-8">
+        <p className="text-[#1C1D20] font-bold mb-8">
           Don't worry, you can refill them in the shop or wait for them to regenerate.
         </p>
 
@@ -43,7 +43,7 @@ export const HeartsModal = ({ onClose }: { onClose: () => void }) => {
               onClose();
               router.push('/shop');
             }}
-            className="w-full py-3.5 bg-[#1CB0F6] hover:bg-[#1899D6] text-white font-extrabold rounded-2xl border-b-4 border-[#1899D6] active:border-b-0 active:translate-y-1 transition-all uppercase tracking-wide"
+            className="w-full py-3.5 bg-[#0ba2b3] hover:bg-[#1e91a3] text-white font-extrabold rounded-2xl border-b-4 border-[#1e91a3] active:border-b-0 active:translate-y-1 transition-all uppercase tracking-wide"
           >
             Refill in Shop
           </button>
@@ -52,7 +52,7 @@ export const HeartsModal = ({ onClose }: { onClose: () => void }) => {
               onClose();
               router.push('/');
             }}
-            className="w-full py-3.5 bg-white text-[#1CB0F6] font-extrabold rounded-2xl border-2 border-[#E5E5E5] hover:bg-[#F7F7F7] active:border-b-0 active:translate-y-1 transition-all uppercase tracking-wide"
+            className="w-full py-3.5 bg-white text-[#0ba2b3] font-extrabold rounded-2xl border-2 border-[#1C1D2033] hover:bg-[#F8F8F8] active:border-b-0 active:translate-y-1 transition-all uppercase tracking-wide"
           >
             End Lesson
           </button>

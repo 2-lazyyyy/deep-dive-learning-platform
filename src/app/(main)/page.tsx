@@ -1,23 +1,32 @@
 'use client';
 
 import { useUserStore } from '@/store/use-user-store';
-import { units, getAllLessons } from '@/data/lessons';
+import { useLessonStore } from '@/store/use-lesson-store';
+import { useState, useEffect } from 'react';
 import { LessonNode } from '@/components/lesson-node';
 
-import { Heart, Flame, Zap, Trophy, Target, Gem } from 'lucide-react';
+import { Heart, Flame, Star, Trophy, Target, Gem, Award, Shield, Crown } from 'lucide-react';
 import { motion } from 'framer-motion';
+import Link from 'next/link';
 
 // Duolingo color pairs per unit
 const unitThemes = [
-  { bg: 'bg-[#58CC02]', border: 'border-[#46A302]', color: '#58CC02', colorDark: '#46A302', text: 'text-white' },
-  { bg: 'bg-[#1CB0F6]', border: 'border-[#1899D6]', color: '#1CB0F6', colorDark: '#1899D6', text: 'text-white' },
-  { bg: 'bg-[#CE82FF]', border: 'border-[#A86BD8]', color: '#CE82FF', colorDark: '#A86BD8', text: 'text-white' },
-  { bg: 'bg-[#FF9600]', border: 'border-[#E08500]', color: '#FF9600', colorDark: '#E08500', text: 'text-white' },
+  { bg: 'bg-[#0ba2b3]', border: 'border-[#1e91a3]', color: '#0ba2b3', colorDark: '#1e91a3', text: 'text-white' },
+  { bg: 'bg-[#0ba2b3]', border: 'border-[#1e91a3]', color: '#0ba2b3', colorDark: '#1e91a3', text: 'text-white' },
+  { bg: 'bg-[#0ba2b3]', border: 'border-[#1e91a3]', color: '#0ba2b3', colorDark: '#1e91a3', text: 'text-white' },
+  { bg: 'bg-[#0ba2b3]', border: 'border-[#1e91a3]', color: '#0ba2b3', colorDark: '#1e91a3', text: 'text-white' },
 ];
 
 export default function Home() {
   const { hearts, xp, streak, gems, completedLessonIds } = useUserStore();
+  const { units, getAllLessons } = useLessonStore();
   const allLessons = getAllLessons();
+
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // Determine lesson status based on completion
   const getLessonStatus = (lessonId: string, lessonIndex: number) => {
@@ -40,79 +49,122 @@ export default function Home() {
 
   let globalLessonIndex = 0;
 
+  if (!isMounted) {
+    return null;
+  }
+
+  const getLeagueDetails = (userXp: number) => {
+    if (userXp < 1000) return { name: 'Bronze League', min: 0, max: 1000, color: '#CD7F32', icon: Award };
+    if (userXp < 2500) return { name: 'Silver League', min: 1000, max: 2500, color: '#C0C0C0', icon: Shield };
+    if (userXp < 4500) return { name: 'Gold League', min: 2500, max: 4500, color: '#FFC800', icon: Trophy };
+    if (userXp < 7000) return { name: 'Platinum League', min: 4500, max: 7000, color: '#8CC6D7', icon: Star };
+    if (userXp < 10000) return { name: 'Diamond League', min: 7000, max: 10000, color: '#00BCD4', icon: Gem };
+    return { name: 'Ruby League', min: 10000, max: 15000, color: '#E0115F', icon: Crown };
+  };
+  
+  const currentLeague = getLeagueDetails(xp);
+  const xpProgressPercent = Math.min(100, Math.max(0, ((xp - currentLeague.min) / (currentLeague.max - currentLeague.min)) * 100));
+
   return (
     <div className="flex flex-row-reverse gap-[48px] px-6">
       {/* Right Sidebar (Stats) */}
       <div className="w-[368px] sticky top-6 flex-col gap-y-4 hidden lg:flex self-start">
-          <div className="flex items-center justify-between w-full border-2 border-[#E5E5E5] p-4 rounded-xl bg-white">
-            <div className="flex items-center gap-x-1.5 text-[#FF4B4B] font-bold">
-              <Heart fill="currentColor" size={22} /> {hearts}
-            </div>
-            <div className="flex items-center gap-x-1.5 text-[#FFC800] font-bold">
-              <Zap fill="currentColor" size={22} /> {xp}
-            </div>
-            <div className="flex items-center gap-x-1.5 text-[#FF9600] font-bold">
-              <Flame fill="currentColor" size={22} /> {streak}
-            </div>
-            <div className="flex items-center gap-x-1.5 text-[#1CB0F6] font-bold">
-              <Gem fill="currentColor" size={22} /> {gems}
-            </div>
+        <div className="flex items-center justify-between w-full border-2 border-[#1C1D2033] p-4 rounded-xl bg-white">
+          <div className="flex items-center gap-x-1.5 text-[#FC4B0B] font-bold">
+            <Heart fill="currentColor" size={22} /> {hearts}
           </div>
+          <div className="flex items-center gap-x-1.5 text-[#FFC800] font-bold">
+            <Star fill="currentColor" size={22} /> {xp}
+          </div>
+          <div className="flex items-center gap-x-1.5 text-[#FF9600] font-bold">
+            <Flame fill="currentColor" size={22} /> {streak}
+          </div>
+          <div className="flex items-center gap-x-1.5 text-[#00BCD4] font-bold">
+            <Gem fill="currentColor" size={22} /> {gems}
+          </div>
+        </div>
 
         {/* Progress Summary */}
-        <div className="border-2 border-[#E5E5E5] p-4 rounded-xl bg-white">
-          <p className="text-sm font-bold text-[#AFAFAF] uppercase tracking-wider mb-2">
+        <div className="border-2 border-[#1C1D2033] p-4 rounded-xl bg-white">
+          <p className="text-sm font-bold text-[#1C1D20] uppercase tracking-wider mb-2">
             Progress
           </p>
-          <div className="w-full bg-[#E5E5E5] rounded-full h-3 overflow-hidden">
+          <div className="w-full bg-[#1C1D2033] rounded-full h-3 overflow-hidden">
             <motion.div
-              className="bg-[#58CC02] h-full rounded-full relative"
+              className="bg-[#0ba2b3] h-full rounded-full relative"
               initial={{ width: 0 }}
               animate={{
-                width: `${
-                  allLessons.length > 0
+                width: `${allLessons.length > 0
                     ? (completedLessonIds.length / allLessons.length) * 100
                     : 0
-                }%`,
+                  }%`,
               }}
               transition={{ duration: 0.5, ease: 'easeOut' }}
             >
               <div className="bg-white h-1 absolute left-2 right-2 top-0.5 rounded-full opacity-30" />
             </motion.div>
           </div>
-          <p className="text-xs text-[#AFAFAF] font-semibold mt-2">
+          <p className="text-xs text-[#1C1D20] font-semibold mt-2">
             {completedLessonIds.length} / {allLessons.length} lessons completed
           </p>
         </div>
 
         {/* Rank Box */}
-        <div className="border-2 border-[#E5E5E5] p-4 rounded-xl bg-white hover:bg-gray-50 transition cursor-pointer flex items-center justify-between">
-          <div>
-            <h3 className="font-extrabold text-[#4B4B4B] text-lg">Bronze League</h3>
-            <p className="text-sm font-semibold text-[#1CB0F6]">Rank #1</p>
+        <div className="border-2 border-[#1C1D2033] p-4 rounded-xl bg-white hover:bg-gray-50 transition cursor-pointer flex flex-col gap-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="font-extrabold text-lg" style={{ color: currentLeague.color }}>{currentLeague.name}</h3>
+              <p className="text-sm font-semibold text-[#6B7280]">Top 20 advance to next league</p>
+            </div>
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center shadow-sm border-2 border-[#1C1D2011]" style={{ backgroundColor: `${currentLeague.color}15` }}>
+              <currentLeague.icon size={28} style={{ color: currentLeague.color }} />
+            </div>
           </div>
-          <div className="w-12 h-12 rounded-xl bg-[#FFC800]/20 flex items-center justify-center">
-            <Trophy className="text-[#FFC800]" size={28} />
+          
+          <div>
+            <div className="flex justify-between text-xs font-extrabold text-[#6B7280] mb-1">
+              <span>{currentLeague.min} XP</span>
+              <span style={{ color: currentLeague.color }}>{xp} / {currentLeague.max} XP</span>
+            </div>
+            <div className="w-full bg-[#1C1D2033] rounded-full h-3 overflow-hidden">
+              <motion.div
+                className="h-full rounded-full relative"
+                style={{ backgroundColor: currentLeague.color }}
+                initial={{ width: 0 }}
+                animate={{ width: `${xpProgressPercent}%` }}
+                transition={{ duration: 0.8, ease: 'easeOut' }}
+              >
+                <div className="bg-white h-1 absolute left-2 right-2 top-0.5 rounded-full opacity-30" />
+              </motion.div>
+            </div>
           </div>
         </div>
 
         {/* Daily Quests Box */}
-        <div className="border-2 border-[#E5E5E5] p-4 rounded-xl bg-white hover:bg-gray-50 transition cursor-pointer">
+        <div className="border-2 border-[#1C1D2033] p-4 rounded-xl bg-white hover:bg-gray-50 transition cursor-pointer">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-extrabold text-[#4B4B4B] text-lg">Daily Quests</h3>
+            <h3 className="font-extrabold text-[#1C1D20] text-lg">Daily Quests</h3>
             <Target className="text-[#FF9600]" size={24} />
           </div>
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-[#1CB0F6]/20 flex items-center justify-center flex-shrink-0">
-              <Zap className="text-[#1CB0F6]" size={20} />
+            <div className="w-10 h-10 rounded-full bg-[#FFC800]/20 flex items-center justify-center flex-shrink-0">
+              <Star className="text-[#FFC800]" size={20} />
             </div>
             <div className="flex-1">
-              <p className="text-sm font-bold text-[#4B4B4B] mb-1">Earn 50 XP</p>
-              <div className="w-full bg-[#E5E5E5] rounded-full h-2.5 overflow-hidden">
-                <div className="bg-[#1CB0F6] h-full rounded-full w-[40%]" />
+              <p className="text-sm font-bold text-[#1C1D20] mb-1">Earn 50 XP</p>
+              <div className="w-full bg-[#1C1D2033] rounded-full h-2.5 overflow-hidden">
+                <div className="bg-[#0ba2b3] h-full rounded-full w-[40%]" />
               </div>
             </div>
           </div>
+      </div>
+
+        {/* Footer */}
+        <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 px-2 mt-4 mb-4">
+          <Link href="/about" className="text-xs font-bold text-[#6B7280] hover:text-[#1C1D20] transition uppercase tracking-wide">About</Link>
+          <Link href="/contact" className="text-xs font-bold text-[#6B7280] hover:text-[#1C1D20] transition uppercase tracking-wide">Contact</Link>
+          <Link href="/terms" className="text-xs font-bold text-[#6B7280] hover:text-[#1C1D20] transition uppercase tracking-wide">Terms</Link>
+          <Link href="/privacy" className="text-xs font-bold text-[#6B7280] hover:text-[#1C1D20] transition uppercase tracking-wide">Privacy</Link>
         </div>
       </div>
 
@@ -190,7 +242,7 @@ export default function Home() {
                   <div key={section.id} className="mb-8">
                     {/* Section label */}
                     <div className="flex items-center justify-center mb-4">
-                      <span className="text-xs font-extrabold uppercase tracking-widest text-[#AFAFAF]">
+                      <span className="text-xs font-extrabold uppercase tracking-widest text-[#1C1D20]">
                         {section.title}
                       </span>
                     </div>

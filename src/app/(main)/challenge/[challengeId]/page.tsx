@@ -1,18 +1,19 @@
 'use client';
 
 import { useParams, useRouter } from 'next/navigation';
-import { getChallengeById } from '@/data/challenges';
+import { useChallengeStore } from '@/store/use-challenge-store';
 import { CodeSandbox } from '@/components/code-sandbox';
 import { useUserStore } from '@/store/use-user-store';
 import { ResultModal } from '@/components/result-modal';
 import { useState, useCallback } from 'react';
-import { ArrowLeft, BookOpen, Code, Swords, Zap, Gem } from 'lucide-react';
+import { ArrowLeft, BookOpen, Code, Swords, Star, Gem } from 'lucide-react';
 import Link from 'next/link';
 
 export default function ChallengeWorkspace() {
   const params = useParams();
   const router = useRouter();
   const challengeId = params.challengeId as string;
+  const { getChallengeById } = useChallengeStore();
   const challenge = getChallengeById(challengeId);
 
   const { completeChallenge, addXp, addGems } = useUserStore();
@@ -24,8 +25,8 @@ export default function ChallengeWorkspace() {
     setIsCorrect(true);
     setShowResult(true);
     completeChallenge(challenge.id);
-    addXp(challenge.rewardXp);
-    addGems(challenge.rewardGems);
+    addXp(challenge.xpReward);
+    addGems(Math.floor(challenge.xpReward / 10)); // Reward logic
   }, [challenge, completeChallenge, addXp, addGems]);
 
   const handleError = useCallback(() => {
@@ -43,8 +44,8 @@ export default function ChallengeWorkspace() {
   if (!challenge) {
     return (
       <div className="flex flex-col items-center justify-center py-20">
-        <h1 className="text-2xl font-extrabold text-[#4B4B4B] mb-2">Challenge Not Found</h1>
-        <Link href="/challenge" className="text-[#1CB0F6] font-bold hover:underline">
+        <h1 className="text-2xl font-extrabold text-[#1C1D20] mb-2">Challenge Not Found</h1>
+        <Link href="/challenge" className="text-[#0ba2b3] font-bold hover:underline">
           Go back to Challenges
         </Link>
       </div>
@@ -56,14 +57,14 @@ export default function ChallengeWorkspace() {
       {/* Top Bar */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-4">
-          <Link href="/challenge" className="text-[#AFAFAF] hover:text-[#4B4B4B] transition">
+          <Link href="/challenge" className="text-[#0ba2b3] hover:text-[#1e91a3] transition">
             <ArrowLeft size={24} strokeWidth={3} />
           </Link>
-          <h1 className="text-2xl font-extrabold text-[#4B4B4B]">{challenge.title}</h1>
+          <h1 className="text-2xl font-extrabold text-[#1C1D20]">{challenge.title}</h1>
           <span className={`text-xs font-extrabold px-3 py-1 rounded-full border ${
-            challenge.difficulty === 'Easy' ? 'text-[#58CC02] bg-[#E8F5E9] border-[#58CC02]' :
-            challenge.difficulty === 'Medium' ? 'text-[#FF9600] bg-[#FFF3E0] border-[#FF9600]' :
-            'text-[#FF4B4B] bg-[#FFEBEE] border-[#FF4B4B]'
+            challenge.difficulty === 'easy' ? 'text-[#0ba2b3] bg-[#F0F8FF] border-[#0ba2b3]' :
+            challenge.difficulty === 'medium' ? 'text-[#FF9600] bg-[#FFF3E0] border-[#FF9600]' :
+            'text-[#FC4B0B] bg-[#FFEBEE] border-[#FC4B0B]'
           }`}>
             {challenge.difficulty}
           </span>
@@ -71,10 +72,10 @@ export default function ChallengeWorkspace() {
         
         <div className="flex gap-4">
           <div className="flex items-center gap-1.5 text-[#FFC800] font-bold">
-            <Zap size={20} fill="currentColor" /> {challenge.rewardXp} XP
+            <Star size={20} fill="currentColor" /> {challenge.xpReward} XP
           </div>
-          <div className="flex items-center gap-1.5 text-[#1CB0F6] font-bold">
-            <Gem size={20} fill="currentColor" /> {challenge.rewardGems} Gems
+          <div className="flex items-center gap-1.5 text-[#00BCD4] font-bold">
+            <Gem size={20} fill="currentColor" /> {Math.floor(challenge.xpReward / 10)} Gems
           </div>
         </div>
       </div>
@@ -82,49 +83,65 @@ export default function ChallengeWorkspace() {
       {/* Split Workspace */}
       <div className="flex-1 flex gap-6 overflow-hidden pb-4">
         {/* Left Panel: Description */}
-        <div className="w-1/2 bg-white border-2 border-[#E5E5E5] rounded-2xl flex flex-col overflow-hidden">
-          <div className="p-4 bg-[#F7F7F7] border-b-2 border-[#E5E5E5] flex items-center gap-2">
-            <BookOpen size={18} className="text-[#AFAFAF]" />
-            <h2 className="font-extrabold text-[#AFAFAF] text-sm uppercase tracking-wider">Problem Description</h2>
+        <div className="w-1/2 bg-white border-2 border-[#1C1D2033] rounded-2xl flex flex-col overflow-hidden">
+          <div className="p-4 bg-[#F8F8F8] border-b-2 border-[#1C1D2033] flex items-center gap-2">
+            <BookOpen size={18} className="text-[#0ba2b3]" />
+            <h2 className="font-extrabold text-[#1C1D20] text-sm uppercase tracking-wider">Problem Description</h2>
           </div>
           
-          <div className="p-6 overflow-y-auto flex-1 text-[#4B4B4B]">
-            <div className="prose prose-sm max-w-none">
-              {challenge.description.split('\n').map((line, i) => (
-                <p key={i} className="mb-4 font-semibold leading-relaxed">
-                  {line.split('`').map((part, j) => 
-                    j % 2 === 1 ? (
-                      <code key={j} className="bg-[#F7F7F7] text-[#FF4B4B] px-1.5 py-0.5 rounded text-sm font-mono font-bold">
-                        {part}
-                      </code>
-                    ) : (
-                      part
-                    )
-                  )}
-                </p>
-              ))}
+          <div className="p-6 overflow-y-auto flex-1 text-[#1C1D20]">
+            <p className="text-sm font-bold text-[#6B7280] mb-6 border-b-2 border-[#1C1D2011] pb-4">
+              Created by <span className="text-[#1C1D20]">{challenge.creatorName}</span>
+            </p>
+
+            <div className="space-y-6">
+              {challenge.contentBlocks.map((block, i) => {
+                if (block.type === 'text') {
+                  // Render markdown-like bold (**) and inline code (`)
+                  const formattedContent = block.content.replace(
+                    /\*\*(.*?)\*\*/g, 
+                    '<strong class="font-extrabold text-[#1C1D20]">$1</strong>'
+                  ).replace(
+                    /`([^`]+)`/g,
+                    '<code class="bg-[#F0F8FF] border-2 border-[#84D8FF] text-[#0ba2b3] px-2 py-0.5 rounded-md text-[13px] font-mono font-bold">$1</code>'
+                  );
+                  return (
+                    <div 
+                      key={i} 
+                      className="text-[#1C1D20] leading-relaxed font-semibold"
+                      dangerouslySetInnerHTML={{ __html: formattedContent.replace(/\n/g, '<br/>') }}
+                    />
+                  );
+                }
+                
+                if (block.type === 'code') {
+                  return (
+                    <div key={i} className="rounded-xl overflow-hidden border-2 border-[#84D8FF]">
+                      <pre className="bg-[#F0F8FF] text-[#0ba2b3] p-4 text-sm font-mono font-bold overflow-x-auto leading-relaxed">
+                        {block.content}
+                      </pre>
+                    </div>
+                  );
+                }
+                return null;
+              })}
             </div>
 
-            <div className="mt-8">
-              <h3 className="font-extrabold text-[#4B4B4B] mb-3">Examples:</h3>
-              {challenge.examples.map((ex, i) => (
-                <div key={i} className="mb-4 bg-[#F7F7F7] p-4 rounded-xl border border-[#E5E5E5]">
-                  <p className="font-mono text-sm text-[#4B4B4B] mb-2"><strong className="text-[#AFAFAF]">Input:</strong> {ex.input}</p>
-                  <p className="font-mono text-sm text-[#4B4B4B]"><strong className="text-[#AFAFAF]">Output:</strong> {ex.output}</p>
-                </div>
-              ))}
-            </div>
-
-            <div className="mt-8">
-              <h3 className="font-extrabold text-[#4B4B4B] mb-3">Constraints:</h3>
-              <ul className="list-disc pl-5 space-y-1">
-                {challenge.constraints.map((c, i) => (
-                  <li key={i} className="font-mono text-sm text-[#4B4B4B] bg-[#F7F7F7] px-2 py-1 rounded inline-block mb-2">
-                    {c}
-                  </li>
-                ))}
-              </ul>
-            </div>
+            {challenge.constraints && challenge.constraints.length > 0 && (
+              <div className="mt-8 border-t-2 border-[#1C1D2011] pt-6">
+                <h3 className="font-extrabold text-[#1C1D20] mb-4">Constraints:</h3>
+                <ul className="space-y-2">
+                  {challenge.constraints.map((c, i) => (
+                    <li key={i} className="flex items-start gap-2">
+                      <span className="mt-1 text-[#FC4B0B]">•</span>
+                      <span className="font-mono text-sm font-bold text-[#1C1D20] bg-[#F8F8F8] px-2 py-1 rounded inline-block border-2 border-[#1C1D2033]">
+                        {c}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
         </div>
 
@@ -132,8 +149,8 @@ export default function ChallengeWorkspace() {
         <div className="w-1/2 flex flex-col">
           <div className="flex-1 overflow-y-auto pr-2">
             <CodeSandbox
-              initialCode={challenge.initialCode}
-              expectedOutput={challenge.expectedOutput}
+              initialCode={challenge.initialCode || ''}
+              expectedOutput={challenge.expectedOutput || ''}
               onSuccess={handleSuccess}
               onError={handleError}
             />
@@ -145,7 +162,7 @@ export default function ChallengeWorkspace() {
         <ResultModal
           isOpen={true}
           isSuccess={isCorrect}
-          xpEarned={isCorrect ? challenge.rewardXp : 0}
+          xpEarned={isCorrect ? challenge.xpReward : 0}
           onContinue={handleContinue}
           onRetry={() => setShowResult(false)}
         />

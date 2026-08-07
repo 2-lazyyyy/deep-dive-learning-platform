@@ -95,7 +95,7 @@ export const CodeSandbox = ({
         whileTap={!disabled ? { scale: 0.98 } : {}}
         onClick={handleRun}
         disabled={isLoading || isRunning || disabled}
-        className="flex items-center justify-center gap-2.5 bg-[#58CC02] hover:bg-[#4CAF00] text-white font-extrabold py-3.5 px-8 rounded-xl border-b-4 border-[#46A302] active:border-b-0 active:translate-y-1 transition-all disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-wide"
+        className="flex items-center justify-center gap-2.5 bg-[#0ba2b3] hover:bg-[#1e91a3] text-white font-extrabold py-3.5 px-8 rounded-xl border-b-4 border-[#1e91a3] active:border-b-0 active:translate-y-1 transition-all disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-wide"
       >
         {isLoading || isRunning ? (
           <>
@@ -139,12 +139,7 @@ export const CodeSandbox = ({
                 Expected Output:
               </p>
               <pre className="text-gray-800 whitespace-pre-wrap">{expectedOutput}</pre>
-              
-              <div className="mt-4 p-2 bg-yellow-50 text-xs font-mono break-all text-yellow-800 rounded">
-                DEBUG (Raw):<br/>
-                STDOUT: {JSON.stringify(stdout.replace(/\s+/g, ''))}<br/>
-                EXPECT: {JSON.stringify(expectedOutput.replace(/\s+/g, ''))}
-              </div>
+
             </div>
           )}
         </motion.div>

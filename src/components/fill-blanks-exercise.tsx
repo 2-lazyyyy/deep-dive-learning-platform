@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Check, RotateCcw } from 'lucide-react';
+import { Check, RotateCcw, CheckCircle, XCircle } from 'lucide-react';
 
 interface FillBlanksExerciseProps {
   codeTemplate: string[];
@@ -137,12 +137,12 @@ export const FillBlanksExercise = ({
                   className={`inline-flex items-center justify-center min-w-[52px] h-[32px] px-2.5 rounded-lg font-mono text-sm font-bold transition-all ${
                     filledTokens[currentBlankIdx] !== null
                       ? result === 'correct'
-                        ? 'bg-[#58CC02] text-white border-2 border-[#46A302]'
+                        ? 'bg-[#0ba2b3] text-white border-2 border-[#1e91a3]'
                         : result === 'wrong'
-                        ? 'bg-[#FF4B4B] text-white border-2 border-[#E53E3E]'
-                        : 'bg-[#1CB0F6] text-white border-2 border-[#1899D6] cursor-pointer hover:bg-[#1899D6]'
+                        ? 'bg-[#FC4B0B] text-white border-2 border-[#E53E3E]'
+                        : 'bg-[#0ba2b3] text-white border-2 border-[#1e91a3] cursor-pointer hover:bg-[#1e91a3]'
                       : currentBlankIdx === nextBlankIndex
-                      ? 'bg-[#374151] border-2 border-dashed border-[#1CB0F6] text-[#1CB0F6] animate-pulse'
+                      ? 'bg-[#374151] border-2 border-dashed border-[#0ba2b3] text-[#0ba2b3] animate-pulse'
                       : 'bg-[#374151] border-2 border-dashed border-[#4B5563] text-[#6B7280]'
                   }`}
                 >
@@ -163,13 +163,13 @@ export const FillBlanksExercise = ({
       {/* Code Template Area */}
       <div className="flex-1">
         <div className="flex items-center justify-between mb-3">
-          <span className="text-xs font-extrabold uppercase tracking-wider text-[#AFAFAF]">
+          <span className="text-xs font-extrabold uppercase tracking-wider text-[#1C1D20]">
             python
           </span>
           {result !== 'none' && (
             <button
               onClick={handleReset}
-              className="flex items-center gap-1.5 text-xs font-bold text-[#1CB0F6] hover:text-[#1899D6]"
+              className="flex items-center gap-1.5 text-xs font-bold text-[#0ba2b3] hover:text-[#1e91a3]"
             >
               <RotateCcw size={14} />
               Reset
@@ -183,7 +183,7 @@ export const FillBlanksExercise = ({
 
         {/* Token Pool */}
         <div className="mb-6">
-          <p className="text-xs font-extrabold uppercase tracking-wider text-[#AFAFAF] mb-3">
+          <p className="text-xs font-extrabold uppercase tracking-wider text-[#1C1D20] mb-3">
             Available Tokens
           </p>
           <div className="flex flex-wrap gap-2">
@@ -198,8 +198,8 @@ export const FillBlanksExercise = ({
                   disabled={isUsed || result !== 'none'}
                   className={`px-4 py-2 rounded-xl font-mono text-sm font-bold transition-all ${
                     isUsed
-                      ? 'bg-[#F7F7F7] text-[#E5E5E5] border-2 border-[#F7F7F7] cursor-default'
-                      : 'bg-white text-[#4B4B4B] border-2 border-[#E5E5E5] hover:border-[#1CB0F6] hover:bg-[#DDF4FF] cursor-pointer shadow-sm'
+                      ? 'bg-[#F8F8F8] text-[#1C1D2033] border-2 border-[#F8F8F8] cursor-default'
+                      : 'bg-white text-[#1C1D20] border-2 border-[#1C1D2033] hover:border-[#0ba2b3] hover:bg-[#F0F8FF] cursor-pointer shadow-sm'
                   }`}
                 >
                   {token}
@@ -219,13 +219,23 @@ export const FillBlanksExercise = ({
             exit={{ opacity: 0, y: 10 }}
             className={`px-5 py-4 rounded-2xl mb-4 ${
               result === 'correct'
-                ? 'bg-[#E8F5E9] border-2 border-green-200'
-                : 'bg-[#FFEBEE] border-2 border-red-200'
+                ? 'bg-[#F0F8FF] border-2 border-[#1e91a3]'
+                : 'bg-[#FC4B0B]/10 border-2 border-[#FC4B0B]'
             }`}
           >
-            <p className={`font-extrabold text-sm ${result === 'correct' ? 'text-[#2E7D32]' : 'text-[#C62828]'}`}>
-              {result === 'correct' ? '✅ Correct! Well done!' : '❌ Not quite. Try again!'}
-            </p>
+            <div className={`flex items-center gap-2 font-extrabold text-sm ${result === 'correct' ? 'text-[#0ba2b3]' : 'text-[#FC4B0B]'}`}>
+              {result === 'correct' ? (
+                <>
+                  <CheckCircle size={18} strokeWidth={3} />
+                  Correct! Well done!
+                </>
+              ) : (
+                <>
+                  <XCircle size={18} strokeWidth={3} />
+                  Not quite. Try again!
+                </>
+              )}
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -238,12 +248,12 @@ export const FillBlanksExercise = ({
         disabled={!allFilled && result === 'none'}
         className={`w-full py-3.5 rounded-2xl font-extrabold text-base uppercase tracking-wider transition-all ${
           result === 'correct'
-            ? 'bg-[#58CC02] text-white border-b-4 border-[#46A302]'
+            ? 'bg-[#0ba2b3] text-white border-b-4 border-[#1e91a3]'
             : result === 'wrong'
             ? 'bg-[#FF9600] text-white border-b-4 border-[#E08500]'
             : allFilled
-            ? 'bg-[#1CB0F6] text-white border-b-4 border-[#1899D6] hover:bg-[#1899D6] active:border-b-0 active:translate-y-1'
-            : 'bg-[#E5E5E5] text-[#AFAFAF] cursor-not-allowed'
+            ? 'bg-[#0ba2b3] text-white border-b-4 border-[#1e91a3] hover:bg-[#1e91a3] active:border-b-0 active:translate-y-1'
+            : 'bg-[#1C1D2033] text-[#1C1D20] cursor-not-allowed'
         }`}
       >
         {result === 'correct' ? (

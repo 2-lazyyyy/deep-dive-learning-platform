@@ -2,11 +2,11 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Moon, Sun, Volume2, VolumeX, Save, User, Bell, Sliders, Trash2, Camera } from 'lucide-react';
+import { Moon, Sun, Volume2, VolumeX, Save, User, Bell, Sliders, CreditCard, Trash2, Camera } from 'lucide-react';
 
-type Tab = 'preferences' | 'profile' | 'notifications';
+type Tab = 'preferences' | 'profile' | 'notifications' | 'subscription';
 
-export default function TeacherSettingsPage() {
+export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<Tab>('profile');
 
   // Preferences State
@@ -14,15 +14,14 @@ export default function TeacherSettingsPage() {
   const [isSoundOn, setIsSoundOn] = useState(true);
 
   // Profile State
-  const [name, setName] = useState('Teacher Alex');
-  const [username, setUsername] = useState('teacheralex');
-  const [email, setEmail] = useState('alex@deepdive.edu');
+  const [name, setName] = useState('John Doe');
+  const [username, setUsername] = useState('johndoe123');
+  const [email, setEmail] = useState('john@example.com');
   const [password, setPassword] = useState('');
 
   // Notifications State
-  const [submissionAlerts, setSubmissionAlerts] = useState(true);
-  const [dailySummary, setDailySummary] = useState(false);
-  const [passRateWarnings, setPassRateWarnings] = useState(true);
+  const [emailNotifs, setEmailNotifs] = useState(true);
+  const [pushNotifs, setPushNotifs] = useState(false);
 
   const renderContent = () => {
     switch (activeTab) {
@@ -172,24 +171,24 @@ export default function TeacherSettingsPage() {
           <div className="flex flex-col gap-6">
             <h2 className="text-2xl font-extrabold text-[#1C1D20] mb-2">Notifications</h2>
             
-            {/* Submission Alerts */}
+            {/* Email Notifications */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 rounded-xl bg-[#F0F8FF] text-[#0ba2b3] flex items-center justify-center">
                   <Bell size={24} />
                 </div>
                 <div>
-                  <h3 className="text-lg font-extrabold text-[#1C1D20]">New Submission Alerts</h3>
-                  <p className="text-sm font-bold text-[#6B7280]">Receive alerts for new student submissions</p>
+                  <h3 className="text-lg font-extrabold text-[#1C1D20]">Email Notifications</h3>
+                  <p className="text-sm font-bold text-[#6B7280]">Receive weekly reports and updates</p>
                 </div>
               </div>
               <button 
-                onClick={() => setSubmissionAlerts(!submissionAlerts)}
-                className={`w-14 h-8 flex items-center rounded-full p-1 transition-colors ${submissionAlerts ? 'bg-[#0ba2b3]' : 'bg-[#1C1D2033]'}`}
+                onClick={() => setEmailNotifs(!emailNotifs)}
+                className={`w-14 h-8 flex items-center rounded-full p-1 transition-colors ${emailNotifs ? 'bg-[#0ba2b3]' : 'bg-[#1C1D2033]'}`}
               >
                 <motion.div 
                   className="bg-white w-6 h-6 rounded-full shadow-md"
-                  animate={{ x: submissionAlerts ? 24 : 0 }}
+                  animate={{ x: emailNotifs ? 24 : 0 }}
                   transition={{ type: "spring", stiffness: 500, damping: 30 }}
                 />
               </button>
@@ -197,51 +196,45 @@ export default function TeacherSettingsPage() {
 
             <div className="h-[2px] bg-[#1C1D2033] w-full" />
 
-            {/* Daily Summary */}
+            {/* Push Notifications */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 rounded-xl bg-[#F0F8FF] text-[#0ba2b3] flex items-center justify-center">
                   <Bell size={24} />
                 </div>
                 <div>
-                  <h3 className="text-lg font-extrabold text-[#1C1D20]">Daily Summary Email</h3>
-                  <p className="text-sm font-bold text-[#6B7280]">Receive daily summary reports</p>
+                  <h3 className="text-lg font-extrabold text-[#1C1D20]">Push Notifications</h3>
+                  <p className="text-sm font-bold text-[#6B7280]">Daily reminders and streak alerts</p>
                 </div>
               </div>
               <button 
-                onClick={() => setDailySummary(!dailySummary)}
-                className={`w-14 h-8 flex items-center rounded-full p-1 transition-colors ${dailySummary ? 'bg-[#0ba2b3]' : 'bg-[#1C1D2033]'}`}
+                onClick={() => setPushNotifs(!pushNotifs)}
+                className={`w-14 h-8 flex items-center rounded-full p-1 transition-colors ${pushNotifs ? 'bg-[#0ba2b3]' : 'bg-[#1C1D2033]'}`}
               >
                 <motion.div 
                   className="bg-white w-6 h-6 rounded-full shadow-md"
-                  animate={{ x: dailySummary ? 24 : 0 }}
+                  animate={{ x: pushNotifs ? 24 : 0 }}
                   transition={{ type: "spring", stiffness: 500, damping: 30 }}
                 />
               </button>
             </div>
+          </div>
+        );
 
-            <div className="h-[2px] bg-[#1C1D2033] w-full" />
-
-            {/* Pass Rate Warnings */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-[#F0F8FF] text-[#0ba2b3] flex items-center justify-center">
-                  <Bell size={24} />
-                </div>
-                <div>
-                  <h3 className="text-lg font-extrabold text-[#1C1D20]">Low Pass-Rate Warnings</h3>
-                  <p className="text-sm font-bold text-[#6B7280]">Receive warnings when pass rates drop below 50%</p>
-                </div>
+      case 'subscription':
+        return (
+          <div className="flex flex-col gap-6">
+            <h2 className="text-2xl font-extrabold text-[#1C1D20] mb-2">Subscription</h2>
+            
+            <div className="bg-[#F0F8FF] border-2 border-[#84D8FF] rounded-xl p-6 relative overflow-hidden">
+              <div className="absolute top-0 right-0 p-4">
+                <div className="bg-white px-3 py-1 rounded-full font-extrabold text-[#0ba2b3] text-sm shadow-sm border-2 border-[#1C1D2033]">Free Plan</div>
               </div>
-              <button 
-                onClick={() => setPassRateWarnings(!passRateWarnings)}
-                className={`w-14 h-8 flex items-center rounded-full p-1 transition-colors ${passRateWarnings ? 'bg-[#0ba2b3]' : 'bg-[#1C1D2033]'}`}
-              >
-                <motion.div 
-                  className="bg-white w-6 h-6 rounded-full shadow-md"
-                  animate={{ x: passRateWarnings ? 24 : 0 }}
-                  transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                />
+              <h3 className="text-xl font-extrabold text-[#0ba2b3] mb-2">DeepDive Free</h3>
+              <p className="text-[#1C1D20] font-bold mb-6 max-w-sm">You are currently on the free plan. Upgrade to unlock premium avatars, unlimited hearts, and detailed progress insights.</p>
+              
+              <button className="bg-white text-[#0ba2b3] font-extrabold uppercase px-6 py-3 rounded-xl border-2 border-[#1C1D2033] transition shadow-[0_4px_0_#1C1D2033] hover:bg-[#F8F8F8] active:shadow-none active:translate-y-1">
+                Upgrade to Pro
               </button>
             </div>
           </div>
@@ -250,10 +243,11 @@ export default function TeacherSettingsPage() {
   };
 
   return (
-    <div className="pb-12">
-      <div className="mb-8">
+    <div className="max-w-5xl mx-auto pb-12">
+      <div className="flex items-center gap-4 mb-8">
         <h1 className="text-3xl font-extrabold text-[#1C1D20]">Settings</h1>
       </div>
+
       <div className="flex flex-col lg:flex-row-reverse gap-8">
         {/* Sidebar */}
         <div className="w-full lg:w-64 flex-shrink-0">
@@ -282,6 +276,14 @@ export default function TeacherSettingsPage() {
             >
               <Bell size={20} />
               Notifications
+            </button>
+            
+            <button 
+              onClick={() => setActiveTab('subscription')}
+              className={`flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition text-left ${activeTab === 'subscription' ? 'bg-[#F0F8FF] text-[#0ba2b3] border-2 border-[#84D8FF]' : 'text-[#1C1D20] border-2 border-transparent hover:bg-[#F8F8F8]'}`}
+            >
+              <CreditCard size={20} />
+              Subscription
             </button>
           </div>
         </div>

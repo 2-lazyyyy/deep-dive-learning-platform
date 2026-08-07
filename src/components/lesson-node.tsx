@@ -20,7 +20,7 @@ export const LessonNode = ({
   lessonNumber,
   status,
   offsetX = 0,
-  color = '#58CC02',
+  color = '#0ba2b3',
   colorDark = '#46A302',
   isLast = false,
   nextOffsetX = 0,
@@ -34,7 +34,7 @@ export const LessonNode = ({
       case 'current':
         return { bg: color, shadow: colorDark };
       case 'locked':
-        return { bg: '#E5E5E5', shadow: '#CECECE' };
+        return { bg: '#1C1D2033', shadow: '#CECECE' };
     }
   };
 
@@ -108,7 +108,7 @@ export const LessonNode = ({
         {status === 'completed' ? (
           <Icon size={34} className="text-white drop-shadow-sm" strokeWidth={3} />
         ) : status === 'locked' ? (
-          <Icon size={28} className="text-[#AFAFAF]" strokeWidth={2.5} />
+          <Icon size={28} className="text-[#1C1D20]" strokeWidth={2.5} />
         ) : (
           <Code size={34} className="text-white drop-shadow-sm" strokeWidth={2.5} />
         )}

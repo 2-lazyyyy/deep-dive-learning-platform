@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { CheckCircle, XCircle } from 'lucide-react';
 import { Check, X } from 'lucide-react';
 
 interface MultipleChoiceExerciseProps {
@@ -41,6 +42,7 @@ export const MultipleChoiceExercise = ({
 
   // Render question with code blocks
   const renderQuestion = (text: string) => {
+    if (!text) return null;
     const parts = text.split(/(```[\s\S]*?```)/g);
     return parts.map((part, idx) => {
       if (part.startsWith('```') && part.endsWith('```')) {
@@ -55,7 +57,7 @@ export const MultipleChoiceExercise = ({
         );
       }
       return (
-        <p key={idx} className="text-[#4B4B4B] font-bold text-base leading-relaxed">
+        <p key={idx} className="text-[#1C1D20] font-bold text-base leading-relaxed">
           {part}
         </p>
       );
@@ -84,24 +86,24 @@ export const MultipleChoiceExercise = ({
                 onClick={() => result === 'none' && setSelectedIndex(idx)}
                 className={`w-full flex items-center gap-4 p-4 rounded-2xl text-left transition-all border-2 ${
                   showCorrect
-                    ? 'bg-[#E8F5E9] border-[#58CC02] text-[#2E7D32]'
+                    ? 'bg-[#F0F8FF] border-[#0ba2b3] text-[#1e91a3]'
                     : showWrong
-                    ? 'bg-[#FFEBEE] border-[#FF4B4B] text-[#C62828]'
+                    ? 'bg-[#FFEBEE] border-[#FC4B0B] text-[#C62828]'
                     : isSelected
-                    ? 'bg-[#DDF4FF] border-[#1CB0F6] text-[#1CB0F6]'
-                    : 'bg-white border-[#E5E5E5] text-[#4B4B4B] hover:bg-[#F7F7F7] hover:border-[#CECECE]'
+                    ? 'bg-[#F0F8FF] border-[#0ba2b3] text-[#0ba2b3]'
+                    : 'bg-white border-[#1C1D2033] text-[#1C1D20] hover:bg-[#F8F8F8] hover:border-[#CECECE]'
                 }`}
               >
                 {/* Radio circle / Check/X icon */}
                 <div
                   className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 border-2 ${
                     showCorrect
-                      ? 'bg-[#58CC02] border-[#46A302]'
+                      ? 'bg-[#0ba2b3] border-[#1e91a3]'
                       : showWrong
-                      ? 'bg-[#FF4B4B] border-[#E53E3E]'
+                      ? 'bg-[#FC4B0B] border-[#E53E3E]'
                       : isSelected
-                      ? 'bg-[#1CB0F6] border-[#1899D6]'
-                      : 'bg-white border-[#E5E5E5]'
+                      ? 'bg-[#0ba2b3] border-[#1e91a3]'
+                      : 'bg-white border-[#1C1D2033]'
                   }`}
                 >
                   {showCorrect && <Check size={16} className="text-white" strokeWidth={3} />}
@@ -128,19 +130,27 @@ export const MultipleChoiceExercise = ({
             exit={{ opacity: 0, y: 10 }}
             className={`px-5 py-4 rounded-2xl mb-4 ${
               result === 'correct'
-                ? 'bg-[#E8F5E9] border-2 border-green-200'
-                : 'bg-[#FFEBEE] border-2 border-red-200'
+                ? 'bg-[#F0F8FF] border-2 border-[#1e91a3]'
+                : 'bg-[#FC4B0B]/10 border-2 border-[#FC4B0B]'
             }`}
           >
-            <p
-              className={`font-extrabold text-sm ${
-                result === 'correct' ? 'text-[#2E7D32]' : 'text-[#C62828]'
+            <div
+              className={`flex items-center gap-2 font-extrabold text-sm ${
+                result === 'correct' ? 'text-[#0ba2b3]' : 'text-[#FC4B0B]'
               }`}
             >
-              {result === 'correct'
-                ? '✅ Correct! Well done!'
-                : `❌ Not quite. The answer is: ${options[correctIndex]}`}
-            </p>
+              {result === 'correct' ? (
+                <>
+                  <CheckCircle size={18} strokeWidth={3} />
+                  Correct! Well done!
+                </>
+              ) : (
+                <>
+                  <XCircle size={18} strokeWidth={3} />
+                  Not quite. The answer is: {options[correctIndex]}
+                </>
+              )}
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -153,12 +163,12 @@ export const MultipleChoiceExercise = ({
         disabled={selectedIndex === null && result === 'none'}
         className={`w-full py-3.5 rounded-2xl font-extrabold text-base uppercase tracking-wider transition-all ${
           result === 'correct'
-            ? 'bg-[#58CC02] text-white border-b-4 border-[#46A302]'
+            ? 'bg-[#0ba2b3] text-white border-b-4 border-[#1e91a3]'
             : result === 'wrong'
             ? 'bg-[#FF9600] text-white border-b-4 border-[#E08500]'
             : selectedIndex !== null
-            ? 'bg-[#1CB0F6] text-white border-b-4 border-[#1899D6] hover:bg-[#1899D6] active:border-b-0 active:translate-y-1'
-            : 'bg-[#E5E5E5] text-[#AFAFAF] cursor-not-allowed'
+            ? 'bg-[#0ba2b3] text-white border-b-4 border-[#1e91a3] hover:bg-[#1e91a3] active:border-b-0 active:translate-y-1'
+            : 'bg-[#1C1D2033] text-[#1C1D20] cursor-not-allowed'
         }`}
       >
         {result === 'correct' ? (

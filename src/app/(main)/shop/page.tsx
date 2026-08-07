@@ -2,7 +2,7 @@
 
 import { useUserStore } from '@/store/use-user-store';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Heart, Gem, Zap, Snowflake, ShieldCheck, Store } from 'lucide-react';
+import { Heart, Gem, Star, Snowflake, ShieldCheck, Store } from 'lucide-react';
 import { useState } from 'react';
 
 interface ShopItem {
@@ -34,7 +34,7 @@ export default function ShopPage() {
     const success = spendGems(item.price);
     if (success) {
       item.action();
-      showToast(`✅ ${item.name} ဝယ်ယူပြီးပါပြီ!`);
+      showToast(`Successfully purchased ${item.name}!`);
     }
   };
 
@@ -44,7 +44,7 @@ export default function ShopPage() {
       name: 'Heart Refill',
       description: 'Hearts ပြန်ဖြည့်ပါ (5 hearts)',
       price: 350,
-      icon: <Heart size={32} className="text-[#FF4B4B]" fill="currentColor" />,
+      icon: <Heart size={32} className="text-[#FC4B0B]" fill="currentColor" />,
       color: 'bg-red-50',
       borderColor: 'border-red-200',
       action: () => refillHearts(),
@@ -54,7 +54,7 @@ export default function ShopPage() {
       name: 'Streak Freeze',
       description: 'တစ်ရက်မလေ့ကျင့်ရင်တောင် streak မကျပါ',
       price: 200,
-      icon: <Snowflake size={32} className="text-[#1CB0F6]" />,
+      icon: <Snowflake size={32} className="text-[#0ba2b3]" />,
       color: 'bg-blue-50',
       borderColor: 'border-blue-200',
       action: () => {},
@@ -64,7 +64,7 @@ export default function ShopPage() {
       name: 'Double XP (15 min)',
       description: '၁၅ မိနစ်အတွင်း XP ၂ ဆ ရပါမယ်',
       price: 300,
-      icon: <Zap size={32} className="text-[#FFC800]" fill="currentColor" />,
+      icon: <Star size={32} className="text-[#FFC800]" fill="currentColor" />,
       color: 'bg-yellow-50',
       borderColor: 'border-yellow-200',
       action: () => addXp(50),
@@ -74,7 +74,7 @@ export default function ShopPage() {
       name: 'Heart Shield',
       description: 'နောက်တစ်ခေါက် မှားရင် heart မနုတ်ပါ',
       price: 450,
-      icon: <ShieldCheck size={32} className="text-[#58CC02]" />,
+      icon: <ShieldCheck size={32} className="text-[#0ba2b3]" />,
       color: 'bg-green-50',
       borderColor: 'border-green-200',
       action: () => {},
@@ -82,18 +82,17 @@ export default function ShopPage() {
   ];
 
   return (
-    <div className="max-w-2xl mx-auto pb-20">
+    <div className="max-w-4xl mx-auto pb-20">
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <div className="flex items-center gap-3">
-          <Store size={32} className="text-[#FF9600]" />
-          <h1 className="text-2xl font-extrabold text-[#4B4B4B]">Shop</h1>
+      <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-extrabold text-[#1C1D20]">Shop</h1>
         </div>
 
         {/* Gem Balance */}
-        <div className="flex items-center gap-2 bg-white border-2 border-[#E5E5E5] px-4 py-2 rounded-xl">
-          <Gem size={20} className="text-[#1CB0F6]" fill="currentColor" />
-          <span className="font-extrabold text-[#1CB0F6]">{gems}</span>
+        <div className="flex items-center gap-2 bg-white border-2 border-[#1C1D2033] px-4 py-2 rounded-xl">
+          <Gem size={20} className="text-[#00BCD4]" fill="currentColor" />
+          <span className="font-extrabold text-[#00BCD4]">{gems}</span>
         </div>
       </div>
 
@@ -101,9 +100,9 @@ export default function ShopPage() {
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-white border-2 border-[#E5E5E5] rounded-2xl p-5 mb-8"
+        className="bg-white border-2 border-[#1C1D2033] rounded-2xl p-5 mb-8"
       >
-        <p className="text-xs font-extrabold uppercase tracking-widest text-[#AFAFAF] mb-3">
+        <p className="text-xs font-extrabold uppercase tracking-widest text-[#1C1D20] mb-3">
           CURRENT HEARTS
         </p>
         <div className="flex gap-2">
@@ -111,7 +110,7 @@ export default function ShopPage() {
             <Heart
               key={i}
               size={28}
-              className={i < hearts ? 'text-[#FF4B4B]' : 'text-[#E5E5E5]'}
+              className={i < hearts ? 'text-[#FC4B0B]' : 'text-[#1C1D2033]'}
               fill="currentColor"
             />
           ))}
@@ -134,8 +133,8 @@ export default function ShopPage() {
             </div>
 
             {/* Info */}
-            <h3 className="font-extrabold text-[#4B4B4B] text-base mb-1">{item.name}</h3>
-            <p className="text-sm text-[#777777] font-semibold mb-4 leading-snug">
+            <h3 className="font-extrabold text-[#1C1D20] text-base mb-1">{item.name}</h3>
+            <p className="text-sm text-[#1C1D20] font-semibold mb-4 leading-snug">
               {item.description}
             </p>
 
@@ -146,8 +145,8 @@ export default function ShopPage() {
               onClick={() => handlePurchase(item)}
               className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-xl font-extrabold text-sm uppercase tracking-wide transition-all ${
                 gems >= item.price
-                  ? 'bg-[#1CB0F6] hover:bg-[#1899D6] text-white border-b-4 border-[#1784BA] active:border-b-0 active:translate-y-1'
-                  : 'bg-[#E5E5E5] text-[#AFAFAF] cursor-not-allowed'
+                  ? 'bg-[#0ba2b3] hover:bg-[#1e91a3] text-white border-b-4 border-[#1784BA] active:border-b-0 active:translate-y-1'
+                  : 'bg-[#1C1D2033] text-[#1C1D20] cursor-not-allowed'
               }`}
               disabled={gems < item.price}
             >
@@ -165,7 +164,7 @@ export default function ShopPage() {
             initial={{ opacity: 0, y: 50, scale: 0.9 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 50, scale: 0.9 }}
-            className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-[#4B4B4B] text-white font-bold px-6 py-3 rounded-xl shadow-lg z-50"
+            className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-[#1C1D20] text-white font-bold px-6 py-3 rounded-xl shadow-lg z-50"
           >
             {toast}
           </motion.div>

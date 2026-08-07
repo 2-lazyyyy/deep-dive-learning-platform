@@ -15,12 +15,12 @@ const stats = {
 };
 
 const recentSubmissions = [
-  { id: 1, student: 'Aung Kyaw', lesson: 'Output ထုတ်ခြင်း', status: 'pass', time: '2 min ago', xp: 10 },
-  { id: 2, student: 'Thiri Wai', lesson: 'F-String သုံးခြင်း', status: 'fail', time: '5 min ago', xp: 0 },
-  { id: 3, student: 'Min Thant', lesson: '.format() သုံးခြင်း', status: 'pass', time: '8 min ago', xp: 15 },
-  { id: 4, student: 'Su Su', lesson: 'Variable တည်ဆောက်ခြင်း', status: 'pass', time: '12 min ago', xp: 15 },
-  { id: 5, student: 'Zaw Lin', lesson: 'If Statement ရေးခြင်း', status: 'fail', time: '15 min ago', xp: 0 },
-  { id: 6, student: 'Aye Chan', lesson: 'For Loop ရေးခြင်း', status: 'pass', time: '20 min ago', xp: 25 },
+  { id: 1, student: 'Alice Smith', lesson: 'Printing Output', status: 'pass', time: '2 min ago', xp: 10 },
+  { id: 2, student: 'Bob Johnson', lesson: 'Using F-Strings', status: 'fail', time: '5 min ago', xp: 0 },
+  { id: 3, student: 'Charlie Davis', lesson: 'Using .format()', status: 'pass', time: '8 min ago', xp: 15 },
+  { id: 4, student: 'Diana Miller', lesson: 'Creating Variables', status: 'pass', time: '12 min ago', xp: 15 },
+  { id: 5, student: 'Evan Brown', lesson: 'Writing If Statements', status: 'fail', time: '15 min ago', xp: 0 },
+  { id: 6, student: 'Fiona White', lesson: 'Writing For Loops', status: 'pass', time: '20 min ago', xp: 25 },
 ];
 
 // Simple bar chart data (submissions per day, last 7 days)
@@ -41,16 +41,13 @@ export default function TeacherDashboard() {
     <div className="pb-20">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-2xl font-extrabold text-[#4B4B4B]">Dashboard</h1>
-        <p className="text-sm font-semibold text-[#AFAFAF] mt-1">
-          မင်္ဂလာပါ ဆရာ/ဆရာမ။ ဒီနေ့ student တွေရဲ့ progress ကိုကြည့်ပါ။
-        </p>
+        <h1 className="text-2xl font-extrabold text-[#1C1D20]">Welcome Teacher Alex!</h1>
       </div>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <StatCard
-          icon={<Users size={24} className="text-[#1CB0F6]" />}
+          icon={<Users size={24} className="text-[#0ba2b3]" />}
           label="Total Students"
           value={stats.totalStudents}
           sub={`${stats.onlineNow} online`}
@@ -59,16 +56,16 @@ export default function TeacherDashboard() {
           delay={0}
         />
         <StatCard
-          icon={<BookOpen size={24} className="text-[#58CC02]" />}
+          icon={<BookOpen size={24} className="text-[#0ba2b3]" />}
           label="Active Lessons"
           value={stats.activeLessons}
-          sub="modules 4 ခု"
+          sub="4 modules"
           color="bg-green-50"
           borderColor="border-green-200"
           delay={0.05}
         />
         <StatCard
-          icon={<CheckCircle size={24} className="text-[#FFC800]" />}
+          icon={<CheckCircle size={24} className="text-[#0ba2b3]" />}
           label="Total Submissions"
           value={stats.totalSubmissions}
           sub={`${stats.todaySubmissions} today`}
@@ -77,7 +74,7 @@ export default function TeacherDashboard() {
           delay={0.1}
         />
         <StatCard
-          icon={<TrendingUp size={24} className="text-[#CE82FF]" />}
+          icon={<TrendingUp size={24} className="text-[#0ba2b3]" />}
           label="Pass Rate"
           value={`${stats.passRate}%`}
           sub={`avg ${stats.avgCompletionTime}`}
@@ -93,11 +90,11 @@ export default function TeacherDashboard() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="lg:col-span-2 bg-white rounded-2xl border-2 border-[#E5E5E5] p-6"
+          className="lg:col-span-2 bg-white rounded-2xl border-2 border-[#1C1D2033] p-6"
         >
           <div className="flex items-center justify-between mb-6">
-            <h2 className="font-extrabold text-[#4B4B4B]">Submissions This Week</h2>
-            <span className="text-xs font-bold text-[#AFAFAF] bg-[#F7F7F7] px-3 py-1 rounded-full">
+            <h2 className="font-extrabold text-[#1C1D20]">Submissions This Week</h2>
+            <span className="text-xs font-bold text-[#1C1D20] bg-[#F8F8F8] px-3 py-1 rounded-full">
               Last 7 days
             </span>
           </div>
@@ -109,19 +106,19 @@ export default function TeacherDashboard() {
               const isToday = idx === chartData.length - 1;
               return (
                 <div key={d.day} className="flex flex-col items-center flex-1 gap-2">
-                  <span className="text-xs font-extrabold text-[#4B4B4B]">{d.count}</span>
+                  <span className="text-xs font-extrabold text-[#1C1D20]">{d.count}</span>
                   <motion.div
                     initial={{ height: 0 }}
                     animate={{ height: `${heightPct}%` }}
                     transition={{ delay: 0.3 + idx * 0.05, duration: 0.5, ease: 'easeOut' }}
                     className={`w-full rounded-t-lg relative overflow-hidden ${
-                      isToday ? 'bg-[#CE82FF]' : 'bg-[#1CB0F6]'
+                      isToday ? 'bg-[#0ba2b3]' : 'bg-[#0ba2b3]'
                     }`}
                   >
                     <div className="absolute top-0 left-1 right-1 h-2 bg-white/20 rounded-full mt-1" />
                   </motion.div>
                   <span
-                    className={`text-xs font-bold ${isToday ? 'text-[#CE82FF]' : 'text-[#AFAFAF]'}`}
+                    className={`text-xs font-bold ${isToday ? 'text-[#0ba2b3]' : 'text-[#1C1D20]'}`}
                   >
                     {d.day}
                   </span>
@@ -136,9 +133,9 @@ export default function TeacherDashboard() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.25 }}
-          className="bg-white rounded-2xl border-2 border-[#E5E5E5] p-6 flex flex-col items-center justify-center"
+          className="bg-white rounded-2xl border-2 border-[#1C1D2033] p-6 flex flex-col items-center justify-center"
         >
-          <h2 className="font-extrabold text-[#4B4B4B] mb-4 self-start">Pass / Fail</h2>
+          <h2 className="font-extrabold text-[#1C1D20] mb-4 self-start">Pass / Fail</h2>
 
           <div className="relative w-[140px] h-[140px]">
             <svg className="w-full h-full -rotate-90" viewBox="0 0 120 120">
@@ -150,7 +147,7 @@ export default function TeacherDashboard() {
                 cy="60"
                 r="50"
                 fill="none"
-                stroke="#58CC02"
+                stroke="#0ba2b3"
                 strokeWidth="14"
                 strokeLinecap="round"
                 strokeDasharray={`${2 * Math.PI * 50}`}
@@ -160,19 +157,19 @@ export default function TeacherDashboard() {
               />
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className="text-2xl font-extrabold text-[#4B4B4B]">{stats.passRate}%</span>
-              <span className="text-xs font-bold text-[#AFAFAF]">Pass</span>
+              <span className="text-2xl font-extrabold text-[#1C1D20]">{stats.passRate}%</span>
+              <span className="text-xs font-bold text-[#1C1D20]">Pass</span>
             </div>
           </div>
 
           <div className="flex gap-6 mt-4">
             <div className="flex items-center gap-1.5">
-              <div className="w-3 h-3 rounded-full bg-[#58CC02]" />
-              <span className="text-xs font-bold text-[#777777]">Pass</span>
+              <div className="w-3 h-3 rounded-full bg-[#0ba2b3]" />
+              <span className="text-xs font-bold text-[#1C1D20]">Pass</span>
             </div>
             <div className="flex items-center gap-1.5">
               <div className="w-3 h-3 rounded-full bg-[#FFE5E5]" />
-              <span className="text-xs font-bold text-[#777777]">Fail</span>
+              <span className="text-xs font-bold text-[#1C1D20]">Fail</span>
             </div>
           </div>
         </motion.div>
@@ -183,43 +180,43 @@ export default function TeacherDashboard() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
-        className="mt-6 bg-white rounded-2xl border-2 border-[#E5E5E5] overflow-hidden"
+        className="mt-6 bg-white rounded-2xl border-2 border-[#1C1D2033] overflow-hidden"
       >
-        <div className="flex items-center justify-between px-6 py-4 border-b-2 border-[#E5E5E5]">
-          <h2 className="font-extrabold text-[#4B4B4B]">Recent Submissions</h2>
-          <a href="/teacher/submissions" className="text-sm font-bold text-[#1CB0F6] hover:underline">
+        <div className="flex items-center justify-between px-6 py-4 border-b-2 border-[#1C1D2033]">
+          <h2 className="font-extrabold text-[#1C1D20]">Recent Submissions</h2>
+          <a href="/teacher/submissions" className="text-sm font-bold text-[#0ba2b3] hover:underline">
             View all →
           </a>
         </div>
 
-        <div className="divide-y divide-[#E5E5E5]">
+        <div className="divide-y divide-[#1C1D2033]">
           {recentSubmissions.map((sub, idx) => (
             <motion.div
               key={sub.id}
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.35 + idx * 0.04 }}
-              className="flex items-center justify-between px-6 py-3.5 hover:bg-[#F7F7F7] transition-colors"
+              className="flex items-center justify-between px-6 py-3.5 hover:bg-[#F8F8F8] transition-colors"
             >
               <div className="flex items-center gap-4">
                 {/* Status icon */}
                 {sub.status === 'pass' ? (
-                  <CheckCircle size={20} className="text-[#58CC02]" fill="currentColor" />
+                  <CheckCircle size={20} className="text-[#0ba2b3]" fill="currentColor" />
                 ) : (
-                  <XCircle size={20} className="text-[#FF4B4B]" fill="currentColor" />
+                  <XCircle size={20} className="text-[#FC4B0B]" fill="currentColor" />
                 )}
 
                 <div>
-                  <p className="font-bold text-[#4B4B4B] text-sm">{sub.student}</p>
-                  <p className="text-xs font-semibold text-[#AFAFAF]">{sub.lesson}</p>
+                  <p className="font-bold text-[#1C1D20] text-sm">{sub.student}</p>
+                  <p className="text-xs font-semibold text-[#1C1D20]">{sub.lesson}</p>
                 </div>
               </div>
 
               <div className="flex items-center gap-4">
                 {sub.xp > 0 && (
-                  <span className="text-xs font-extrabold text-[#58CC02]">+{sub.xp} XP</span>
+                  <span className="text-xs font-extrabold text-[#0ba2b3]">+{sub.xp} XP</span>
                 )}
-                <div className="flex items-center gap-1 text-xs font-semibold text-[#AFAFAF]">
+                <div className="flex items-center gap-1 text-xs font-semibold text-[#1C1D20]">
                   <Clock size={12} />
                   {sub.time}
                 </div>
@@ -259,12 +256,12 @@ function StatCard({
     >
       <div className="flex items-center gap-2 mb-2">
         {icon}
-        <span className="text-xs font-extrabold uppercase tracking-wider text-[#AFAFAF]">
+        <span className="text-xs font-extrabold uppercase tracking-wider text-[#1C1D20]">
           {label}
         </span>
       </div>
-      <p className="text-2xl font-extrabold text-[#4B4B4B]">{value}</p>
-      <p className="text-xs font-bold text-[#AFAFAF] mt-0.5 flex items-center gap-1">
+      <p className="text-2xl font-extrabold text-[#1C1D20]">{value}</p>
+      <p className="text-xs font-bold text-[#1C1D20] mt-0.5 flex items-center gap-1">
         <Flame size={12} className="text-[#FF9600]" />
         {sub}
       </p>

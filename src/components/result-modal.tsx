@@ -1,7 +1,7 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { CheckCircle, XCircle, ArrowRight, RotateCcw, Zap } from 'lucide-react';
+import { CheckCircle, XCircle, ArrowRight, RotateCcw, Star } from 'lucide-react';
 
 interface ResultModalProps {
   isOpen: boolean;
@@ -30,7 +30,7 @@ export const ResultModal = ({
           transition={{ type: 'spring', damping: 25, stiffness: 300 }}
           className={`fixed bottom-0 left-0 right-0 z-50 border-t-2 ${
             isSuccess
-              ? 'bg-green-50 border-green-200'
+              ? 'bg-[#F0F8FF] border-[#0ba2b3]'
               : 'bg-red-50 border-red-200'
           }`}
         >
@@ -43,7 +43,7 @@ export const ResultModal = ({
                   animate={{ scale: 1, rotate: 0 }}
                   transition={{ type: 'spring', damping: 12, delay: 0.1 }}
                 >
-                  <CheckCircle size={48} className="text-green-500" strokeWidth={2.5} />
+                  <CheckCircle size={48} className="text-[#0ba2b3]" strokeWidth={2.5} />
                 </motion.div>
               ) : (
                 <motion.div
@@ -58,14 +58,14 @@ export const ResultModal = ({
               <div>
                 <h3
                   className={`text-xl font-extrabold ${
-                    isSuccess ? 'text-green-600' : 'text-red-600'
+                    isSuccess ? 'text-teal-600' : 'text-red-600'
                   }`}
                 >
                   {isSuccess ? 'Correct!' : 'Not quite right'}
                 </h3>
                 <p
                   className={`text-sm font-semibold mt-0.5 ${
-                    isSuccess ? 'text-green-500' : 'text-red-400'
+                    isSuccess ? 'text-teal-500' : 'text-red-400'
                   }`}
                 >
                   {message ||
@@ -80,8 +80,8 @@ export const ResultModal = ({
                     transition={{ delay: 0.3 }}
                     className="flex items-center gap-1.5 mt-1.5"
                   >
-                    <Zap size={16} className="text-yellow-500" fill="currentColor" />
-                    <span className="text-sm font-bold text-yellow-600">
+                    <Star size={16} className="text-[#FFC800]" fill="currentColor" />
+                    <span className="text-sm font-bold text-[#FFC800]">
                       +{xpEarned} XP
                     </span>
                   </motion.div>
@@ -95,7 +95,7 @@ export const ResultModal = ({
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
                 onClick={onContinue}
-                className="flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white font-extrabold py-3 px-8 rounded-xl border-b-4 border-green-700 active:border-b-0 active:translate-y-1 transition-all uppercase tracking-wide text-sm"
+                className="flex items-center gap-2 bg-[#0ba2b3] hover:bg-[#1e91a3] text-white font-extrabold py-3 px-8 rounded-xl border-b-4 border-[#1e91a3] active:border-b-0 active:translate-y-1 transition-all uppercase tracking-wide text-sm"
               >
                 CONTINUE
                 <ArrowRight size={18} strokeWidth={3} />

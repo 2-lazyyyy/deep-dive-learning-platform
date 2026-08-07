@@ -6,35 +6,40 @@ import {
   LayoutDashboard,
   BookOpen,
   FileText,
+  Target,
   Settings,
+  HelpCircle,
+  MoreHorizontal,
   LogOut,
   GraduationCap,
+  User,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const teacherNavItems = [
-  { href: '/teacher', label: 'Dashboard', icon: LayoutDashboard, color: 'text-[#1CB0F6]' },
-  { href: '/teacher/lessons', label: 'Lessons', icon: BookOpen, color: 'text-[#58CC02]' },
-  { href: '/teacher/submissions', label: 'Submissions', icon: FileText, color: 'text-[#FF9600]' },
-  { href: '/teacher/settings', label: 'Settings', icon: Settings, color: 'text-[#777777]' },
+  { href: '/teacher', label: 'Dashboard', icon: LayoutDashboard, color: 'text-[#0ba2b3]' },
+  { href: '/teacher/lessons', label: 'Lessons', icon: BookOpen, color: 'text-[#0ba2b3]' },
+  { href: '/teacher/challenges', label: 'Challenges', icon: Target, color: 'text-[#0ba2b3]' },
+  { href: '/teacher/submissions', label: 'Submissions', icon: FileText, color: 'text-[#0ba2b3]' },
+  { href: '/teacher/profile', label: 'Profile', icon: User, color: 'text-[#0ba2b3]' },
 ];
 
 export const TeacherSidebar = () => {
   const pathname = usePathname();
 
   return (
-    <div className="h-full w-[256px] lg:flex flex-col hidden left-0 top-0 border-r-2 border-[#E5E5E5] px-4 fixed bg-white z-30">
+    <div className="h-full w-[256px] lg:flex flex-col hidden left-0 top-0 border-r-2 border-[#1C1D2033] px-4 fixed bg-white z-30">
       {/* Logo */}
       <Link href="/teacher">
         <div className="pt-8 pl-4 pb-3 flex items-center gap-x-3">
-          <GraduationCap size={32} className="text-[#CE82FF]" strokeWidth={2.5} />
-          <h1 className="text-2xl font-extrabold text-[#CE82FF] tracking-wide">
+          <GraduationCap size={32} className="text-[#0ba2b3]" strokeWidth={2.5} />
+          <h1 className="text-2xl font-extrabold text-[#0ba2b3] tracking-wide">
             DeepDive
           </h1>
         </div>
       </Link>
       <div className="pl-4 pb-6">
-        <span className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-white bg-[#CE82FF] px-2.5 py-1 rounded-full">
+        <span className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-white bg-[#0ba2b3] px-2.5 py-1 rounded-full">
           Teacher
         </span>
       </div>
@@ -52,13 +57,13 @@ export const TeacherSidebar = () => {
                 whileTap={{ scale: 0.98 }}
                 className={`flex items-center gap-x-4 p-3.5 rounded-xl font-bold uppercase text-sm tracking-wide cursor-pointer transition-colors ${
                   isActive
-                    ? 'bg-[#F3E8FF] border-2 border-[#CE82FF]/40 text-[#CE82FF]'
-                    : 'border-2 border-transparent text-[#777777] hover:bg-[#F7F7F7]'
+                    ? 'bg-[#F0F8FF] border-2 border-[#84D8FF] text-[#0ba2b3]'
+                    : 'border-2 border-transparent text-[#1C1D20] hover:bg-[#F8F8F8]'
                 }`}
               >
                 <Icon
-                  size={24}
-                  className={isActive ? 'text-[#CE82FF]' : item.color}
+                  size={28}
+                  className={isActive ? 'text-[#0ba2b3]' : item.color}
                   strokeWidth={2.5}
                 />
                 {item.label}
@@ -66,20 +71,46 @@ export const TeacherSidebar = () => {
             </Link>
           );
         })}
+
+        {/* More Tab */}
+        <div className="relative group">
+          <motion.div
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            className="flex items-center gap-x-4 p-3.5 rounded-xl font-bold uppercase text-sm tracking-wide cursor-pointer transition-colors border-2 border-transparent text-[#1C1D20] hover:bg-[#F8F8F8]"
+          >
+            <MoreHorizontal size={28} className="text-[#0ba2b3]" strokeWidth={2.5} />
+            More
+          </motion.div>
+
+          {/* Dropdown Menu Wrapper to bridge the hover gap */}
+          <div className="absolute left-full bottom-0 pl-2 hidden group-hover:block z-[100]">
+            {/* Invisible bridge for hover */}
+            <div className="absolute -left-8 -top-8 -bottom-8 w-16 bg-transparent" />
+            <div className="flex flex-col bg-white border-2 border-[#1C1D2033] rounded-xl shadow-[0_4px_12px_rgba(0,0,0,0.1)] w-56 overflow-hidden py-2 relative">
+              <Link href="/teacher/settings" className="flex items-center gap-3 px-4 py-3 hover:bg-[#F8F8F8] font-bold text-[#1C1D20] text-sm uppercase transition cursor-pointer">
+                <Settings size={22} className="text-[#0ba2b3]" strokeWidth={2.5} /> Settings
+              </Link>
+              <Link href="/teacher/help" className="flex items-center gap-3 px-4 py-3 hover:bg-[#F8F8F8] font-bold text-[#1C1D20] text-sm uppercase transition cursor-pointer">
+                <HelpCircle size={22} className="text-[#0ba2b3]" strokeWidth={2.5} /> Help
+              </Link>
+              <div className="h-[2px] bg-[#1C1D2033] w-full my-1" />
+              <Link href="/auth" className="flex items-center gap-3 px-4 py-3 hover:bg-[#F8F8F8] font-bold text-[#FC4B0B] text-sm uppercase transition cursor-pointer">
+                <LogOut size={22} className="text-[#FC4B0B]" strokeWidth={2.5} /> Log Out
+              </Link>
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Bottom: Switch to Student + Logout */}
-      <div className="border-t-2 border-[#E5E5E5] pt-4 pb-6 flex flex-col gap-2">
+      {/* Bottom: Switch to Student */}
+      <div className="border-t-2 border-[#1C1D2033] pt-4 pb-6 flex flex-col gap-2">
         <Link href="/">
-          <div className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-bold text-[#1CB0F6] hover:bg-[#DDF4FF] transition-colors cursor-pointer">
+          <div className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-bold text-[#0ba2b3] hover:bg-[#F0F8FF] transition-colors cursor-pointer">
             <GraduationCap size={20} strokeWidth={2.5} />
             Student View
           </div>
         </Link>
-        <div className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-bold text-[#FF4B4B] hover:bg-red-50 transition-colors cursor-pointer">
-          <LogOut size={20} strokeWidth={2.5} />
-          Logout
-        </div>
       </div>
     </div>
   );
