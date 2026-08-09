@@ -41,7 +41,7 @@ export default function TeacherDashboard() {
     <div className="pb-20">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-2xl font-extrabold text-[#1C1D20]">Welcome Teacher Alex!</h1>
+        <h1 className="text-2xl font-extrabold text-[#000313] dark:text-white">Welcome Teacher Alex!</h1>
       </div>
 
       {/* Stats Grid */}
@@ -51,8 +51,8 @@ export default function TeacherDashboard() {
           label="Total Students"
           value={stats.totalStudents}
           sub={`${stats.onlineNow} online`}
-          color="bg-blue-50"
-          borderColor="border-blue-200"
+          color="bg-blue-50 dark:bg-blue-950/30"
+          borderColor="border-blue-200 dark:border-blue-900/50"
           delay={0}
         />
         <StatCard
@@ -60,8 +60,8 @@ export default function TeacherDashboard() {
           label="Active Lessons"
           value={stats.activeLessons}
           sub="4 modules"
-          color="bg-green-50"
-          borderColor="border-green-200"
+          color="bg-green-50 dark:bg-green-950/30"
+          borderColor="border-green-200 dark:border-green-900/50"
           delay={0.05}
         />
         <StatCard
@@ -69,8 +69,8 @@ export default function TeacherDashboard() {
           label="Total Submissions"
           value={stats.totalSubmissions}
           sub={`${stats.todaySubmissions} today`}
-          color="bg-yellow-50"
-          borderColor="border-yellow-200"
+          color="bg-yellow-50 dark:bg-yellow-900/20"
+          borderColor="border-yellow-200 dark:border-yellow-700/30"
           delay={0.1}
         />
         <StatCard
@@ -78,8 +78,8 @@ export default function TeacherDashboard() {
           label="Pass Rate"
           value={`${stats.passRate}%`}
           sub={`avg ${stats.avgCompletionTime}`}
-          color="bg-purple-50"
-          borderColor="border-purple-200"
+          color="bg-purple-50 dark:bg-purple-950/30"
+          borderColor="border-purple-200 dark:border-purple-900/50"
           delay={0.15}
         />
       </div>
@@ -90,11 +90,11 @@ export default function TeacherDashboard() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="lg:col-span-2 bg-white rounded-2xl border-2 border-[#1C1D2033] p-6"
+          className="lg:col-span-2 bg-white dark:bg-[#000313] rounded-2xl border-2 border-[#00031333] dark:border-white/20 p-6"
         >
           <div className="flex items-center justify-between mb-6">
-            <h2 className="font-extrabold text-[#1C1D20]">Submissions This Week</h2>
-            <span className="text-xs font-bold text-[#1C1D20] bg-[#F8F8F8] px-3 py-1 rounded-full">
+            <h2 className="font-extrabold text-[#000313] dark:text-white">Submissions This Week</h2>
+            <span className="text-xs font-bold text-[#000313] dark:text-white bg-[#F8F8F8] dark:bg-[#060a1d] px-3 py-1 rounded-full">
               Last 7 days
             </span>
           </div>
@@ -106,7 +106,7 @@ export default function TeacherDashboard() {
               const isToday = idx === chartData.length - 1;
               return (
                 <div key={d.day} className="flex flex-col items-center flex-1 gap-2">
-                  <span className="text-xs font-extrabold text-[#1C1D20]">{d.count}</span>
+                  <span className="text-xs font-extrabold text-[#000313] dark:text-white">{d.count}</span>
                   <motion.div
                     initial={{ height: 0 }}
                     animate={{ height: `${heightPct}%` }}
@@ -115,10 +115,10 @@ export default function TeacherDashboard() {
                       isToday ? 'bg-[#0ba2b3]' : 'bg-[#0ba2b3]'
                     }`}
                   >
-                    <div className="absolute top-0 left-1 right-1 h-2 bg-white/20 rounded-full mt-1" />
+                    <div className="absolute top-0 left-1 right-1 h-2 bg-white dark:bg-[#000313]/20 rounded-full mt-1" />
                   </motion.div>
                   <span
-                    className={`text-xs font-bold ${isToday ? 'text-[#0ba2b3]' : 'text-[#1C1D20]'}`}
+                    className={`text-xs font-bold ${isToday ? 'text-[#0ba2b3]' : 'text-[#000313] dark:text-white'}`}
                   >
                     {d.day}
                   </span>
@@ -133,9 +133,9 @@ export default function TeacherDashboard() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.25 }}
-          className="bg-white rounded-2xl border-2 border-[#1C1D2033] p-6 flex flex-col items-center justify-center"
+          className="bg-white dark:bg-[#000313] rounded-2xl border-2 border-[#00031333] dark:border-white/20 p-6 flex flex-col items-center justify-center"
         >
-          <h2 className="font-extrabold text-[#1C1D20] mb-4 self-start">Pass / Fail</h2>
+          <h2 className="font-extrabold text-[#000313] dark:text-white mb-4 self-start">Pass / Fail</h2>
 
           <div className="relative w-[140px] h-[140px]">
             <svg className="w-full h-full -rotate-90" viewBox="0 0 120 120">
@@ -157,19 +157,19 @@ export default function TeacherDashboard() {
               />
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className="text-2xl font-extrabold text-[#1C1D20]">{stats.passRate}%</span>
-              <span className="text-xs font-bold text-[#1C1D20]">Pass</span>
+              <span className="text-2xl font-extrabold text-[#000313] dark:text-white">{stats.passRate}%</span>
+              <span className="text-xs font-bold text-[#000313] dark:text-white">Pass</span>
             </div>
           </div>
 
           <div className="flex gap-6 mt-4">
             <div className="flex items-center gap-1.5">
               <div className="w-3 h-3 rounded-full bg-[#0ba2b3]" />
-              <span className="text-xs font-bold text-[#1C1D20]">Pass</span>
+              <span className="text-xs font-bold text-[#000313] dark:text-white">Pass</span>
             </div>
             <div className="flex items-center gap-1.5">
               <div className="w-3 h-3 rounded-full bg-[#FFE5E5]" />
-              <span className="text-xs font-bold text-[#1C1D20]">Fail</span>
+              <span className="text-xs font-bold text-[#000313] dark:text-white">Fail</span>
             </div>
           </div>
         </motion.div>
@@ -180,23 +180,23 @@ export default function TeacherDashboard() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
-        className="mt-6 bg-white rounded-2xl border-2 border-[#1C1D2033] overflow-hidden"
+        className="mt-6 bg-white dark:bg-[#000313] rounded-2xl border-2 border-[#00031333] dark:border-white/20 overflow-hidden"
       >
-        <div className="flex items-center justify-between px-6 py-4 border-b-2 border-[#1C1D2033]">
-          <h2 className="font-extrabold text-[#1C1D20]">Recent Submissions</h2>
+        <div className="flex items-center justify-between px-6 py-4 border-b-2 border-[#00031333] dark:border-white/20">
+          <h2 className="font-extrabold text-[#000313] dark:text-white">Recent Submissions</h2>
           <a href="/teacher/submissions" className="text-sm font-bold text-[#0ba2b3] hover:underline">
             View all →
           </a>
         </div>
 
-        <div className="divide-y divide-[#1C1D2033]">
+        <div className="divide-y divide-[#00031333]">
           {recentSubmissions.map((sub, idx) => (
             <motion.div
               key={sub.id}
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.35 + idx * 0.04 }}
-              className="flex items-center justify-between px-6 py-3.5 hover:bg-[#F8F8F8] transition-colors"
+              className="flex items-center justify-between px-6 py-3.5 hover:bg-[#F8F8F8] dark:bg-[#060a1d] transition-colors"
             >
               <div className="flex items-center gap-4">
                 {/* Status icon */}
@@ -207,8 +207,8 @@ export default function TeacherDashboard() {
                 )}
 
                 <div>
-                  <p className="font-bold text-[#1C1D20] text-sm">{sub.student}</p>
-                  <p className="text-xs font-semibold text-[#1C1D20]">{sub.lesson}</p>
+                  <p className="font-bold text-[#000313] dark:text-white text-sm">{sub.student}</p>
+                  <p className="text-xs font-semibold text-[#000313] dark:text-white">{sub.lesson}</p>
                 </div>
               </div>
 
@@ -216,7 +216,7 @@ export default function TeacherDashboard() {
                 {sub.xp > 0 && (
                   <span className="text-xs font-extrabold text-[#0ba2b3]">+{sub.xp} XP</span>
                 )}
-                <div className="flex items-center gap-1 text-xs font-semibold text-[#1C1D20]">
+                <div className="flex items-center gap-1 text-xs font-semibold text-[#000313] dark:text-white">
                   <Clock size={12} />
                   {sub.time}
                 </div>
@@ -256,12 +256,12 @@ function StatCard({
     >
       <div className="flex items-center gap-2 mb-2">
         {icon}
-        <span className="text-xs font-extrabold uppercase tracking-wider text-[#1C1D20]">
+        <span className="text-xs font-extrabold uppercase tracking-wider text-[#000313] dark:text-white">
           {label}
         </span>
       </div>
-      <p className="text-2xl font-extrabold text-[#1C1D20]">{value}</p>
-      <p className="text-xs font-bold text-[#1C1D20] mt-0.5 flex items-center gap-1">
+      <p className="text-2xl font-extrabold text-[#000313] dark:text-white">{value}</p>
+      <p className="text-xs font-bold text-[#000313] dark:text-white mt-0.5 flex items-center gap-1">
         <Flame size={12} className="text-[#FF9600]" />
         {sub}
       </p>

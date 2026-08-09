@@ -94,7 +94,7 @@ export default function LeaderboardPage() {
       case 3:
         return <Medal size={20} className="text-[#CD7F32]" fill="currentColor" />;
       default:
-        return <span className="text-sm font-extrabold text-[#1C1D20] w-[20px] text-center">{rank}</span>;
+        return <span className="text-sm font-extrabold text-[#000313] dark:text-white w-[20px] text-center">{rank}</span>;
     }
   };
 
@@ -103,44 +103,44 @@ export default function LeaderboardPage() {
       {/* Header */}
       <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-extrabold text-[#1C1D20]">Leaderboard</h1>
+          <h1 className="text-3xl font-extrabold text-[#000313] dark:text-white">Leaderboard</h1>
         </div>
       </div>
 
-      <div className="flex flex-col md:flex-row-reverse gap-8">
-        {/* Tier Navigation (Right Column on Desktop) */}
-        <div className="w-full md:w-1/3 flex flex-col gap-3">
+      <div className="flex flex-row-reverse gap-4 md:gap-8">
+        {/* Tier Navigation (Right Column) */}
+        <div className="w-[60px] md:w-1/3 flex flex-col gap-3 flex-shrink-0">
           {TIERS.map((tier) => {
             const isActive = tier.id === activeTierId;
             return (
               <button
                 key={tier.id}
                 onClick={() => setActiveTierId(tier.id)}
-                className={`flex items-center gap-3 px-5 py-4 rounded-2xl font-extrabold text-sm uppercase tracking-wide transition-all border-2 w-full text-left ${
+                className={`flex items-center justify-center md:justify-start md:gap-3 p-3 md:px-5 md:py-4 rounded-2xl font-extrabold text-sm uppercase tracking-wide transition-all border-2 w-full text-left ${
                   isActive 
-                    ? 'bg-white shadow-[0_4px_0_rgba(28,29,32,0.2)] scale-[1.02]' 
-                    : 'bg-[#F8F8F8] border-transparent text-[#6B7280] hover:bg-[#E5E7EB]'
+                    ? 'bg-white dark:bg-[#000313] shadow-[0_4px_0_rgba(28,29,32,0.2)] scale-[1.02]' 
+                    : 'bg-[#F8F8F8] dark:bg-[#060a1d] border-transparent text-[#6B7280] dark:text-gray-400 hover:bg-[#E5E7EB]'
                 }`}
                 style={{
                   borderColor: isActive ? tier.color : 'transparent',
                   color: isActive ? tier.color : undefined
                 }}
               >
-                <tier.icon size={24} fill={isActive ? tier.color : 'currentColor'} />
-                {tier.name}
+                <tier.icon size={28} className="md:w-6 md:h-6" fill={isActive ? tier.color : 'currentColor'} />
+                <span className="hidden md:inline">{tier.name}</span>
               </button>
             );
           })}
         </div>
 
-        {/* Content (Left Column on Desktop) */}
-        <div className="w-full md:w-2/3 flex flex-col gap-6">
+        {/* Content (Left Column) */}
+        <div className="flex-1 min-w-0 md:w-2/3 flex flex-col gap-6">
           {/* Active League Banner */}
           <motion.div 
             key={activeTierId}
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="rounded-2xl p-6 flex flex-col items-center justify-center text-white text-center shadow-sm border-2 border-[#1C1D2033]"
+            className="rounded-2xl p-6 flex flex-col items-center justify-center text-white text-center shadow-sm border-2 border-[#00031333] dark:border-white/20"
         style={{ backgroundColor: activeTier.color }}
       >
         <activeTier.icon size={64} fill="white" className="mb-3 opacity-90" />
@@ -155,16 +155,16 @@ export default function LeaderboardPage() {
             <span>{activeTier.minXP} XP</span>
             <span>{Math.max(activeTier.minXP, Math.min(activeTier.baseXP, xp))} / {activeTier.baseXP} XP</span>
           </div>
-          <div className="w-full bg-black/20 rounded-full h-4 overflow-hidden">
+          <div className="w-full bg-[#000313]/20 rounded-full h-4 overflow-hidden">
             <motion.div
-              className="h-full rounded-full relative bg-white"
+              className="h-full rounded-full relative bg-white dark:bg-[#000313]"
               initial={{ width: 0 }}
               animate={{ 
                 width: `${Math.min(100, Math.max(0, ((xp - activeTier.minXP) / (activeTier.baseXP - activeTier.minXP)) * 100))}%` 
               }}
               transition={{ duration: 0.8, ease: 'easeOut' }}
             >
-              <div className="bg-black h-1.5 absolute left-2 right-2 top-1 rounded-full opacity-10" />
+              <div className="bg-[#000313] h-1.5 absolute left-2 right-2 top-1 rounded-full opacity-10" />
             </motion.div>
           </div>
           <p className="text-xs font-bold text-white mt-2 opacity-80 uppercase tracking-wider">
@@ -183,7 +183,7 @@ export default function LeaderboardPage() {
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-[#F0F8FF] border-2 border-[#84D8FF] rounded-2xl p-4 mb-6 flex items-center justify-between"
+          className="bg-[#F0F8FF] dark:bg-[#0a1128] border-2 border-[#84D8FF] rounded-2xl p-4 mb-6 flex items-center justify-between"
         >
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-[#0ba2b3] flex items-center justify-center text-lg">
@@ -191,7 +191,7 @@ export default function LeaderboardPage() {
             </div>
             <div>
               <p className="text-xs font-extrabold text-[#0ba2b3] mb-1">YOUR RANK</p>
-              <p className="text-xl font-extrabold text-[#1C1D20]">#{currentUserRank}</p>
+              <p className="text-xl font-extrabold text-[#000313] dark:text-white">#{currentUserRank}</p>
             </div>
           </div>
           <div className="flex items-center gap-1.5">
@@ -202,8 +202,8 @@ export default function LeaderboardPage() {
       )}
 
       {/* Leaderboard Table */}
-      <div className="bg-white rounded-2xl border-2 border-[#1C1D2033] overflow-hidden shadow-sm">
-        <div className="p-4 bg-[#F8F8F8] border-b-2 border-[#1C1D2033] flex justify-between font-extrabold text-sm text-[#6B7280] uppercase">
+      <div className="bg-white dark:bg-[#000313] rounded-2xl border-2 border-[#00031333] dark:border-white/20 overflow-hidden shadow-sm">
+        <div className="p-4 bg-[#F8F8F8] dark:bg-[#060a1d] border-b-2 border-[#00031333] dark:border-white/20 flex justify-between font-extrabold text-sm text-[#6B7280] dark:text-gray-400 uppercase">
           <span>Rank & User</span>
           <span>Total XP</span>
         </div>
@@ -218,12 +218,12 @@ export default function LeaderboardPage() {
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: idx * 0.04, duration: 0.3 }}
-              className={`flex items-center justify-between px-5 py-4 border-b-2 border-[#1C1D2033] last:border-b-0 transition-colors ${
+              className={`flex items-center justify-between px-5 py-4 border-b-2 border-[#00031333] dark:border-white/20 last:border-b-0 transition-colors ${
                 isCurrentUser 
-                  ? 'bg-[#FFF8E1]' 
+                  ? 'bg-[#FFF8E1] dark:bg-[#FFC800]/20' 
                   : isTop3 
-                    ? 'bg-[#F9FAFB]' 
-                    : 'hover:bg-[#F8F8F8]'
+                    ? 'bg-[#F9FAFB] dark:bg-white/10' 
+                    : 'hover:bg-[#F8F8F8] dark:hover:bg-white/5 bg-transparent'
               }`}
             >
               <div className="flex items-center gap-4">
@@ -235,7 +235,7 @@ export default function LeaderboardPage() {
                 {/* Avatar */}
                 <div
                   className={`w-10 h-10 rounded-full flex items-center justify-center text-xl border-2 ${
-                    isTop3 ? 'border-[#FFC800] bg-[#FFF3CD]' : 'border-[#1C1D2033] bg-[#F8F8F8]'
+                    isTop3 ? 'border-[#FFC800] bg-[#FFF3CD] dark:bg-[#FFC800]/20' : 'border-[#00031333] dark:border-white/20 bg-[#F8F8F8] dark:bg-white/5'
                   }`}
                 >
                   {user.avatar}
@@ -245,7 +245,7 @@ export default function LeaderboardPage() {
                 <div className="flex flex-col">
                   <span
                     className={`font-extrabold ${
-                      isCurrentUser ? 'text-[#0ba2b3]' : 'text-[#1C1D20]'
+                      isCurrentUser ? 'text-[#0ba2b3]' : 'text-[#000313] dark:text-white'
                     }`}
                   >
                     {user.name}
@@ -255,14 +255,14 @@ export default function LeaderboardPage() {
                       </span>
                     )}
                   </span>
-                  <span className="text-xs font-bold text-[#6B7280]">
+                  <span className="text-xs font-bold text-[#6B7280] dark:text-gray-400">
                     {user.streak} day streak
                   </span>
                 </div>
               </div>
 
               {/* XP */}
-              <span className={`font-extrabold text-lg ${isTop3 ? 'text-[#FFC800]' : 'text-[#1C1D20]'}`}>
+              <span className={`font-extrabold text-lg ${isTop3 ? 'text-[#FFC800]' : 'text-[#000313] dark:text-white'}`}>
                 {user.xp}
               </span>
             </motion.div>

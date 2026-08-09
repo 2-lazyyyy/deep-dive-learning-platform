@@ -12,10 +12,10 @@ export default function ChallengeDashboard() {
 
   const getDifficultyColor = (diff: string) => {
     switch (diff.toLowerCase()) {
-      case 'easy': return 'text-[#0ba2b3] bg-[#F0F8FF] border-[#0ba2b3]';
+      case 'easy': return 'text-[#0ba2b3] bg-[#F0F8FF] dark:bg-[#0a1128] border-[#0ba2b3]';
       case 'medium': return 'text-[#FF9600] bg-[#FFF3E0] border-[#FF9600]';
       case 'hard': return 'text-[#FC4B0B] bg-[#FFEBEE] border-[#FC4B0B]';
-      default: return 'text-[#1C1D20] bg-[#F8F8F8] border-[#1C1D2033]';
+      default: return 'text-[#000313] dark:text-white bg-[#F8F8F8] dark:bg-[#060a1d] border-[#00031333] dark:border-white/20';
     }
   };
 
@@ -24,16 +24,16 @@ export default function ChallengeDashboard() {
       {/* Header */}
       <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-extrabold text-[#1C1D20]">Coding Challenges</h1>
+          <h1 className="text-3xl font-extrabold text-[#000313] dark:text-white">Coding Challenges</h1>
         </div>
       </div>
 
       {/* Challenge Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {challenges.length === 0 ? (
-          <div className="col-span-full bg-white border-2 border-[#1C1D2033] border-dashed rounded-2xl p-12 text-center text-[#6B7280]">
+          <div className="col-span-full bg-white dark:bg-[#000313] border-2 border-[#00031333] dark:border-white/20 border-dashed rounded-2xl p-12 text-center text-[#6B7280] dark:text-gray-400">
             <Swords size={48} className="mx-auto mb-4 opacity-30" />
-            <h3 className="font-extrabold text-lg text-[#1C1D20]">No challenges available</h3>
+            <h3 className="font-extrabold text-lg text-[#000313] dark:text-white">No challenges available</h3>
             <p className="font-bold text-sm">Wait for your teachers to create new challenges.</p>
           </div>
         ) : (
@@ -48,14 +48,14 @@ export default function ChallengeDashboard() {
                   whileTap={!isLocked ? { scale: 0.98 } : {}}
                   className={`p-6 rounded-2xl border-2 flex flex-col h-full transition-all ${
                     isCompleted
-                      ? 'bg-[#F8F8F8] border-[#1C1D2033]'
+                      ? 'bg-[#F8F8F8] dark:bg-[#060a1d] border-[#00031333] dark:border-white/20'
                       : isLocked
-                      ? 'bg-white border-[#1C1D2033] opacity-60 cursor-not-allowed'
-                      : 'bg-white border-[#1C1D2033] hover:border-[#0ba2b3] hover:shadow-sm cursor-pointer'
+                      ? 'bg-white dark:bg-[#000313] border-[#00031333] dark:border-white/20 opacity-60 cursor-not-allowed'
+                      : 'bg-white dark:bg-[#000313] border-[#00031333] dark:border-white/20 hover:border-[#0ba2b3] hover:shadow-sm cursor-pointer'
                   }`}
                 >
                   <div className="flex justify-between items-start mb-4">
-                    <h2 className={`text-xl font-extrabold ${isCompleted ? 'text-[#1C1D20]' : 'text-[#1C1D20]'}`}>
+                    <h2 className={`text-xl font-extrabold ${isCompleted ? 'text-[#000313] dark:text-white' : 'text-[#000313] dark:text-white'}`}>
                       {challenge.title}
                     </h2>
                     {isCompleted ? (
@@ -65,8 +65,8 @@ export default function ChallengeDashboard() {
                     ) : null}
                   </div>
 
-                  <p className="text-sm font-bold text-[#6B7280] mb-4 flex-1">
-                    Created by <span className="text-[#1C1D20]">{challenge.creatorName}</span>
+                  <p className="text-sm font-bold text-[#6B7280] dark:text-gray-400 mb-4 flex-1">
+                    Published: <span className="text-[#000313] dark:text-white ml-1">{challenge.date}</span>
                   </p>
 
                   <div className="flex items-center gap-2 mb-6">
@@ -75,7 +75,7 @@ export default function ChallengeDashboard() {
                     </span>
                   </div>
 
-                  <div className="mt-auto flex items-center justify-between border-t-2 border-[#1C1D2033] pt-4">
+                  <div className="mt-auto flex items-center justify-between border-t-2 border-[#00031333] dark:border-white/20 pt-4">
                     <div className="flex items-center gap-4">
                       <div className="flex items-center gap-1.5 text-[#FFC800] font-bold text-sm">
                         <Star size={18} fill="currentColor" /> {challenge.xpReward} XP

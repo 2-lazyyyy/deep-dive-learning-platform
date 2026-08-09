@@ -5,6 +5,7 @@ interface UserState {
   username: string;
   profilePicture: string;
   level: number;
+  isDarkMode: boolean;
 
   // Gamification
   xp: number;
@@ -31,12 +32,14 @@ interface UserState {
   // Actions — Profile
   setUsername: (name: string) => void;
   setProfilePicture: (pic: string) => void;
+  toggleDarkMode: () => void;
 }
 
 export const useUserStore = create<UserState>((set, get) => ({
   username: 'Aung Kyaw',
   profilePicture: '🦊',
   level: 1,
+  isDarkMode: false,
   xp: 0,
   hearts: 5,
   streak: 0,
@@ -83,4 +86,5 @@ export const useUserStore = create<UserState>((set, get) => ({
 
   setUsername: (name) => set({ username: name }),
   setProfilePicture: (pic) => set({ profilePicture: pic }),
+  toggleDarkMode: () => set((state) => ({ isDarkMode: !state.isDarkMode })),
 }));

@@ -88,7 +88,7 @@ export type Difficulty = 'easy' | 'medium' | 'hard';
 export interface Challenge {
   id: string;
   title: string;
-  creatorName: string;
+  date: string;
   difficulty: Difficulty;
   xpReward: number;
   goal: number; // e.g., complete 5 lessons

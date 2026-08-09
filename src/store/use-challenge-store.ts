@@ -16,7 +16,7 @@ const defaultChallenges: Challenge[] = [
   {
     id: 'c1',
     title: 'Variables Master',
-    creatorName: 'Teacher Sarah',
+    date: '2026-08-01',
     difficulty: 'medium',
     xpReward: 150,
     goal: 1,
@@ -37,7 +37,7 @@ const defaultChallenges: Challenge[] = [
   {
     id: 'c2',
     title: 'Array Ninja',
-    creatorName: 'Teacher Alex',
+    date: '2026-08-02',
     difficulty: 'hard',
     xpReward: 300,
     goal: 1,

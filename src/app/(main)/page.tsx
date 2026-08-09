@@ -5,9 +5,11 @@ import { useLessonStore } from '@/store/use-lesson-store';
 import { useState, useEffect } from 'react';
 import { LessonNode } from '@/components/lesson-node';
 
-import { Heart, Flame, Star, Trophy, Target, Gem, Award, Shield, Crown } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { Heart, Flame, Star, Trophy, Target, Gem, Award, Shield, Crown, MessageCircle } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { Chatbot } from '@/components/chatbot';
 
 // Duolingo color pairs per unit
 const unitThemes = [
@@ -17,10 +19,86 @@ const unitThemes = [
   { bg: 'bg-[#0ba2b3]', border: 'border-[#1e91a3]', color: '#0ba2b3', colorDark: '#1e91a3', text: 'text-white' },
 ];
 
+const pythonTips = [
+  "Tip: Use list comprehensions for cleaner code!",
+  "Tip: 'enumerate()' gives you both index and value in loops.",
+  "Tip: Use 'zip()' to iterate over multiple lists simultaneously.",
+  "Tip: f-strings (f'Hello {name}') are the fastest way to format strings.",
+  "Tip: 'any()' and 'all()' are great for checking boolean conditions.",
+  "Tip: Set comprehensions {x for x in list} remove duplicates easily.",
+  "Tip: Use 'collections.Counter' for easy frequency counting.",
+  "Tip: 'dict.get(key, default)' is safer than 'dict[key]'.",
+];
+
+const InteractiveMascot = ({ positionClass }: { positionClass: string }) => {
+  const [mascotImg, setMascotImg] = useState('/mascot1.svg');
+  const [isAnimating, setIsAnimating] = useState(false);
+  const [currentTip, setCurrentTip] = useState('');
+
+  const handleClick = () => {
+    if (isAnimating) return;
+    setIsAnimating(true);
+    
+    // Pick randomly from the other mascots
+    const allMascots = [
+      '/mascot1.svg', 
+      '/mascot2.svg', 
+      '/mascot3.svg', 
+      '/mascot4.svg', 
+      '/mascot5.svg'
+    ];
+    const available = allMascots.filter(m => m !== mascotImg);
+    const nextMascot = available[Math.floor(Math.random() * available.length)];
+    
+    setMascotImg(nextMascot);
+    
+    // Pick a random Python tip
+    let nextTip = currentTip;
+    while (nextTip === currentTip) {
+      nextTip = pythonTips[Math.floor(Math.random() * pythonTips.length)];
+    }
+    setCurrentTip(nextTip);
+    
+    setTimeout(() => {
+      setIsAnimating(false);
+    }, 500);
+  };
+
+  return (
+    <div 
+      className={`absolute top-1/2 -translate-y-1/2 ${positionClass} z-20 cursor-pointer`}
+      onClick={handleClick}
+    >
+      <motion.img 
+        src={mascotImg} 
+        alt="Interactive Mascot" 
+        className="w-48 h-48 sm:w-64 sm:h-64 object-contain drop-shadow-2xl select-none relative z-10 hover:scale-105 transition-transform" 
+        animate={isAnimating ? { scale: [1, 1.2, 0.9, 1.1, 1], rotate: [0, -10, 10, -5, 0] } : {}}
+        transition={{ duration: 0.5 }}
+      />
+      <AnimatePresence>
+        {currentTip && (
+          <motion.div
+            key={currentTip}
+            initial={{ opacity: 0, y: -10, scale: 0.8 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -10, scale: 0.8 }}
+            className="absolute top-full left-1/2 -translate-x-1/2 mt-2 bg-white dark:bg-[#000313] border-2 border-[#0ba2b3] text-[#000313] dark:text-white px-4 py-3 rounded-2xl shadow-xl w-56 text-center text-sm font-bold pointer-events-none z-20"
+          >
+            <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-white dark:bg-[#000313] border-l-2 border-t-2 border-[#0ba2b3] rotate-45"></div>
+            <span className="relative z-10">{currentTip}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
+
 export default function Home() {
   const { hearts, xp, streak, gems, completedLessonIds } = useUserStore();
   const { units, getAllLessons } = useLessonStore();
   const allLessons = getAllLessons();
+  const router = useRouter();
 
   const [isMounted, setIsMounted] = useState(false);
 
@@ -69,7 +147,7 @@ export default function Home() {
     <div className="flex flex-row-reverse gap-[48px] px-6">
       {/* Right Sidebar (Stats) */}
       <div className="w-[368px] sticky top-6 flex-col gap-y-4 hidden lg:flex self-start">
-        <div className="flex items-center justify-between w-full border-2 border-[#1C1D2033] p-4 rounded-xl bg-white">
+        <div className="flex items-center justify-between w-full border-2 border-[#00031333] dark:border-white/20 p-4 rounded-xl bg-white dark:bg-[#000313]">
           <div className="flex items-center gap-x-1.5 text-[#FC4B0B] font-bold">
             <Heart fill="currentColor" size={22} /> {hearts}
           </div>
@@ -85,11 +163,11 @@ export default function Home() {
         </div>
 
         {/* Progress Summary */}
-        <div className="border-2 border-[#1C1D2033] p-4 rounded-xl bg-white">
-          <p className="text-sm font-bold text-[#1C1D20] uppercase tracking-wider mb-2">
+        <div className="border-2 border-[#00031333] dark:border-white/20 p-4 rounded-xl bg-white dark:bg-[#000313]">
+          <p className="text-sm font-bold text-[#000313] dark:text-white uppercase tracking-wider mb-2">
             Progress
           </p>
-          <div className="w-full bg-[#1C1D2033] rounded-full h-3 overflow-hidden">
+          <div className="w-full bg-[#00031333] dark:bg-white/20 rounded-full h-3 overflow-hidden">
             <motion.div
               className="bg-[#0ba2b3] h-full rounded-full relative"
               initial={{ width: 0 }}
@@ -101,32 +179,35 @@ export default function Home() {
               }}
               transition={{ duration: 0.5, ease: 'easeOut' }}
             >
-              <div className="bg-white h-1 absolute left-2 right-2 top-0.5 rounded-full opacity-30" />
+              <div className="bg-white dark:bg-[#000313] h-1 absolute left-2 right-2 top-0.5 rounded-full opacity-30" />
             </motion.div>
           </div>
-          <p className="text-xs text-[#1C1D20] font-semibold mt-2">
+          <p className="text-xs text-[#000313] dark:text-white font-semibold mt-2">
             {completedLessonIds.length} / {allLessons.length} lessons completed
           </p>
         </div>
 
         {/* Rank Box */}
-        <div className="border-2 border-[#1C1D2033] p-4 rounded-xl bg-white hover:bg-gray-50 transition cursor-pointer flex flex-col gap-3">
+        <div 
+          onClick={() => router.push('/leaderboard')}
+          className="border-2 border-[#00031333] dark:border-white/20 p-4 rounded-xl bg-white dark:bg-[#000313] hover:bg-gray-50 dark:hover:bg-white/5 transition cursor-pointer flex flex-col gap-3"
+        >
           <div className="flex items-center justify-between">
             <div>
               <h3 className="font-extrabold text-lg" style={{ color: currentLeague.color }}>{currentLeague.name}</h3>
-              <p className="text-sm font-semibold text-[#6B7280]">Top 20 advance to next league</p>
+              <p className="text-sm font-semibold text-[#6B7280] dark:text-gray-400">Top 20 advance to next league</p>
             </div>
-            <div className="w-12 h-12 rounded-xl flex items-center justify-center shadow-sm border-2 border-[#1C1D2011]" style={{ backgroundColor: `${currentLeague.color}15` }}>
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center shadow-sm border-2 border-[#00031311] dark:border-white/10" style={{ backgroundColor: `${currentLeague.color}15` }}>
               <currentLeague.icon size={28} style={{ color: currentLeague.color }} />
             </div>
           </div>
           
           <div>
-            <div className="flex justify-between text-xs font-extrabold text-[#6B7280] mb-1">
+            <div className="flex justify-between text-xs font-extrabold text-[#6B7280] dark:text-gray-400 mb-1">
               <span>{currentLeague.min} XP</span>
               <span style={{ color: currentLeague.color }}>{xp} / {currentLeague.max} XP</span>
             </div>
-            <div className="w-full bg-[#1C1D2033] rounded-full h-3 overflow-hidden">
+            <div className="w-full bg-[#00031333] dark:bg-white/20 rounded-full h-3 overflow-hidden">
               <motion.div
                 className="h-full rounded-full relative"
                 style={{ backgroundColor: currentLeague.color }}
@@ -134,37 +215,36 @@ export default function Home() {
                 animate={{ width: `${xpProgressPercent}%` }}
                 transition={{ duration: 0.8, ease: 'easeOut' }}
               >
-                <div className="bg-white h-1 absolute left-2 right-2 top-0.5 rounded-full opacity-30" />
+                <div className="bg-white dark:bg-[#000313] h-1 absolute left-2 right-2 top-0.5 rounded-full opacity-30" />
               </motion.div>
             </div>
           </div>
         </div>
 
         {/* Daily Quests Box */}
-        <div className="border-2 border-[#1C1D2033] p-4 rounded-xl bg-white hover:bg-gray-50 transition cursor-pointer">
+        <div 
+          onClick={() => router.push('/quests')}
+          className="border-2 border-[#00031333] dark:border-white/20 p-4 rounded-xl bg-white dark:bg-[#000313] hover:bg-gray-50 dark:hover:bg-white/5 transition cursor-pointer"
+        >
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-extrabold text-[#1C1D20] text-lg">Daily Quests</h3>
-            <Target className="text-[#FF9600]" size={24} />
+            <h3 className="font-extrabold text-[#000313] dark:text-white text-lg">Daily Quests</h3>
           </div>
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-[#FFC800]/20 flex items-center justify-center flex-shrink-0">
-              <Star className="text-[#FFC800]" size={20} />
-            </div>
             <div className="flex-1">
-              <p className="text-sm font-bold text-[#1C1D20] mb-1">Earn 50 XP</p>
-              <div className="w-full bg-[#1C1D2033] rounded-full h-2.5 overflow-hidden">
+              <p className="text-sm font-bold text-[#000313] dark:text-white mb-1">Earn 50 XP</p>
+              <div className="w-full bg-[#00031333] dark:bg-white/20 rounded-full h-2.5 overflow-hidden">
                 <div className="bg-[#0ba2b3] h-full rounded-full w-[40%]" />
               </div>
             </div>
           </div>
-      </div>
+        </div>
 
         {/* Footer */}
         <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 px-2 mt-4 mb-4">
-          <Link href="/about" className="text-xs font-bold text-[#6B7280] hover:text-[#1C1D20] transition uppercase tracking-wide">About</Link>
-          <Link href="/contact" className="text-xs font-bold text-[#6B7280] hover:text-[#1C1D20] transition uppercase tracking-wide">Contact</Link>
-          <Link href="/terms" className="text-xs font-bold text-[#6B7280] hover:text-[#1C1D20] transition uppercase tracking-wide">Terms</Link>
-          <Link href="/privacy" className="text-xs font-bold text-[#6B7280] hover:text-[#1C1D20] transition uppercase tracking-wide">Privacy</Link>
+          <Link href="/about" className="text-xs font-bold text-[#6B7280] dark:text-gray-400 hover:text-[#000313] dark:text-white transition uppercase tracking-wide">About</Link>
+          <Link href="/contact" className="text-xs font-bold text-[#6B7280] dark:text-gray-400 hover:text-[#000313] dark:text-white transition uppercase tracking-wide">Contact</Link>
+          <Link href="/terms" className="text-xs font-bold text-[#6B7280] dark:text-gray-400 hover:text-[#000313] dark:text-white transition uppercase tracking-wide">Terms</Link>
+          <Link href="/privacy" className="text-xs font-bold text-[#6B7280] dark:text-gray-400 hover:text-[#000313] dark:text-white transition uppercase tracking-wide">Privacy</Link>
         </div>
       </div>
 
@@ -182,6 +262,21 @@ export default function Home() {
 
           // Strip "Unit X: " prefix from unit title for display
           const moduleTitle = unit.title.replace(/^Unit \d+:\s*/, '');
+
+          const currentUnitStartIndex = globalLessonIndex;
+          let targetMascotGlobalIdx = unitLessons.findIndex((_, idx) => {
+            const gIndex = currentUnitStartIndex + idx;
+            const offset = getSnakeOffset(gIndex);
+            return Math.abs(offset) >= 55 && idx !== unitLessons.length - 1;
+          });
+          
+          if (targetMascotGlobalIdx === -1 && unitLessons.length > 1) {
+            targetMascotGlobalIdx = 0;
+          }
+          
+          if (targetMascotGlobalIdx !== -1) {
+            targetMascotGlobalIdx += currentUnitStartIndex;
+          }
 
           return (
             <div key={unit.id} className="w-full mb-6">
@@ -242,31 +337,43 @@ export default function Home() {
                   <div key={section.id} className="mb-8">
                     {/* Section label */}
                     <div className="flex items-center justify-center mb-4">
-                      <span className="text-xs font-extrabold uppercase tracking-widest text-[#1C1D20]">
+                      <span className="text-xs font-extrabold uppercase tracking-widest text-[#000313] dark:text-white">
                         {section.title}
                       </span>
                     </div>
 
                     {/* Lesson Nodes — Snake path */}
                     <div className="flex flex-col items-center">
-                      {section.lessons.map((lesson) => {
+                      {section.lessons.map((lesson, localIdx) => {
                         const currentGlobalIndex = globalLessonIndex;
                         globalLessonIndex++;
                         const status = getLessonStatus(
                           lesson.id,
                           currentGlobalIndex
                         );
+                        
+                        const offset = getSnakeOffset(currentGlobalIndex);
+                        const showMascot = currentGlobalIndex === targetMascotGlobalIdx;
+
+                        // If offset < 0 (left bend), put on right (ml). If offset > 0 (right bend), put on left (mr).
+                        const mascotPositionClass = offset < 0 
+                          ? "left-[50%] ml-16 sm:ml-24" 
+                          : "right-[50%] mr-16 sm:mr-24";
 
                         return (
-                          <LessonNode
-                            key={lesson.id}
-                            lessonId={lesson.id}
-                            lessonNumber={currentGlobalIndex + 1}
-                            status={status}
-                            offsetX={getSnakeOffset(currentGlobalIndex)}
-                            color={theme.color}
-                            colorDark={theme.colorDark}
-                          />
+                          <div key={lesson.id} className="relative w-full flex justify-center">
+                            {showMascot && (
+                              <InteractiveMascot positionClass={mascotPositionClass} />
+                            )}
+                            <LessonNode
+                              lessonId={lesson.id}
+                              lessonNumber={currentGlobalIndex + 1}
+                              status={status}
+                              offsetX={getSnakeOffset(currentGlobalIndex)}
+                              color={theme.color}
+                              colorDark={theme.colorDark}
+                            />
+                          </div>
                         );
                       })}
                     </div>
@@ -277,6 +384,9 @@ export default function Home() {
           );
         })}
       </div>
+
+      {/* Floating Chatbot Box */}
+      <Chatbot />
     </div>
   );
 }

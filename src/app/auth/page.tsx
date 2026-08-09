@@ -33,15 +33,15 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8F8F8] flex items-center justify-center p-4">
+    <div className="min-h-screen bg-[#F8F8F8] dark:bg-[#060a1d] flex items-center justify-center p-4">
       {/* Container */}
-      <div className="relative bg-white border-2 border-[#1C1D2033] rounded-3xl w-full max-w-[900px] h-[600px] overflow-hidden flex flex-col md:flex-row shadow-[0_8px_30px_rgba(0,0,0,0.04)]">
+      <div className="relative bg-white dark:bg-[#000313] border-2 border-[#00031333] dark:border-white/20 rounded-3xl w-full max-w-[900px] h-[600px] overflow-hidden flex flex-col md:flex-row shadow-[0_8px_30px_rgba(0,0,0,0.04)]">
         
         {/* Mobile Toggle (Visible only on small screens) */}
         <div className="md:hidden absolute top-4 right-4 z-50">
           <button 
             onClick={() => setIsLogin(!isLogin)}
-            className="text-sm font-extrabold text-[#0ba2b3] bg-[#F0F8FF] px-4 py-2 rounded-xl"
+            className="text-sm font-extrabold text-[#0ba2b3] bg-[#F0F8FF] dark:bg-[#0a1128] px-4 py-2 rounded-xl"
           >
             {isLogin ? 'Create Account' : 'Sign In'}
           </button>
@@ -51,43 +51,43 @@ export default function AuthPage() {
         <div className={`absolute top-0 right-0 w-full md:w-1/2 h-full p-8 md:p-12 flex flex-col justify-center transition-all duration-700 ease-in-out ${isLogin ? 'opacity-0 z-0 pointer-events-none' : 'opacity-100 z-10'}`}>
           <div className="flex items-center gap-2 mb-8">
             <GraduationCap size={32} className="text-[#0ba2b3]" />
-            <span className="text-2xl font-extrabold text-[#1C1D20]">DeepDive</span>
+            <span className="text-2xl font-extrabold text-[#000313] dark:text-white">DeepDive</span>
           </div>
-          <h2 className="text-3xl font-extrabold text-[#1C1D20] mb-2">Create Account</h2>
-          <p className="font-bold text-[#6B7280] mb-8">Start your learning journey today.</p>
+          <h2 className="text-3xl font-extrabold text-[#000313] dark:text-white mb-2">Create Account</h2>
+          <p className="font-bold text-[#6B7280] dark:text-gray-400 mb-8">Start your learning journey today.</p>
           
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <div className="relative">
-              <User size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#6B7280]" />
+              <User size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#6B7280] dark:text-gray-400" />
               <input 
                 type="text" 
                 placeholder="Full Name" 
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required={!isLogin}
-                className="w-full border-2 border-[#1C1D2033] rounded-xl pl-12 pr-4 py-3 font-bold text-[#1C1D20] outline-none focus:border-[#0ba2b3] transition bg-[#F8F8F8] focus:bg-white"
+                className="w-full border-2 border-[#00031333] dark:border-white/20 rounded-xl pl-12 pr-4 py-3 font-bold text-[#000313] dark:text-white outline-none focus:border-[#0ba2b3] transition bg-[#F8F8F8] dark:bg-[#060a1d] focus:bg-white dark:bg-[#000313]"
               />
             </div>
             <div className="relative">
-              <Mail size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#6B7280]" />
+              <Mail size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#6B7280] dark:text-gray-400" />
               <input 
                 type="email" 
                 placeholder="Email Address" 
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required={!isLogin}
-                className="w-full border-2 border-[#1C1D2033] rounded-xl pl-12 pr-4 py-3 font-bold text-[#1C1D20] outline-none focus:border-[#0ba2b3] transition bg-[#F8F8F8] focus:bg-white"
+                className="w-full border-2 border-[#00031333] dark:border-white/20 rounded-xl pl-12 pr-4 py-3 font-bold text-[#000313] dark:text-white outline-none focus:border-[#0ba2b3] transition bg-[#F8F8F8] dark:bg-[#060a1d] focus:bg-white dark:bg-[#000313]"
               />
             </div>
             <div className="relative">
-              <Lock size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#6B7280]" />
+              <Lock size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#6B7280] dark:text-gray-400" />
               <input 
                 type="password" 
                 placeholder="Password" 
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required={!isLogin}
-                className="w-full border-2 border-[#1C1D2033] rounded-xl pl-12 pr-4 py-3 font-bold text-[#1C1D20] outline-none focus:border-[#0ba2b3] transition bg-[#F8F8F8] focus:bg-white"
+                className="w-full border-2 border-[#00031333] dark:border-white/20 rounded-xl pl-12 pr-4 py-3 font-bold text-[#000313] dark:text-white outline-none focus:border-[#0ba2b3] transition bg-[#F8F8F8] dark:bg-[#060a1d] focus:bg-white dark:bg-[#000313]"
               />
             </div>
             
@@ -104,41 +104,41 @@ export default function AuthPage() {
         <div className={`absolute top-0 left-0 w-full md:w-1/2 h-full p-8 md:p-12 flex flex-col justify-center transition-all duration-700 ease-in-out ${!isLogin ? 'opacity-0 z-0 pointer-events-none' : 'opacity-100 z-10'}`}>
           <div className="flex items-center gap-2 mb-8">
             <GraduationCap size={32} className="text-[#0ba2b3]" />
-            <span className="text-2xl font-extrabold text-[#1C1D20]">DeepDive</span>
+            <span className="text-2xl font-extrabold text-[#000313] dark:text-white">DeepDive</span>
           </div>
-          <h2 className="text-3xl font-extrabold text-[#1C1D20] mb-2">Welcome Back</h2>
-          <p className="font-bold text-[#6B7280] mb-8">Sign in to continue your progress.</p>
+          <h2 className="text-3xl font-extrabold text-[#000313] dark:text-white mb-2">Welcome Back</h2>
+          <p className="font-bold text-[#6B7280] dark:text-gray-400 mb-8">Sign in to continue your progress.</p>
           
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <div className="relative">
-              <Mail size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#6B7280]" />
+              <Mail size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#6B7280] dark:text-gray-400" />
               <input 
                 type="email" 
                 placeholder="Email Address" 
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required={isLogin}
-                className="w-full border-2 border-[#1C1D2033] rounded-xl pl-12 pr-4 py-3 font-bold text-[#1C1D20] outline-none focus:border-[#0ba2b3] transition bg-[#F8F8F8] focus:bg-white"
+                className="w-full border-2 border-[#00031333] dark:border-white/20 rounded-xl pl-12 pr-4 py-3 font-bold text-[#000313] dark:text-white outline-none focus:border-[#0ba2b3] transition bg-[#F8F8F8] dark:bg-[#060a1d] focus:bg-white dark:bg-[#000313]"
               />
             </div>
             <div className="relative">
-              <Lock size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#6B7280]" />
+              <Lock size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#6B7280] dark:text-gray-400" />
               <input 
                 type="password" 
                 placeholder="Password" 
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required={isLogin}
-                className="w-full border-2 border-[#1C1D2033] rounded-xl pl-12 pr-4 py-3 font-bold text-[#1C1D20] outline-none focus:border-[#0ba2b3] transition bg-[#F8F8F8] focus:bg-white"
+                className="w-full border-2 border-[#00031333] dark:border-white/20 rounded-xl pl-12 pr-4 py-3 font-bold text-[#000313] dark:text-white outline-none focus:border-[#0ba2b3] transition bg-[#F8F8F8] dark:bg-[#060a1d] focus:bg-white dark:bg-[#000313]"
               />
             </div>
             
             <div className="flex items-center justify-between mt-2">
               <label className="flex items-center gap-2 cursor-pointer group">
-                <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${isTeacher ? 'bg-[#0ba2b3] border-[#0ba2b3]' : 'border-[#1C1D2033] group-hover:border-[#0ba2b3]'}`}>
+                <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${isTeacher ? 'bg-[#0ba2b3] border-[#0ba2b3]' : 'border-[#00031333] dark:border-white/20 group-hover:border-[#0ba2b3]'}`}>
                   {isTeacher && <svg width="12" height="10" viewBox="0 0 12 10" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1 5L4.5 8.5L11 1.5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>}
                 </div>
-                <span className="font-bold text-[#1C1D20] text-sm select-none">I am a teacher</span>
+                <span className="font-bold text-[#000313] dark:text-white text-sm select-none">I am a teacher</span>
                 <input 
                   type="checkbox" 
                   checked={isTeacher}
@@ -173,7 +173,7 @@ export default function AuthPage() {
               <p className="font-bold text-lg mb-8 opacity-90">Enter your personal details and start your coding journey with us.</p>
               <button 
                 onClick={() => setIsLogin(false)}
-                className="bg-transparent border-2 border-white text-white font-extrabold uppercase px-12 py-3 rounded-xl transition hover:bg-white hover:text-[#0ba2b3]"
+                className="bg-transparent border-2 border-white text-white font-extrabold uppercase px-12 py-3 rounded-xl transition hover:bg-white dark:bg-[#000313] hover:text-[#0ba2b3]"
               >
                 Sign Up
               </button>
@@ -187,7 +187,7 @@ export default function AuthPage() {
               <p className="font-bold text-lg mb-8 opacity-90">To keep connected with us please login with your personal info.</p>
               <button 
                 onClick={() => setIsLogin(true)}
-                className="bg-transparent border-2 border-white text-white font-extrabold uppercase px-12 py-3 rounded-xl transition hover:bg-white hover:text-[#0ba2b3]"
+                className="bg-transparent border-2 border-white text-white font-extrabold uppercase px-12 py-3 rounded-xl transition hover:bg-white dark:bg-[#000313] hover:text-[#0ba2b3]"
               >
                 Sign In
               </button>

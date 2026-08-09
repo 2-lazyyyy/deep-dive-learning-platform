@@ -34,7 +34,7 @@ export const LessonNode = ({
       case 'current':
         return { bg: color, shadow: colorDark };
       case 'locked':
-        return { bg: '#1C1D2033', shadow: '#CECECE' };
+        return { bg: '', shadow: '' };
     }
   };
 
@@ -64,51 +64,56 @@ export const LessonNode = ({
 
       {/* 3D Bottom shadow — slightly offset down for depth */}
       <div
-        className="absolute w-[78px] h-[78px] rounded-full"
+        className={`absolute w-[78px] h-[78px] rounded-full ${status === 'locked' ? 'bg-[#9CA3AF] dark:bg-[#374151]' : ''}`}
         style={{
-          backgroundColor: colors.shadow,
+          ...(status !== 'locked' ? { backgroundColor: colors.shadow } : {}),
           top: '8px',
         }}
       />
 
       {/* Main bubble — oval/circle shape */}
       <div
-        className="relative w-[78px] h-[78px] rounded-full flex items-center justify-center"
+        className={`relative w-[78px] h-[78px] rounded-full flex items-center justify-center ${status === 'locked' ? 'bg-[#D1D5DB] dark:bg-[#4B5563]' : ''}`}
         style={{
-          backgroundColor: colors.bg,
+          ...(status !== 'locked' ? { backgroundColor: colors.bg } : {}),
         }}
       >
-        {/* Top reflection / gloss highlight */}
-        <div
-          className="absolute rounded-full pointer-events-none"
-          style={{
-            top: '4px',
-            left: '12px',
-            right: '12px',
-            height: '28px',
-            borderRadius: '50%',
-            background: 'linear-gradient(180deg, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.05) 100%)',
-          }}
-        />
+        {/* Reflections (only for unlocked) */}
+        {status !== 'locked' && (
+          <>
+            {/* Top reflection / gloss highlight */}
+            <div
+              className="absolute rounded-full pointer-events-none"
+              style={{
+                top: '4px',
+                left: '12px',
+                right: '12px',
+                height: '28px',
+                borderRadius: '50%',
+                background: 'linear-gradient(180deg, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.05) 100%)',
+              }}
+            />
 
-        {/* Secondary subtle rim light at bottom */}
-        <div
-          className="absolute rounded-full pointer-events-none"
-          style={{
-            bottom: '6px',
-            left: '18px',
-            right: '18px',
-            height: '10px',
-            borderRadius: '50%',
-            background: 'linear-gradient(0deg, rgba(255,255,255,0.15) 0%, transparent 100%)',
-          }}
-        />
+            {/* Secondary subtle rim light at bottom */}
+            <div
+              className="absolute rounded-full pointer-events-none"
+              style={{
+                bottom: '6px',
+                left: '18px',
+                right: '18px',
+                height: '10px',
+                borderRadius: '50%',
+                background: 'linear-gradient(0deg, rgba(255,255,255,0.15) 0%, transparent 100%)',
+              }}
+            />
+          </>
+        )}
 
         {/* Icon */}
         {status === 'completed' ? (
           <Icon size={34} className="text-white drop-shadow-sm" strokeWidth={3} />
         ) : status === 'locked' ? (
-          <Icon size={28} className="text-[#1C1D20]" strokeWidth={2.5} />
+          <Icon size={28} className="text-[#6B7280] dark:text-[#9CA3AF]" strokeWidth={2.5} />
         ) : (
           <Code size={34} className="text-white drop-shadow-sm" strokeWidth={2.5} />
         )}

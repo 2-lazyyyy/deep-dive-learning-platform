@@ -30,14 +30,14 @@ export function LessonEditor({ lesson, onSave, onCancel }: LessonEditorProps) {
   };
 
   return (
-    <div className="bg-white rounded-2xl border-2 border-[#1C1D2033] overflow-hidden">
+    <div className="bg-white dark:bg-[#000313] rounded-2xl border-2 border-[#00031333] dark:border-white/20 overflow-hidden">
       {/* Header */}
-      <div className="px-6 py-5 border-b-2 border-[#1C1D2033] bg-[#F8F8F8] flex items-center justify-between">
-        <h2 className="text-xl font-extrabold text-[#1C1D20]">Edit Lesson</h2>
+      <div className="px-6 py-5 border-b-2 border-[#00031333] dark:border-white/20 bg-[#F8F8F8] dark:bg-[#060a1d] flex items-center justify-between">
+        <h2 className="text-xl font-extrabold text-[#000313] dark:text-white">Edit Lesson</h2>
         <div className="flex gap-2">
           <button 
             onClick={onCancel}
-            className="flex items-center gap-1 px-4 py-2 text-sm font-bold text-[#1C1D20] hover:bg-[#1C1D2033] rounded-xl transition"
+            className="flex items-center gap-1 px-4 py-2 text-sm font-bold text-[#000313] dark:text-white hover:bg-[#00031333] dark:bg-white/20 rounded-xl transition"
           >
             <X size={16} /> Cancel
           </button>
@@ -54,29 +54,29 @@ export function LessonEditor({ lesson, onSave, onCancel }: LessonEditorProps) {
         {/* Basic Info */}
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs font-bold text-[#1C1D20] uppercase tracking-wider mb-2">Title</label>
+            <label className="block text-xs font-bold text-[#000313] dark:text-white uppercase tracking-wider mb-2">Title</label>
             <input 
               type="text" 
               value={formData.title} 
               onChange={(e) => setFormData({...formData, title: e.target.value})}
-              className="w-full border-2 border-[#1C1D2033] rounded-xl p-3 font-bold text-[#1C1D20] focus:border-[#0ba2b3] outline-none"
+              className="w-full border-2 border-[#00031333] dark:border-white/20 rounded-xl p-3 font-bold text-[#000313] dark:text-white focus:border-[#0ba2b3] outline-none"
             />
           </div>
           <div>
-            <label className="block text-xs font-bold text-[#1C1D20] uppercase tracking-wider mb-2">XP Reward</label>
+            <label className="block text-xs font-bold text-[#000313] dark:text-white uppercase tracking-wider mb-2">XP Reward</label>
             <input 
               type="number" 
               value={formData.xpReward} 
               onChange={(e) => setFormData({...formData, xpReward: parseInt(e.target.value)})}
-              className="w-full border-2 border-[#1C1D2033] rounded-xl p-3 font-bold text-[#1C1D20] focus:border-[#0ba2b3] outline-none"
+              className="w-full border-2 border-[#00031333] dark:border-white/20 rounded-xl p-3 font-bold text-[#000313] dark:text-white focus:border-[#0ba2b3] outline-none"
             />
           </div>
           <div className="col-span-2">
-            <label className="block text-xs font-bold text-[#1C1D20] uppercase tracking-wider mb-2">Lesson Type</label>
+            <label className="block text-xs font-bold text-[#000313] dark:text-white uppercase tracking-wider mb-2">Lesson Type</label>
             <select 
               value={formData.lessonType} 
               onChange={(e) => setFormData({...formData, lessonType: e.target.value})}
-              className="w-full border-2 border-[#1C1D2033] rounded-xl p-3 font-bold text-[#1C1D20] focus:border-[#0ba2b3] outline-none bg-white cursor-pointer"
+              className="w-full border-2 border-[#00031333] dark:border-white/20 rounded-xl p-3 font-bold text-[#000313] dark:text-white focus:border-[#0ba2b3] outline-none bg-white dark:bg-[#000313] cursor-pointer"
             >
               <option value="code_fix">Code Fix</option>
               <option value="fill_blanks">Fill Blanks</option>
@@ -87,34 +87,34 @@ export function LessonEditor({ lesson, onSave, onCancel }: LessonEditorProps) {
 
         {/* Content Blocks */}
         <div>
-          <label className="block text-xs font-bold text-[#1C1D20] uppercase tracking-wider mb-4 flex items-center justify-between">
+          <label className="block text-xs font-bold text-[#000313] dark:text-white uppercase tracking-wider mb-4 flex items-center justify-between">
             <span className="flex items-center gap-2"><FileText size={16} /> Content Blocks</span>
             <div className="flex gap-2">
-              <button onClick={() => handleAddBlock('text')} className="text-[#0ba2b3] hover:bg-[#F0F8FF] px-2 py-1 rounded text-xs">+ Text</button>
-              <button onClick={() => handleAddBlock('code')} className="text-[#0ba2b3] hover:bg-[#F0F8FF] px-2 py-1 rounded text-xs">+ Code</button>
-              <button onClick={() => handleAddBlock('image')} className="text-[#0ba2b3] hover:bg-[#F4EAF9] px-2 py-1 rounded text-xs">+ Image</button>
-              <button onClick={() => handleAddBlock('video')} className="text-[#FF9600] hover:bg-[#FFF4E5] px-2 py-1 rounded text-xs">+ Video</button>
+              <button onClick={() => handleAddBlock('text')} className="text-[#0ba2b3] hover:bg-[#F0F8FF] dark:hover:bg-[#0a1128] px-2 py-1 rounded text-xs">+ Text</button>
+              <button onClick={() => handleAddBlock('code')} className="text-[#0ba2b3] hover:bg-[#F0F8FF] dark:hover:bg-[#0a1128] px-2 py-1 rounded text-xs">+ Code</button>
+              <button onClick={() => handleAddBlock('image')} className="text-[#0ba2b3] hover:bg-[#F4EAF9] dark:hover:bg-purple-900/30 px-2 py-1 rounded text-xs">+ Image</button>
+              <button onClick={() => handleAddBlock('video')} className="text-[#FF9600] hover:bg-[#FFF4E5] dark:hover:bg-orange-900/30 px-2 py-1 rounded text-xs">+ Video</button>
             </div>
           </label>
           
           <div className="space-y-4">
             {formData.contentBlocks.map((block: ContentBlock, idx: number) => (
-              <div key={idx} className="border-2 border-[#1C1D2033] rounded-xl p-4 relative group">
+              <div key={idx} className="border-2 border-[#00031333] dark:border-white/20 rounded-xl p-4 relative group">
                 <button 
                   onClick={() => handleRemoveBlock(idx)}
-                  className="absolute top-2 right-2 p-1.5 text-red-500 hover:bg-red-50 rounded-lg opacity-0 group-hover:opacity-100 transition"
+                  className="absolute top-2 right-2 p-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-950/50 rounded-lg opacity-0 group-hover:opacity-100 transition"
                 >
                   <Trash2 size={16} />
                 </button>
                 <div className="flex gap-2 mb-2">
-                  <span className="text-[10px] font-extrabold uppercase tracking-widest text-[#0ba2b3] bg-[#F4EAF9] px-2 py-0.5 rounded-full">
+                  <span className="text-[10px] font-extrabold uppercase tracking-widest text-[#0ba2b3] bg-[#F4EAF9] dark:bg-purple-900/30 px-2 py-0.5 rounded-full">
                     {block.type}
                   </span>
                 </div>
                 {(block.type === 'image' || block.type === 'video') ? (
-                  <div className="space-y-2 mb-2 bg-white border-2 border-[#1C1D2033] p-3 rounded-xl">
+                  <div className="space-y-2 mb-2 bg-white dark:bg-[#000313] border-2 border-[#00031333] dark:border-white/20 p-3 rounded-xl">
                     <div>
-                      <p className="text-xs font-bold text-[#1C1D20] mb-2">Upload File (Max 2MB)</p>
+                      <p className="text-xs font-bold text-[#000313] dark:text-white mb-2">Upload File (Max 2MB)</p>
                       <input
                         type="file"
                         accept={block.type === 'image' ? 'image/*' : 'video/*'}
@@ -132,21 +132,21 @@ export function LessonEditor({ lesson, onSave, onCancel }: LessonEditorProps) {
                             reader.readAsDataURL(file);
                           }
                         }}
-                        className="w-full text-sm font-semibold text-[#1C1D20] file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-[#0ba2b3] file:text-white hover:file:bg-[#1e91a3] file:cursor-pointer"
+                        className="w-full text-sm font-semibold text-[#000313] dark:text-white file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-[#0ba2b3] file:text-white hover:file:bg-[#1e91a3] file:cursor-pointer"
                       />
                     </div>
                     
                     <div className="relative flex items-center py-2">
-                      <div className="flex-grow border-t border-[#1C1D2033]"></div>
-                      <span className="flex-shrink-0 mx-4 text-[#1C1D20] text-xs font-bold">OR USE LINK</span>
-                      <div className="flex-grow border-t border-[#1C1D2033]"></div>
+                      <div className="flex-grow border-t border-[#00031333] dark:border-white/20"></div>
+                      <span className="flex-shrink-0 mx-4 text-[#000313] dark:text-white text-xs font-bold">OR USE LINK</span>
+                      <div className="flex-grow border-t border-[#00031333] dark:border-white/20"></div>
                     </div>
 
                     <textarea
                       value={block.content}
                       onChange={(e) => handleBlockChange(idx, 'content', e.target.value)}
                       placeholder={block.type === 'image' ? 'Enter Image URL...' : 'Enter YouTube/Video URL...'}
-                      className="w-full border-2 border-[#F8F8F8] bg-[#F8F8F8] rounded-xl p-3 text-sm font-semibold text-[#1C1D20] focus:border-[#1C1D2033] focus:bg-white outline-none min-h-[60px]"
+                      className="w-full border-2 border-[#F8F8F8] bg-[#F8F8F8] dark:bg-[#060a1d] rounded-xl p-3 text-sm font-semibold text-[#000313] dark:text-white focus:border-[#00031333] dark:focus:border-white/20 focus:bg-white dark:focus:bg-[#000313] outline-none min-h-[60px]"
                     />
                   </div>
                 ) : (
@@ -154,7 +154,7 @@ export function LessonEditor({ lesson, onSave, onCancel }: LessonEditorProps) {
                     value={block.content}
                     onChange={(e) => handleBlockChange(idx, 'content', e.target.value)}
                     placeholder={`Enter ${block.type} content...`}
-                    className="w-full border-2 border-[#F8F8F8] bg-[#F8F8F8] rounded-xl p-3 text-sm font-semibold text-[#1C1D20] focus:border-[#1C1D2033] focus:bg-white outline-none min-h-[80px] mb-2"
+                    className="w-full border-2 border-[#F8F8F8] bg-[#F8F8F8] dark:bg-[#060a1d] rounded-xl p-3 text-sm font-semibold text-[#000313] dark:text-white focus:border-[#00031333] dark:focus:border-white/20 focus:bg-white dark:focus:bg-[#000313] outline-none min-h-[80px] mb-2"
                   />
                 )}
                 {(block.type === 'image' || block.type === 'video') && (
@@ -163,7 +163,7 @@ export function LessonEditor({ lesson, onSave, onCancel }: LessonEditorProps) {
                     value={block.caption || ''}
                     onChange={(e) => handleBlockChange(idx, 'caption', e.target.value)}
                     placeholder="Enter caption (optional)..."
-                    className="w-full border-2 border-[#F8F8F8] bg-[#F8F8F8] rounded-xl p-3 text-sm font-semibold text-[#1C1D20] focus:border-[#1C1D2033] focus:bg-white outline-none"
+                    className="w-full border-2 border-[#F8F8F8] bg-[#F8F8F8] dark:bg-[#060a1d] rounded-xl p-3 text-sm font-semibold text-[#000313] dark:text-white focus:border-[#00031333] dark:focus:border-white/40 focus:bg-white dark:focus:bg-[#000313] outline-none"
                   />
                 )}
               </div>
@@ -172,15 +172,15 @@ export function LessonEditor({ lesson, onSave, onCancel }: LessonEditorProps) {
         </div>
 
         {/* Exercise Specific Data */}
-        <div className="pt-4 border-t-2 border-[#1C1D2033]">
-          <label className="block text-xs font-bold text-[#1C1D20] uppercase tracking-wider mb-4 flex items-center gap-2">
+        <div className="pt-4 border-t-2 border-[#00031333] dark:border-white/20">
+          <label className="block text-xs font-bold text-[#000313] dark:text-white uppercase tracking-wider mb-4 flex items-center gap-2">
             <Code size={16} /> Exercise Configuration
           </label>
           
           {formData.lessonType === 'code_fix' && (
             <div className="space-y-4">
               <div>
-                <label className="block text-[11px] font-bold text-[#1C1D20] mb-1">Initial Code</label>
+                <label className="block text-[11px] font-bold text-[#000313] dark:text-white mb-1">Initial Code</label>
                 <textarea 
                   value={formData.initialCode || ''} 
                   onChange={(e) => setFormData({...formData, initialCode: e.target.value})}
@@ -188,11 +188,11 @@ export function LessonEditor({ lesson, onSave, onCancel }: LessonEditorProps) {
                 />
               </div>
               <div>
-                <label className="block text-[11px] font-bold text-[#1C1D20] mb-1">Expected Output (Exact match)</label>
+                <label className="block text-[11px] font-bold text-[#000313] dark:text-white mb-1">Expected Output (Exact match)</label>
                 <textarea 
                   value={formData.expectedOutput || ''} 
                   onChange={(e) => setFormData({...formData, expectedOutput: e.target.value})}
-                  className="w-full bg-[#E8F5E9] text-[#2E7D32] border border-green-200 p-4 rounded-xl text-sm font-mono outline-none"
+                  className="w-full bg-[#E8F5E9] dark:bg-green-950/30 text-[#2E7D32] dark:text-green-400 border border-green-200 dark:border-green-900 p-4 rounded-xl text-sm font-mono outline-none"
                 />
               </div>
             </div>
@@ -201,31 +201,31 @@ export function LessonEditor({ lesson, onSave, onCancel }: LessonEditorProps) {
           {formData.lessonType === 'multiple_choice' && (
             <div className="space-y-4">
               <div>
-                <label className="block text-[11px] font-bold text-[#1C1D20] mb-1">Question text</label>
+                <label className="block text-[11px] font-bold text-[#000313] dark:text-white mb-1">Question text</label>
                 <textarea 
                   value={formData.question || ''} 
                   onChange={(e) => setFormData({...formData, question: e.target.value})}
-                  className="w-full bg-[#F8F8F8] border-2 border-[#1C1D2033] p-4 rounded-xl text-sm font-semibold outline-none focus:bg-white min-h-[80px]"
+                  className="w-full bg-[#F8F8F8] dark:bg-[#060a1d] border-2 border-[#00031333] dark:border-white/20 p-4 rounded-xl text-sm font-semibold outline-none focus:bg-white dark:focus:bg-[#000313] dark:focus:border-white/40 min-h-[80px]"
                   placeholder="e.g. Which keyword declares a constant?"
                 />
               </div>
               <div>
-                <label className="block text-[11px] font-bold text-[#1C1D20] mb-1">Options (one per line)</label>
+                <label className="block text-[11px] font-bold text-[#000313] dark:text-white mb-1">Options (one per line)</label>
                 <textarea 
                   value={(formData.options || []).join('\n')} 
                   onChange={(e) => setFormData({...formData, options: e.target.value.split('\n')})}
-                  className="w-full bg-[#F8F8F8] border-2 border-[#1C1D2033] p-4 rounded-xl text-sm font-semibold outline-none focus:bg-white min-h-[100px]"
+                  className="w-full bg-[#F8F8F8] dark:bg-[#060a1d] border-2 border-[#00031333] dark:border-white/20 p-4 rounded-xl text-sm font-semibold outline-none focus:bg-white dark:focus:bg-[#000313] dark:focus:border-white/40 min-h-[100px]"
                   placeholder="var&#10;let&#10;const"
                 />
               </div>
               <div>
-                <label className="block text-[11px] font-bold text-[#1C1D20] mb-1">Correct Option Index (0-based)</label>
+                <label className="block text-[11px] font-bold text-[#000313] dark:text-white mb-1">Correct Option Index (0-based)</label>
                 <input 
                   type="number"
                   min="0"
                   value={formData.correctIndex ?? 0}
                   onChange={(e) => setFormData({...formData, correctIndex: parseInt(e.target.value) || 0})}
-                  className="w-full border-2 border-[#1C1D2033] rounded-xl p-3 font-bold outline-none"
+                  className="w-full border-2 border-[#00031333] dark:border-white/20 rounded-xl p-3 font-bold outline-none"
                 />
               </div>
             </div>
@@ -234,7 +234,7 @@ export function LessonEditor({ lesson, onSave, onCancel }: LessonEditorProps) {
           {formData.lessonType === 'fill_blanks' && (
             <div className="space-y-4">
               <div>
-                <label className="block text-[11px] font-bold text-[#1C1D20] mb-1">Code Template (use _BLANK_)</label>
+                <label className="block text-[11px] font-bold text-[#000313] dark:text-white mb-1">Code Template (use _BLANK_)</label>
                 <textarea 
                   value={(formData.codeTemplate || []).join('\n')} 
                   onChange={(e) => setFormData({...formData, codeTemplate: e.target.value.split('\n')})}
@@ -242,19 +242,19 @@ export function LessonEditor({ lesson, onSave, onCancel }: LessonEditorProps) {
                 />
               </div>
               <div>
-                <label className="block text-[11px] font-bold text-[#1C1D20] mb-1">Correct Tokens (comma separated)</label>
+                <label className="block text-[11px] font-bold text-[#000313] dark:text-white mb-1">Correct Tokens (comma separated)</label>
                 <input 
                   value={(formData.correctTokens || []).join(', ')} 
                   onChange={(e) => setFormData({...formData, correctTokens: e.target.value.split(',').map((s: string) => s.trim())})}
-                  className="w-full border-2 border-[#1C1D2033] rounded-xl p-3 font-bold outline-none"
+                  className="w-full border-2 border-[#00031333] dark:border-white/20 rounded-xl p-3 font-bold outline-none"
                 />
               </div>
               <div>
-                <label className="block text-[11px] font-bold text-[#1C1D20] mb-1">Token Pool (comma separated)</label>
+                <label className="block text-[11px] font-bold text-[#000313] dark:text-white mb-1">Token Pool (comma separated)</label>
                 <input 
                   value={(formData.tokenPool || []).join(', ')} 
                   onChange={(e) => setFormData({...formData, tokenPool: e.target.value.split(',').map((s: string) => s.trim())})}
-                  className="w-full border-2 border-[#1C1D2033] rounded-xl p-3 font-bold outline-none"
+                  className="w-full border-2 border-[#00031333] dark:border-white/20 rounded-xl p-3 font-bold outline-none"
                 />
               </div>
             </div>

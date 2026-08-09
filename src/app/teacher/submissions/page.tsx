@@ -47,30 +47,30 @@ export default function SubmissionsPage() {
     <div className="pb-20">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-2xl font-extrabold text-[#1C1D20]">Submissions</h1>
+        <h1 className="text-2xl font-extrabold text-[#000313] dark:text-white">Submissions</h1>
       </div>
 
       {/* Quick Stats */}
       <div className="flex gap-4 mb-6">
-        <div className="bg-white border-2 border-[#1C1D2033] rounded-xl px-5 py-3 flex items-center gap-3">
+        <div className="bg-white dark:bg-[#000313] border-2 border-[#00031333] dark:border-white/20 rounded-xl px-5 py-3 flex items-center gap-3">
           <FileText size={20} className="text-[#0ba2b3]" />
           <div>
-            <p className="text-lg font-extrabold text-[#1C1D20]">{allSubmissions.length}</p>
-            <p className="text-xs font-bold text-[#1C1D20]">Total</p>
+            <p className="text-lg font-extrabold text-[#000313] dark:text-white">{allSubmissions.length}</p>
+            <p className="text-xs font-bold text-[#000313] dark:text-white">Total</p>
           </div>
         </div>
-        <div className="bg-white border-2 border-[#1C1D2033] rounded-xl px-5 py-3 flex items-center gap-3">
+        <div className="bg-white dark:bg-[#000313] border-2 border-[#00031333] dark:border-white/20 rounded-xl px-5 py-3 flex items-center gap-3">
           <CheckCircle size={20} className="text-[#0ba2b3]" />
           <div>
             <p className="text-lg font-extrabold text-[#0ba2b3]">{passCount}</p>
-            <p className="text-xs font-bold text-[#1C1D20]">Passed</p>
+            <p className="text-xs font-bold text-[#000313] dark:text-white">Passed</p>
           </div>
         </div>
-        <div className="bg-white border-2 border-[#1C1D2033] rounded-xl px-5 py-3 flex items-center gap-3">
+        <div className="bg-white dark:bg-[#000313] border-2 border-[#00031333] dark:border-white/20 rounded-xl px-5 py-3 flex items-center gap-3">
           <XCircle size={20} className="text-[#FC4B0B]" />
           <div>
             <p className="text-lg font-extrabold text-[#FC4B0B]">{failCount}</p>
-            <p className="text-xs font-bold text-[#1C1D20]">Failed</p>
+            <p className="text-xs font-bold text-[#000313] dark:text-white">Failed</p>
           </div>
         </div>
       </div>
@@ -78,17 +78,17 @@ export default function SubmissionsPage() {
       {/* Filters */}
       <div className="flex items-center gap-4 mb-6">
         <div className="flex-1 relative">
-          <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#1C1D20]" />
+          <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#000313] dark:text-white" />
           <input
             type="text"
             placeholder="Search student or lesson..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-11 pr-4 py-3 rounded-xl border-2 border-[#1C1D2033] bg-white text-sm font-semibold text-[#1C1D20] outline-none focus:border-[#0ba2b3] transition-colors"
+            className="w-full pl-11 pr-4 py-3 rounded-xl border-2 border-[#00031333] dark:border-white/20 bg-white dark:bg-[#000313] text-sm font-semibold text-[#000313] dark:text-white outline-none focus:border-[#0ba2b3] transition-colors"
           />
         </div>
         <div className="flex items-center gap-2">
-          <Filter size={16} className="text-[#1C1D20]" />
+          <Filter size={16} className="text-[#000313] dark:text-white" />
           {(['all', 'pass', 'fail'] as const).map((f) => (
             <button
               key={f}
@@ -99,7 +99,7 @@ export default function SubmissionsPage() {
                     : f === 'fail'
                       ? 'bg-[#FC4B0B] text-white'
                       : 'bg-[#0ba2b3] text-white'
-                  : 'bg-white border-2 border-[#1C1D2033] text-[#1C1D20] hover:bg-[#F8F8F8]'
+                  : 'bg-white dark:bg-[#000313] border-2 border-[#00031333] dark:border-white/20 text-[#000313] dark:text-white hover:bg-[#F8F8F8] dark:hover:bg-white/5'
                 }`}
             >
               {f}
@@ -109,9 +109,10 @@ export default function SubmissionsPage() {
       </div>
 
       {/* Submissions Table */}
-      <div className="bg-white rounded-2xl border-2 border-[#1C1D2033] overflow-hidden">
+      <div className="bg-white dark:bg-[#000313] rounded-2xl border-2 border-[#00031333] dark:border-white/20 overflow-x-auto">
+        <div className="min-w-[800px]">
         {/* Table Header */}
-        <div className="grid grid-cols-12 px-6 py-3 bg-[#F8F8F8] border-b-2 border-[#1C1D2033] text-xs font-extrabold uppercase tracking-wider text-[#1C1D20]">
+        <div className="grid grid-cols-12 px-6 py-3 bg-[#F8F8F8] dark:bg-[#060a1d] border-b-2 border-[#00031333] dark:border-white/20 text-xs font-extrabold uppercase tracking-wider text-[#000313] dark:text-white">
           <div className="col-span-1">Status</div>
           <div className="col-span-3">Student</div>
           <div className="col-span-4">Lesson</div>
@@ -128,7 +129,7 @@ export default function SubmissionsPage() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: idx * 0.03 }}
-              className="grid grid-cols-12 items-center px-6 py-3.5 border-b border-[#F8F8F8] hover:bg-[#FAFAFA] transition-colors"
+              className="grid grid-cols-12 items-center px-6 py-3.5 border-b border-[#F8F8F8] dark:border-white/10 hover:bg-[#FAFAFA] dark:hover:bg-white/5 transition-colors"
             >
               <div className="col-span-1">
                 {sub.status === 'pass' ? (
@@ -137,9 +138,9 @@ export default function SubmissionsPage() {
                   <XCircle size={18} className="text-[#FC4B0B]" />
                 )}
               </div>
-              <div className="col-span-3 font-bold text-[#1C1D20] text-sm">{sub.student}</div>
-              <div className="col-span-4 text-sm font-semibold text-[#1C1D20] truncate">{sub.lesson}</div>
-              <div className="col-span-2 text-xs font-semibold text-[#1C1D20] flex items-center gap-1">
+              <div className="col-span-3 font-bold text-[#000313] dark:text-white text-sm">{sub.student}</div>
+              <div className="col-span-4 text-sm font-semibold text-[#000313] dark:text-white truncate">{sub.lesson}</div>
+              <div className="col-span-2 text-xs font-semibold text-[#000313] dark:text-white flex items-center gap-1">
                 <Clock size={12} />
                 {sub.time.split(' ')[1]}
               </div>
@@ -147,7 +148,7 @@ export default function SubmissionsPage() {
                 {sub.xp > 0 ? (
                   <span className="text-xs font-extrabold text-[#0ba2b3]">+{sub.xp}</span>
                 ) : (
-                  <span className="text-xs font-bold text-[#1C1D20]">—</span>
+                  <span className="text-xs font-bold text-[#000313] dark:text-white">—</span>
                 )}
               </div>
               <div className="col-span-1 text-center">
@@ -162,28 +163,29 @@ export default function SubmissionsPage() {
           ))
         ) : (
           <div className="px-6 py-12 text-center">
-            <p className="text-sm font-bold text-[#1C1D20]">No submissions found</p>
+            <p className="text-sm font-bold text-[#000313] dark:text-white">No submissions found</p>
           </div>
         )}
+      </div>
       </div>
 
       {/* Code Viewer Modal */}
       {viewingSub && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-[#000313]/40 flex items-center justify-center z-50 p-4">
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            className="bg-white rounded-2xl w-full max-w-2xl max-h-[80vh] overflow-y-auto"
+            className="bg-white dark:bg-[#000313] rounded-2xl w-full max-w-2xl max-h-[80vh] overflow-y-auto"
           >
             {/* Modal Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b-2 border-[#1C1D2033]">
+            <div className="flex items-center justify-between px-6 py-4 border-b-2 border-[#00031333] dark:border-white/20">
               <div>
-                <h3 className="font-extrabold text-[#1C1D20]">{viewingSub.student}</h3>
-                <p className="text-sm font-semibold text-[#1C1D20]">{viewingSub.lesson}</p>
+                <h3 className="font-extrabold text-[#000313] dark:text-white">{viewingSub.student}</h3>
+                <p className="text-sm font-semibold text-[#000313] dark:text-white">{viewingSub.lesson}</p>
               </div>
               <div className="flex items-center gap-3">
                 {viewingSub.status === 'pass' ? (
-                  <span className="text-xs font-extrabold bg-[#F0F8FF] text-[#0ba2b3] px-3 py-1 rounded-full border border-[#1e91a3]">
+                  <span className="text-xs font-extrabold bg-[#F0F8FF] dark:bg-[#0a1128] text-[#0ba2b3] px-3 py-1 rounded-full border border-[#1e91a3]">
                     PASS
                   </span>
                 ) : (
@@ -193,7 +195,7 @@ export default function SubmissionsPage() {
                 )}
                 <button
                   onClick={() => setViewingId(null)}
-                  className="text-[#1C1D20] hover:text-[#1C1D20] transition-colors"
+                  className="text-[#000313] dark:text-white hover:text-[#000313] dark:text-white transition-colors"
                 >
                   <X size={22} strokeWidth={3} />
                 </button>
@@ -201,8 +203,8 @@ export default function SubmissionsPage() {
             </div>
 
             {/* Submitted Code */}
-            <div className="px-6 py-5 border-b-2 border-[#1C1D2033]">
-              <h4 className="text-xs font-extrabold uppercase tracking-wider text-[#1C1D20] mb-3">
+            <div className="px-6 py-5 border-b-2 border-[#00031333] dark:border-white/20">
+              <h4 className="text-xs font-extrabold uppercase tracking-wider text-[#000313] dark:text-white mb-3">
                 Submitted Code
               </h4>
               <pre className="bg-gray-900 text-green-400 p-4 rounded-xl text-sm font-mono overflow-x-auto whitespace-pre-wrap">
@@ -212,7 +214,7 @@ export default function SubmissionsPage() {
 
             {/* Output */}
             <div className="px-6 py-5">
-              <h4 className="text-xs font-extrabold uppercase tracking-wider text-[#1C1D20] mb-3">
+              <h4 className="text-xs font-extrabold uppercase tracking-wider text-[#000313] dark:text-white mb-3">
                 Output
               </h4>
               <pre className={`p-4 rounded-xl text-sm font-mono border ${viewingSub.status === 'pass'

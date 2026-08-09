@@ -36,10 +36,10 @@ export default function QuestsPage() {
       {/* Header */}
       <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-extrabold text-[#1C1D20]">Quests</h1>
+          <h1 className="text-3xl font-extrabold text-[#000313] dark:text-white">Quests</h1>
         </div>
         <div className="flex gap-4">
-          <div className="flex items-center gap-2 bg-[#F0F8FF] px-4 py-2 rounded-xl text-[#FFC800] font-bold">
+          <div className="flex items-center gap-2 bg-[#F0F8FF] dark:bg-[#0a1128] px-4 py-2 rounded-xl text-[#FFC800] font-bold">
             <Star size={20} fill="currentColor" /> {xp} XP
           </div>
           <div className="flex items-center gap-2 bg-[#F3F3F3] px-4 py-2 rounded-xl text-[#00BCD4] font-bold">
@@ -54,8 +54,8 @@ export default function QuestsPage() {
           onClick={() => setActiveTab('daily')}
           className={`flex-1 py-4 font-extrabold text-lg uppercase tracking-wide rounded-2xl transition-all border-2 ${
             activeTab === 'daily'
-              ? 'bg-[#F0F8FF] text-[#0ba2b3] border-[#1e91a3]'
-              : 'bg-white text-[#1C1D20] border-[#1C1D2033] hover:bg-[#F8F8F8]'
+              ? 'bg-[#F0F8FF] dark:bg-[#0a1128] text-[#0ba2b3] border-[#1e91a3]'
+              : 'bg-white dark:bg-[#000313] text-[#000313] dark:text-white border-[#00031333] dark:border-white/20 hover:bg-[#F8F8F8] dark:bg-[#060a1d]'
           }`}
         >
           Daily Quests
@@ -64,8 +64,8 @@ export default function QuestsPage() {
           onClick={() => setActiveTab('monthly')}
           className={`flex-1 py-4 font-extrabold text-lg uppercase tracking-wide rounded-2xl transition-all border-2 ${
             activeTab === 'monthly'
-              ? 'bg-[#F0F8FF] text-[#0ba2b3] border-[#1e91a3]'
-              : 'bg-white text-[#1C1D20] border-[#1C1D2033] hover:bg-[#F8F8F8]'
+              ? 'bg-[#F0F8FF] dark:bg-[#0a1128] text-[#0ba2b3] border-[#1e91a3]'
+              : 'bg-white dark:bg-[#000313] text-[#000313] dark:text-white border-[#00031333] dark:border-white/20 hover:bg-[#F8F8F8] dark:bg-[#060a1d]'
           }`}
         >
           Monthly Quests
@@ -87,8 +87,8 @@ export default function QuestsPage() {
               key={quest.id}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className={`p-6 rounded-2xl border-2 flex items-center justify-between gap-6 ${
-                isClaimed ? 'bg-[#F8F8F8] border-[#1C1D2033]' : 'bg-white border-[#1C1D2033]'
+              className={`p-6 rounded-2xl border-2 flex items-center justify-between gap-6 transition-all ${
+                isClaimed ? 'bg-[#F8F8F8] dark:bg-[#060a1d] border-[#00031311] dark:border-white/10 opacity-60' : 'bg-white dark:bg-[#000313] border-[#00031333] dark:border-white/20'
               }`}
             >
               <div className="flex items-center gap-6 flex-1">
@@ -101,21 +101,21 @@ export default function QuestsPage() {
                 </div>
 
                 <div className="flex-1">
-                  <h3 className={`font-extrabold text-lg mb-2 ${isClaimed ? 'text-[#1C1D20]' : 'text-[#1C1D20]'}`}>
+                  <h3 className={`font-extrabold text-lg mb-2 ${isClaimed ? 'text-[#00031380]' : 'text-[#000313] dark:text-white'}`}>
                     {quest.title}
                   </h3>
                   
                   {/* Progress Bar */}
                   <div className="flex items-center gap-4">
-                    <div className="flex-1 bg-[#1C1D2033] rounded-full h-3 overflow-hidden">
+                    <div className="flex-1 bg-[#00031311] dark:bg-white/10 rounded-full h-3 overflow-hidden">
                       <motion.div
-                        className={`h-full rounded-full ${isClaimed ? 'bg-[#1C1D20]' : 'bg-[#0ba2b3]'}`}
+                        className={`h-full rounded-full ${isClaimed ? 'bg-[#00031333] dark:bg-white/20' : 'bg-[#0ba2b3]'}`}
                         initial={{ width: 0 }}
                         animate={{ width: `${(progress / quest.target) * 100}%` }}
                         transition={{ duration: 0.5 }}
                       />
                     </div>
-                    <span className={`font-bold text-sm ${isClaimed ? 'text-[#1C1D20]' : 'text-[#0ba2b3]'}`}>
+                    <span className={`font-bold text-sm ${isClaimed ? 'text-[#00031380]' : 'text-[#0ba2b3]'}`}>
                       {progress} / {quest.target}
                     </span>
                   </div>
@@ -138,7 +138,7 @@ export default function QuestsPage() {
                 </div>
 
                 {isClaimed ? (
-                  <button disabled className="bg-[#1C1D2033] text-[#1C1D20] font-bold px-6 py-2.5 rounded-xl text-sm w-full">
+                  <button disabled className="bg-[#00031333] dark:bg-white/20 text-[#000313] dark:text-white font-bold px-6 py-2.5 rounded-xl text-sm w-full">
                     CLAIMED
                   </button>
                 ) : isCompleted ? (

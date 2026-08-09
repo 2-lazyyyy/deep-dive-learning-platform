@@ -28,7 +28,7 @@ export const TeacherSidebar = () => {
   const pathname = usePathname();
 
   return (
-    <div className="h-full w-[256px] lg:flex flex-col hidden left-0 top-0 border-r-2 border-[#1C1D2033] px-4 fixed bg-white z-30">
+    <div className="h-full w-[256px] lg:flex flex-col hidden left-0 top-0 border-r-2 border-[#00031333] dark:border-white/20 px-4 fixed bg-white dark:bg-[#000313] z-30">
       {/* Logo */}
       <Link href="/teacher">
         <div className="pt-8 pl-4 pb-3 flex items-center gap-x-3">
@@ -57,8 +57,8 @@ export const TeacherSidebar = () => {
                 whileTap={{ scale: 0.98 }}
                 className={`flex items-center gap-x-4 p-3.5 rounded-xl font-bold uppercase text-sm tracking-wide cursor-pointer transition-colors ${
                   isActive
-                    ? 'bg-[#F0F8FF] border-2 border-[#84D8FF] text-[#0ba2b3]'
-                    : 'border-2 border-transparent text-[#1C1D20] hover:bg-[#F8F8F8]'
+                    ? 'bg-[#F0F8FF] dark:bg-[#0a1128] border-2 border-[#84D8FF] text-[#0ba2b3]'
+                    : 'border-2 border-transparent text-[#000313] dark:text-white hover:bg-[#F8F8F8] dark:bg-[#060a1d]'
                 }`}
               >
                 <Icon
@@ -77,7 +77,7 @@ export const TeacherSidebar = () => {
           <motion.div
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            className="flex items-center gap-x-4 p-3.5 rounded-xl font-bold uppercase text-sm tracking-wide cursor-pointer transition-colors border-2 border-transparent text-[#1C1D20] hover:bg-[#F8F8F8]"
+            className="flex items-center gap-x-4 p-3.5 rounded-xl font-bold uppercase text-sm tracking-wide cursor-pointer transition-colors border-2 border-transparent text-[#000313] dark:text-white hover:bg-[#F8F8F8] dark:hover:bg-white/5"
           >
             <MoreHorizontal size={28} className="text-[#0ba2b3]" strokeWidth={2.5} />
             More
@@ -87,15 +87,15 @@ export const TeacherSidebar = () => {
           <div className="absolute left-full bottom-0 pl-2 hidden group-hover:block z-[100]">
             {/* Invisible bridge for hover */}
             <div className="absolute -left-8 -top-8 -bottom-8 w-16 bg-transparent" />
-            <div className="flex flex-col bg-white border-2 border-[#1C1D2033] rounded-xl shadow-[0_4px_12px_rgba(0,0,0,0.1)] w-56 overflow-hidden py-2 relative">
-              <Link href="/teacher/settings" className="flex items-center gap-3 px-4 py-3 hover:bg-[#F8F8F8] font-bold text-[#1C1D20] text-sm uppercase transition cursor-pointer">
+            <div className="flex flex-col bg-white dark:bg-[#000313] border-2 border-[#00031333] dark:border-white/20 rounded-xl shadow-[0_4px_12px_rgba(0,0,0,0.1)] w-56 overflow-hidden py-2 relative">
+              <Link href="/teacher/settings" className="flex items-center gap-3 px-4 py-3 hover:bg-[#F8F8F8] dark:hover:bg-white/5 font-bold text-[#000313] dark:text-white text-sm uppercase transition cursor-pointer">
                 <Settings size={22} className="text-[#0ba2b3]" strokeWidth={2.5} /> Settings
               </Link>
-              <Link href="/teacher/help" className="flex items-center gap-3 px-4 py-3 hover:bg-[#F8F8F8] font-bold text-[#1C1D20] text-sm uppercase transition cursor-pointer">
+              <Link href="/teacher/help" className="flex items-center gap-3 px-4 py-3 hover:bg-[#F8F8F8] dark:hover:bg-white/5 font-bold text-[#000313] dark:text-white text-sm uppercase transition cursor-pointer">
                 <HelpCircle size={22} className="text-[#0ba2b3]" strokeWidth={2.5} /> Help
               </Link>
-              <div className="h-[2px] bg-[#1C1D2033] w-full my-1" />
-              <Link href="/auth" className="flex items-center gap-3 px-4 py-3 hover:bg-[#F8F8F8] font-bold text-[#FC4B0B] text-sm uppercase transition cursor-pointer">
+              <div className="h-[2px] bg-[#00031333] dark:bg-white/20 w-full my-1" />
+              <Link href="/auth" className="flex items-center gap-3 px-4 py-3 hover:bg-[#F8F8F8] dark:hover:bg-white/5 font-bold text-[#FC4B0B] text-sm uppercase transition cursor-pointer">
                 <LogOut size={22} className="text-[#FC4B0B]" strokeWidth={2.5} /> Log Out
               </Link>
             </div>
@@ -104,9 +104,9 @@ export const TeacherSidebar = () => {
       </div>
 
       {/* Bottom: Switch to Student */}
-      <div className="border-t-2 border-[#1C1D2033] pt-4 pb-6 flex flex-col gap-2">
+      <div className="border-t-2 border-[#00031333] dark:border-white/20 pt-4 pb-6 flex flex-col gap-2">
         <Link href="/">
-          <div className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-bold text-[#0ba2b3] hover:bg-[#F0F8FF] transition-colors cursor-pointer">
+          <div className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-bold text-[#0ba2b3] hover:bg-[#F0F8FF] dark:bg-[#0a1128] transition-colors cursor-pointer">
             <GraduationCap size={20} strokeWidth={2.5} />
             Student View
           </div>

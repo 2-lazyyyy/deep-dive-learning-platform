@@ -57,7 +57,7 @@ export const MultipleChoiceExercise = ({
         );
       }
       return (
-        <p key={idx} className="text-[#1C1D20] font-bold text-base leading-relaxed">
+        <p key={idx} className="text-[#000313] dark:text-white font-bold text-base leading-relaxed">
           {part}
         </p>
       );
@@ -86,12 +86,12 @@ export const MultipleChoiceExercise = ({
                 onClick={() => result === 'none' && setSelectedIndex(idx)}
                 className={`w-full flex items-center gap-4 p-4 rounded-2xl text-left transition-all border-2 ${
                   showCorrect
-                    ? 'bg-[#F0F8FF] border-[#0ba2b3] text-[#1e91a3]'
+                    ? 'bg-[#F0F8FF] dark:bg-[#0a1128] border-[#0ba2b3] text-[#1e91a3]'
                     : showWrong
                     ? 'bg-[#FFEBEE] border-[#FC4B0B] text-[#C62828]'
                     : isSelected
-                    ? 'bg-[#F0F8FF] border-[#0ba2b3] text-[#0ba2b3]'
-                    : 'bg-white border-[#1C1D2033] text-[#1C1D20] hover:bg-[#F8F8F8] hover:border-[#CECECE]'
+                    ? 'bg-[#F0F8FF] dark:bg-[#0a1128] border-[#0ba2b3] text-[#0ba2b3]'
+                    : 'bg-white dark:bg-[#000313] border-[#00031333] dark:border-white/20 text-[#000313] dark:text-white hover:bg-[#F8F8F8] dark:bg-[#060a1d] hover:border-[#CECECE]'
                 }`}
               >
                 {/* Radio circle / Check/X icon */}
@@ -103,13 +103,13 @@ export const MultipleChoiceExercise = ({
                       ? 'bg-[#FC4B0B] border-[#E53E3E]'
                       : isSelected
                       ? 'bg-[#0ba2b3] border-[#1e91a3]'
-                      : 'bg-white border-[#1C1D2033]'
+                      : 'bg-white dark:bg-[#000313] border-[#00031333] dark:border-white/20'
                   }`}
                 >
                   {showCorrect && <Check size={16} className="text-white" strokeWidth={3} />}
                   {showWrong && <X size={16} className="text-white" strokeWidth={3} />}
                   {isSelected && result === 'none' && (
-                    <div className="w-3 h-3 rounded-full bg-white" />
+                    <div className="w-3 h-3 rounded-full bg-white dark:bg-[#000313]" />
                   )}
                 </div>
 
@@ -121,39 +121,6 @@ export const MultipleChoiceExercise = ({
         </div>
       </div>
 
-      {/* Result Feedback */}
-      <AnimatePresence>
-        {result !== 'none' && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 10 }}
-            className={`px-5 py-4 rounded-2xl mb-4 ${
-              result === 'correct'
-                ? 'bg-[#F0F8FF] border-2 border-[#1e91a3]'
-                : 'bg-[#FC4B0B]/10 border-2 border-[#FC4B0B]'
-            }`}
-          >
-            <div
-              className={`flex items-center gap-2 font-extrabold text-sm ${
-                result === 'correct' ? 'text-[#0ba2b3]' : 'text-[#FC4B0B]'
-              }`}
-            >
-              {result === 'correct' ? (
-                <>
-                  <CheckCircle size={18} strokeWidth={3} />
-                  Correct! Well done!
-                </>
-              ) : (
-                <>
-                  <XCircle size={18} strokeWidth={3} />
-                  Not quite. The answer is: {options[correctIndex]}
-                </>
-              )}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {/* CHECK Button */}
       <motion.button
@@ -168,7 +135,7 @@ export const MultipleChoiceExercise = ({
             ? 'bg-[#FF9600] text-white border-b-4 border-[#E08500]'
             : selectedIndex !== null
             ? 'bg-[#0ba2b3] text-white border-b-4 border-[#1e91a3] hover:bg-[#1e91a3] active:border-b-0 active:translate-y-1'
-            : 'bg-[#1C1D2033] text-[#1C1D20] cursor-not-allowed'
+            : 'bg-[#00031333] dark:bg-white/20 text-[#000313] dark:text-white cursor-not-allowed'
         }`}
       >
         {result === 'correct' ? (

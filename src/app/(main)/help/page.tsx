@@ -30,34 +30,34 @@ export default function HelpPage() {
   return (
     <div className="max-w-3xl mx-auto pb-12">
       <div className="flex items-center gap-4 mb-8">
-        <h1 className="text-3xl font-extrabold text-[#1C1D20]">Help & Support</h1>
+        <h1 className="text-3xl font-extrabold text-[#000313] dark:text-white">Help & Support</h1>
       </div>
 
       <div className="flex flex-col gap-8">
         {/* FAQs Section */}
-        <div className="bg-white border-2 border-[#1C1D2033] rounded-2xl p-6">
+        <div className="bg-white dark:bg-[#000313] border-2 border-[#00031333] dark:border-white/20 rounded-2xl p-6">
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 rounded-xl bg-[#F0F8FF] text-[#0ba2b3] flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-[#F0F8FF] dark:bg-[#0a1128] text-[#0ba2b3] flex items-center justify-center">
               <HelpCircle size={24} />
             </div>
-            <h2 className="text-2xl font-extrabold text-[#1C1D20]">Frequently Asked Questions</h2>
+            <h2 className="text-2xl font-extrabold text-[#000313] dark:text-white">Frequently Asked Questions</h2>
           </div>
 
           <div className="flex flex-col gap-3">
             {FAQS.map((faq, index) => (
               <div 
                 key={index} 
-                className="border-2 border-[#1C1D2033] rounded-xl overflow-hidden transition-colors"
+                className="border-2 border-[#00031333] dark:border-white/20 rounded-xl overflow-hidden transition-colors"
               >
                 <button
-                  className="w-full flex items-center justify-between p-4 text-left hover:bg-[#F8F8F8] transition"
+                  className="w-full flex items-center justify-between p-4 text-left hover:bg-[#F8F8F8] dark:bg-[#060a1d] transition"
                   onClick={() => setOpenFaq(openFaq === index ? null : index)}
                 >
-                  <span className="font-extrabold text-[#1C1D20]">{faq.question}</span>
+                  <span className="font-extrabold text-[#000313] dark:text-white">{faq.question}</span>
                   {openFaq === index ? (
                     <ChevronUp size={20} className="text-[#0ba2b3]" />
                   ) : (
-                    <ChevronDown size={20} className="text-[#6B7280]" />
+                    <ChevronDown size={20} className="text-[#6B7280] dark:text-gray-400" />
                   )}
                 </button>
                 <AnimatePresence>
@@ -68,8 +68,8 @@ export default function HelpPage() {
                       exit={{ height: 0, opacity: 0 }}
                       className="px-4 pb-4"
                     >
-                      <div className="h-[2px] bg-[#1C1D2033] w-full mb-4" />
-                      <p className="text-[#1C1D20] font-bold text-sm leading-relaxed">
+                      <div className="h-[2px] bg-[#00031333] dark:bg-white/20 w-full mb-4" />
+                      <p className="text-[#000313] dark:text-white font-bold text-sm leading-relaxed">
                         {faq.answer}
                       </p>
                     </motion.div>
@@ -81,18 +81,18 @@ export default function HelpPage() {
         </div>
 
         {/* Feedback Section */}
-        <Link href="/contact" className="block bg-white border-2 border-[#1C1D2033] rounded-2xl p-6 hover:bg-[#F8F8F8] transition cursor-pointer group">
+        <Link href="/contact" className="block bg-white dark:bg-[#000313] border-2 border-[#00031333] dark:border-white/20 rounded-2xl p-6 hover:bg-[#F8F8F8] dark:bg-[#060a1d] transition cursor-pointer group">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-[#F0F8FF] text-[#0ba2b3] flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-[#F0F8FF] dark:bg-[#0a1128] text-[#0ba2b3] flex items-center justify-center">
                 <MessageSquare size={24} />
               </div>
               <div>
-                <h2 className="text-2xl font-extrabold text-[#1C1D20]">Send Feedback</h2>
-                <p className="font-bold text-[#6B7280] text-sm mt-1">Have a suggestion or found a bug? Let us know!</p>
+                <h2 className="text-2xl font-extrabold text-[#000313] dark:text-white">Send Feedback</h2>
+                <p className="font-bold text-[#6B7280] dark:text-gray-400 text-sm mt-1">Have a suggestion or found a bug? Let us know!</p>
               </div>
             </div>
-            <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#F0F8FF] text-[#0ba2b3] group-hover:scale-110 transition-transform">
+            <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#F0F8FF] dark:bg-[#0a1128] text-[#0ba2b3] group-hover:scale-110 transition-transform">
               <ArrowRight size={20} strokeWidth={3} />
             </div>
           </div>

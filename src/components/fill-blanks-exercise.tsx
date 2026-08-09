@@ -112,7 +112,7 @@ export const FillBlanksExercise = ({
 
     return (
       <div key={lineIdx} className="flex items-center flex-wrap gap-1 min-h-[36px]">
-        <span className="text-[#6B7280] text-xs mr-2 select-none w-5 text-right">
+        <span className="text-[#6B7280] dark:text-gray-400 text-xs mr-2 select-none w-5 text-right">
           {lineIdx + 1}
         </span>
         {parts.map((part, partIdx) => {
@@ -143,7 +143,7 @@ export const FillBlanksExercise = ({
                         : 'bg-[#0ba2b3] text-white border-2 border-[#1e91a3] cursor-pointer hover:bg-[#1e91a3]'
                       : currentBlankIdx === nextBlankIndex
                       ? 'bg-[#374151] border-2 border-dashed border-[#0ba2b3] text-[#0ba2b3] animate-pulse'
-                      : 'bg-[#374151] border-2 border-dashed border-[#4B5563] text-[#6B7280]'
+                      : 'bg-[#374151] border-2 border-dashed border-[#4B5563] text-[#6B7280] dark:text-gray-400'
                   }`}
                 >
                   {filledTokens[currentBlankIdx] ?? ''}
@@ -163,7 +163,7 @@ export const FillBlanksExercise = ({
       {/* Code Template Area */}
       <div className="flex-1">
         <div className="flex items-center justify-between mb-3">
-          <span className="text-xs font-extrabold uppercase tracking-wider text-[#1C1D20]">
+          <span className="text-xs font-extrabold uppercase tracking-wider text-[#000313] dark:text-white">
             python
           </span>
           {result !== 'none' && (
@@ -183,7 +183,7 @@ export const FillBlanksExercise = ({
 
         {/* Token Pool */}
         <div className="mb-6">
-          <p className="text-xs font-extrabold uppercase tracking-wider text-[#1C1D20] mb-3">
+          <p className="text-xs font-extrabold uppercase tracking-wider text-[#000313] dark:text-white mb-3">
             Available Tokens
           </p>
           <div className="flex flex-wrap gap-2">
@@ -198,8 +198,8 @@ export const FillBlanksExercise = ({
                   disabled={isUsed || result !== 'none'}
                   className={`px-4 py-2 rounded-xl font-mono text-sm font-bold transition-all ${
                     isUsed
-                      ? 'bg-[#F8F8F8] text-[#1C1D2033] border-2 border-[#F8F8F8] cursor-default'
-                      : 'bg-white text-[#1C1D20] border-2 border-[#1C1D2033] hover:border-[#0ba2b3] hover:bg-[#F0F8FF] cursor-pointer shadow-sm'
+                      ? 'bg-[#F8F8F8] dark:bg-[#060a1d] text-[#00031333] border-2 border-[#F8F8F8] cursor-default'
+                      : 'bg-white dark:bg-[#000313] text-[#000313] dark:text-white border-2 border-[#00031333] dark:border-white/20 hover:border-[#0ba2b3] hover:bg-[#F0F8FF] dark:bg-[#0a1128] cursor-pointer shadow-sm'
                   }`}
                 >
                   {token}
@@ -210,35 +210,6 @@ export const FillBlanksExercise = ({
         </div>
       </div>
 
-      {/* Result Feedback */}
-      <AnimatePresence>
-        {result !== 'none' && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 10 }}
-            className={`px-5 py-4 rounded-2xl mb-4 ${
-              result === 'correct'
-                ? 'bg-[#F0F8FF] border-2 border-[#1e91a3]'
-                : 'bg-[#FC4B0B]/10 border-2 border-[#FC4B0B]'
-            }`}
-          >
-            <div className={`flex items-center gap-2 font-extrabold text-sm ${result === 'correct' ? 'text-[#0ba2b3]' : 'text-[#FC4B0B]'}`}>
-              {result === 'correct' ? (
-                <>
-                  <CheckCircle size={18} strokeWidth={3} />
-                  Correct! Well done!
-                </>
-              ) : (
-                <>
-                  <XCircle size={18} strokeWidth={3} />
-                  Not quite. Try again!
-                </>
-              )}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {/* CHECK Button */}
       <motion.button
@@ -253,7 +224,7 @@ export const FillBlanksExercise = ({
             ? 'bg-[#FF9600] text-white border-b-4 border-[#E08500]'
             : allFilled
             ? 'bg-[#0ba2b3] text-white border-b-4 border-[#1e91a3] hover:bg-[#1e91a3] active:border-b-0 active:translate-y-1'
-            : 'bg-[#1C1D2033] text-[#1C1D20] cursor-not-allowed'
+            : 'bg-[#00031333] dark:bg-white/20 text-[#000313] dark:text-white cursor-not-allowed'
         }`}
       >
         {result === 'correct' ? (

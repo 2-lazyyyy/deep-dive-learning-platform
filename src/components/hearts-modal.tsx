@@ -8,15 +8,15 @@ export const HeartsModal = ({ onClose }: { onClose: () => void }) => {
   const router = useRouter();
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#000313]/60">
       <motion.div
         initial={{ scale: 0.8, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        className="bg-white rounded-3xl p-8 max-w-sm w-full text-center relative"
+        className="bg-white dark:bg-[#000313] rounded-3xl p-8 max-w-sm w-full text-center relative"
       >
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-[#1C1D20] hover:text-[#1C1D20] transition-colors"
+          className="absolute top-4 right-4 text-[#000313] dark:text-white hover:text-[#000313] dark:text-white transition-colors"
         >
           <X size={24} strokeWidth={3} />
         </button>
@@ -30,10 +30,10 @@ export const HeartsModal = ({ onClose }: { onClose: () => void }) => {
           />
         </div>
 
-        <h2 className="text-2xl font-extrabold text-[#1C1D20] mb-2">
+        <h2 className="text-2xl font-extrabold text-[#000313] dark:text-white mb-2">
           You ran out of hearts!
         </h2>
-        <p className="text-[#1C1D20] font-bold mb-8">
+        <p className="text-[#000313] dark:text-white font-bold mb-8">
           Don't worry, you can refill them in the shop or wait for them to regenerate.
         </p>
 
@@ -52,7 +52,7 @@ export const HeartsModal = ({ onClose }: { onClose: () => void }) => {
               onClose();
               router.push('/');
             }}
-            className="w-full py-3.5 bg-white text-[#0ba2b3] font-extrabold rounded-2xl border-2 border-[#1C1D2033] hover:bg-[#F8F8F8] active:border-b-0 active:translate-y-1 transition-all uppercase tracking-wide"
+            className="w-full py-3.5 bg-white dark:bg-[#000313] text-[#0ba2b3] font-extrabold rounded-2xl border-2 border-[#00031333] dark:border-white/20 hover:bg-[#F8F8F8] dark:bg-[#060a1d] active:border-b-0 active:translate-y-1 transition-all uppercase tracking-wide"
           >
             End Lesson
           </button>

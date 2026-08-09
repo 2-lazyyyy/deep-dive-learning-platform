@@ -58,7 +58,7 @@ export default function TeacherLessonsPage() {
   };
 
   const handleDelete = () => {
-    if (selectedLesson && confirm('Are you sure you want to delete this lesson?')) {
+    if (selectedLesson) {
       deleteLesson(selectedLesson);
       setSelectedLesson(null);
       setIsEditing(false);
@@ -81,7 +81,7 @@ export default function TeacherLessonsPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-extrabold text-[#1C1D20]">Lesson Manager</h1>
+          <h1 className="text-2xl font-extrabold text-[#000313] dark:text-white">Lesson Manager</h1>
         </div>
         <button
           onClick={handleAddLesson}
@@ -94,9 +94,9 @@ export default function TeacherLessonsPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left: Syllabus Tree */}
-        <div className="lg:col-span-1 bg-white rounded-2xl border-2 border-[#1C1D2033] overflow-hidden">
-          <div className="px-5 py-4 border-b-2 border-[#1C1D2033] flex items-center justify-between">
-            <h2 className="font-extrabold text-[#1C1D20] text-sm uppercase tracking-wider flex items-center gap-2">
+        <div className="lg:col-span-1 bg-white dark:bg-[#000313] rounded-2xl border-2 border-[#00031333] dark:border-white/20 overflow-hidden">
+          <div className="px-5 py-4 border-b-2 border-[#00031333] dark:border-white/20 flex items-center justify-between">
+            <h2 className="font-extrabold text-[#000313] dark:text-white text-sm uppercase tracking-wider flex items-center gap-2">
               <Layers size={16} className="text-[#0ba2b3]" />
               Syllabus
             </h2>
@@ -120,17 +120,17 @@ export default function TeacherLessonsPage() {
                         setExpandedUnit(isUnitExpanded ? null : unit.id);
                       }
                     }}
-                    className="w-full flex items-center justify-between px-5 py-3.5 hover:bg-[#F8F8F8] transition-colors text-left cursor-pointer outline-none focus-visible:bg-[#F8F8F8]"
+                    className="w-full flex items-center justify-between px-5 py-3.5 hover:bg-[#F8F8F8] dark:bg-[#060a1d] transition-colors text-left cursor-pointer outline-none focus-visible:bg-[#F8F8F8] dark:bg-[#060a1d]"
                   >
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-lg bg-[#0ba2b3]/10 flex items-center justify-center">
                         <BookOpen size={16} className="text-[#0ba2b3]" />
                       </div>
                       <div>
-                        <p className="text-xs font-bold text-[#1C1D20] uppercase tracking-wider">
+                        <p className="text-xs font-bold text-[#000313] dark:text-white uppercase tracking-wider">
                           Unit {unitIdx + 1}
                         </p>
-                        <p className="font-bold text-[#1C1D20] text-sm">
+                        <p className="font-bold text-[#000313] dark:text-white text-sm">
                           {unit.title.replace(/^Unit \d+:\s*/, '')}
                         </p>
                       </div>
@@ -144,7 +144,7 @@ export default function TeacherLessonsPage() {
                           setNewUnitDescription(unit.description || '');
                           setShowAddUnitModal(true);
                         }}
-                        className="text-[#1C1D20] hover:text-[#1C1D20] p-1 rounded hover:bg-[#F8F8F8] transition"
+                        className="text-[#000313] dark:text-white hover:text-[#000313] dark:text-white p-1 rounded hover:bg-[#F8F8F8] dark:bg-[#060a1d] transition"
                         title="Edit Unit"
                       >
                         <Edit2 size={16} />
@@ -152,12 +152,10 @@ export default function TeacherLessonsPage() {
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          if (confirm('Are you sure you want to delete this unit and all its modules?')) {
-                            deleteUnit(unit.id);
-                            if (expandedUnit === unit.id) setExpandedUnit(null);
-                          }
+                          // Remove confirm dialog for UX consistency
+                          deleteUnit(unit.id);  if (expandedUnit === unit.id) setExpandedUnit(null);
                         }}
-                        className="text-[#1C1D20] hover:text-red-500 p-1 rounded hover:bg-red-50 transition"
+                        className="text-[#000313] dark:text-white hover:text-red-500 p-1 rounded hover:bg-red-50 transition"
                         title="Delete Unit"
                       >
                         <Trash2 size={16} />
@@ -166,7 +164,7 @@ export default function TeacherLessonsPage() {
                         animate={{ rotate: isUnitExpanded ? 90 : 0 }}
                         transition={{ duration: 0.2 }}
                       >
-                        <ChevronRight size={18} className="text-[#1C1D20]" />
+                        <ChevronRight size={18} className="text-[#000313] dark:text-white" />
                       </motion.div>
                     </div>
                   </div>
@@ -190,13 +188,13 @@ export default function TeacherLessonsPage() {
                                 setExpandedModule(isModExpanded ? null : mod.id);
                               }
                             }}
-                            className="w-full flex items-center justify-between pl-10 pr-5 py-3 hover:bg-[#F8F8F8] transition-colors text-left cursor-pointer outline-none focus-visible:bg-[#F8F8F8]"
+                            className="w-full flex items-center justify-between pl-10 pr-5 py-3 hover:bg-[#F8F8F8] dark:bg-[#060a1d] transition-colors text-left cursor-pointer outline-none focus-visible:bg-[#F8F8F8] dark:bg-[#060a1d]"
                           >
                             <div className="flex items-center gap-3">
                               <div className="w-6 h-6 rounded-md bg-[#0ba2b3]/10 flex items-center justify-center">
                                 <Layers size={12} className="text-[#0ba2b3]" />
                               </div>
-                              <p className="font-semibold text-[#1C1D20] text-sm">
+                              <p className="font-semibold text-[#000313] dark:text-white text-sm">
                                 Module {modIdx + 1}: {mod.title}
                               </p>
                             </div>
@@ -210,7 +208,7 @@ export default function TeacherLessonsPage() {
                                   setNewModuleDescription(mod.description || '');
                                   setShowAddModuleModal(true);
                                 }}
-                                className="text-[#1C1D20] hover:text-[#1C1D20] p-1 rounded hover:bg-white transition"
+                                className="text-[#000313] dark:text-white hover:text-[#000313] dark:text-white p-1 rounded hover:bg-white dark:bg-[#000313] transition"
                                 title="Edit Module"
                               >
                                 <Edit2 size={14} />
@@ -218,12 +216,10 @@ export default function TeacherLessonsPage() {
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  if (confirm('Are you sure you want to delete this module and all its lessons?')) {
-                                    deleteModule(mod.id);
-                                    if (expandedModule === mod.id) setExpandedModule(null);
-                                  }
+                                  // Remove confirm dialog for UX consistency
+                                  deleteModule(mod.id);  if (expandedModule === mod.id) setExpandedModule(null);
                                 }}
-                                className="text-[#1C1D20] hover:text-red-500 p-1 rounded hover:bg-red-50 transition"
+                                className="text-[#000313] dark:text-white hover:text-red-500 p-1 rounded hover:bg-red-50 transition"
                                 title="Delete Module"
                               >
                                 <Trash2 size={14} />
@@ -232,7 +228,7 @@ export default function TeacherLessonsPage() {
                                 animate={{ rotate: isModExpanded ? 90 : 0 }}
                                 transition={{ duration: 0.2 }}
                               >
-                                <ChevronRight size={16} className="text-[#1C1D20]" />
+                                <ChevronRight size={16} className="text-[#000313] dark:text-white" />
                               </motion.div>
                             </div>
                           </div>
@@ -249,17 +245,17 @@ export default function TeacherLessonsPage() {
                                     setSelectedLesson(lesson.id);
                                     setIsEditing(false);
                                   }}
-                                  className={`w-full flex items-center gap-3 pl-16 pr-5 py-2.5 text-left transition-colors ${isSelected
-                                      ? 'bg-[#F4EAF9] border-l-4 border-[#0ba2b3]'
-                                      : 'hover:bg-[#F8F8F8] border-l-4 border-transparent'
+                                    className={`w-full flex items-center gap-3 pl-16 pr-5 py-2.5 text-left transition-colors ${isSelected
+                                      ? 'bg-[#F4EAF9] dark:bg-purple-900/30 border-l-4 border-[#0ba2b3]'
+                                      : 'hover:bg-[#F8F8F8] dark:hover:bg-[#060a1d] dark:bg-transparent border-l-4 border-transparent'
                                     }`}
                                 >
                                   <Code
                                     size={14}
-                                    className={isSelected ? 'text-[#0ba2b3]' : 'text-[#1C1D20]'}
+                                    className={isSelected ? 'text-[#0ba2b3]' : 'text-[#000313] dark:text-white'}
                                   />
                                   <span
-                                    className={`text-sm font-semibold truncate ${isSelected ? 'text-[#0ba2b3]' : 'text-[#1C1D20]'
+                                    className={`text-sm font-semibold truncate ${isSelected ? 'text-[#0ba2b3]' : 'text-[#000313] dark:text-white'
                                       }`}
                                   >
                                     {lesson.title}
@@ -291,20 +287,20 @@ export default function TeacherLessonsPage() {
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.25 }}
-                className="bg-white rounded-2xl border-2 border-[#1C1D2033] overflow-hidden"
+                className="bg-white dark:bg-[#000313] rounded-2xl border-2 border-[#00031333] dark:border-white/20 overflow-hidden"
               >
                 {/* Lesson Header */}
-                <div className="px-6 py-5 border-b-2 border-[#1C1D2033] flex justify-between items-start">
+                <div className="px-6 py-5 border-b-2 border-[#00031333] dark:border-white/20 flex justify-between items-start">
                   <div>
                     <div className="flex items-center gap-2 mb-2">
-                      <span className="text-xs font-extrabold uppercase tracking-wider text-[#0ba2b3] bg-[#F4EAF9] px-2.5 py-1 rounded-full">
+                      <span className="text-xs font-extrabold uppercase tracking-wider text-[#0ba2b3] bg-[#F4EAF9] dark:bg-purple-900/30 px-2.5 py-1 rounded-full">
                         {selectedLessonData.unit.title.replace(/^Unit \d+:\s*/, '')}
                       </span>
-                      <span className="text-xs font-extrabold uppercase tracking-wider text-[#0ba2b3] bg-[#F0F8FF] px-2.5 py-1 rounded-full">
+                      <span className="text-xs font-extrabold uppercase tracking-wider text-[#0ba2b3] bg-[#F0F8FF] dark:bg-[#0a1128] px-2.5 py-1 rounded-full">
                         {selectedLessonData.module.title}
                       </span>
                     </div>
-                    <h2 className="text-xl font-extrabold text-[#1C1D20]">
+                    <h2 className="text-xl font-extrabold text-[#000313] dark:text-white">
                       {selectedLessonData.lesson.title}
                     </h2>
                     <div className="flex items-center gap-4 mt-2">
@@ -312,7 +308,7 @@ export default function TeacherLessonsPage() {
                         <CheckCircle size={12} />
                         +{selectedLessonData.lesson.xpReward} XP
                       </span>
-                      <span className="text-xs font-bold text-[#1C1D20]">
+                      <span className="text-xs font-bold text-[#000313] dark:text-white">
                         ID: {selectedLessonData.lesson.id}
                       </span>
                     </div>
@@ -321,13 +317,13 @@ export default function TeacherLessonsPage() {
                   <div className="flex gap-2">
                     <button
                       onClick={() => setIsEditing(true)}
-                      className="flex items-center gap-1 text-sm font-bold text-[#0ba2b3] bg-[#F0F8FF] px-3 py-1.5 rounded-lg hover:bg-[#1e91a3] hover:text-white transition"
+                      className="flex items-center gap-1 text-sm font-bold text-[#0ba2b3] bg-[#F0F8FF] dark:bg-[#0a1128] px-3 py-1.5 rounded-lg hover:bg-[#1e91a3] hover:text-white transition"
                     >
                       <Edit2 size={16} /> Edit
                     </button>
                     <button
                       onClick={handleDelete}
-                      className="flex items-center gap-1 text-sm font-bold text-red-500 bg-red-50 px-3 py-1.5 rounded-lg hover:bg-red-500 hover:text-white transition"
+                      className="flex items-center gap-1 text-sm font-bold text-red-500 bg-red-50 dark:bg-red-950/30 px-3 py-1.5 rounded-lg hover:bg-red-500 hover:text-white transition"
                     >
                       <Trash2 size={16} /> Delete
                     </button>
@@ -335,15 +331,15 @@ export default function TeacherLessonsPage() {
                 </div>
 
                 {/* Content Blocks (Theory) */}
-                <div className="px-6 py-5 border-b-2 border-[#1C1D2033]">
-                  <h3 className="text-xs font-extrabold uppercase tracking-wider text-[#1C1D20] mb-3 flex items-center gap-2">
+                <div className="px-6 py-5 border-b-2 border-[#00031333] dark:border-white/20">
+                  <h3 className="text-xs font-extrabold uppercase tracking-wider text-[#000313] dark:text-white mb-3 flex items-center gap-2">
                     <FileText size={14} />
                     Content Blocks ({selectedLessonData.lesson.contentBlocks.length})
                   </h3>
                   <div className="space-y-3">
                     {selectedLessonData.lesson.contentBlocks.map((block, idx) => (
-                      <div key={idx} className="bg-[#F8F8F8] rounded-xl p-4">
-                        <span className="text-[10px] font-extrabold uppercase tracking-widest text-[#0ba2b3] bg-[#F4EAF9] px-2 py-0.5 rounded-full mb-2 inline-block">
+                      <div key={idx} className="bg-[#F8F8F8] dark:bg-[#060a1d] rounded-xl p-4">
+                        <span className="text-[10px] font-extrabold uppercase tracking-widest text-[#0ba2b3] bg-[#F4EAF9] dark:bg-purple-900/30 px-2 py-0.5 rounded-full mb-2 inline-block">
                           {block.type}
                         </span>
                         {block.type === 'code' ? (
@@ -351,7 +347,7 @@ export default function TeacherLessonsPage() {
                             {block.content}
                           </pre>
                         ) : (
-                          <p className="text-sm text-[#1C1D20] font-semibold mt-1">{block.content}</p>
+                          <p className="text-sm text-[#000313] dark:text-white font-semibold mt-1">{block.content}</p>
                         )}
                       </div>
                     ))}
@@ -360,7 +356,7 @@ export default function TeacherLessonsPage() {
 
                 {/* Type-specific data */}
                 <div className="px-6 py-5">
-                  <h3 className="text-xs font-extrabold uppercase tracking-wider text-[#1C1D20] mb-3 flex items-center gap-2">
+                  <h3 className="text-xs font-extrabold uppercase tracking-wider text-[#000313] dark:text-white mb-3 flex items-center gap-2">
                     <Code size={14} />
                     Exercise Data — {selectedLessonData.lesson.lessonType.replace('_', ' ').toUpperCase()}
                   </h3>
@@ -368,14 +364,14 @@ export default function TeacherLessonsPage() {
                   {selectedLessonData.lesson.lessonType === 'code_fix' && (
                     <div className="space-y-3">
                       <div>
-                        <p className="text-xs font-bold text-[#1C1D20] mb-1">Starter Code</p>
+                        <p className="text-xs font-bold text-[#000313] dark:text-white mb-1">Starter Code</p>
                         <pre className="bg-gray-900 text-green-400 p-4 rounded-xl text-sm font-mono overflow-x-auto">
                           {selectedLessonData.lesson.initialCode}
                         </pre>
                       </div>
                       <div>
-                        <p className="text-xs font-bold text-[#1C1D20] mb-1">Expected Output</p>
-                        <pre className="bg-[#E8F5E9] text-[#2E7D32] p-4 rounded-xl text-sm font-mono border border-green-200">
+                        <p className="text-xs font-bold text-[#000313] dark:text-white mb-1">Expected Output</p>
+                        <pre className="bg-[#E8F5E9] dark:bg-green-950/30 text-[#2E7D32] dark:text-green-400 p-4 rounded-xl text-sm font-mono border border-green-200 dark:border-green-900">
                           {selectedLessonData.lesson.expectedOutput}
                         </pre>
                       </div>
@@ -385,24 +381,24 @@ export default function TeacherLessonsPage() {
                   {selectedLessonData.lesson.lessonType === 'fill_blanks' && (
                     <div className="space-y-3">
                       <div>
-                        <p className="text-xs font-bold text-[#1C1D20] mb-1">Code Template</p>
+                        <p className="text-xs font-bold text-[#000313] dark:text-white mb-1">Code Template</p>
                         <pre className="bg-gray-900 text-green-400 p-4 rounded-xl text-sm font-mono overflow-x-auto">
                           {(selectedLessonData.lesson.codeTemplate || []).join('\n')}
                         </pre>
                       </div>
                       <div>
-                        <p className="text-xs font-bold text-[#1C1D20] mb-1">Correct Tokens</p>
+                        <p className="text-xs font-bold text-[#000313] dark:text-white mb-1">Correct Tokens</p>
                         <div className="flex gap-2">
                           {(selectedLessonData.lesson.correctTokens || []).map((t: string, i: number) => (
-                            <span key={i} className="px-3 py-1.5 bg-[#E8F5E9] text-[#2E7D32] font-mono text-sm font-bold rounded-lg border border-green-200">{t}</span>
+                            <span key={i} className="px-3 py-1.5 bg-[#E8F5E9] dark:bg-green-950/30 text-[#2E7D32] dark:text-green-400 font-mono text-sm font-bold rounded-lg border border-green-200 dark:border-green-900">{t}</span>
                           ))}
                         </div>
                       </div>
                       <div>
-                        <p className="text-xs font-bold text-[#1C1D20] mb-1">Token Pool</p>
+                        <p className="text-xs font-bold text-[#000313] dark:text-white mb-1">Token Pool</p>
                         <div className="flex flex-wrap gap-2">
                           {(selectedLessonData.lesson.tokenPool || []).map((t: string, i: number) => (
-                            <span key={i} className="px-3 py-1.5 bg-[#F8F8F8] text-[#1C1D20] font-mono text-sm font-bold rounded-lg border border-[#1C1D2033]">{t}</span>
+                            <span key={i} className="px-3 py-1.5 bg-[#F8F8F8] dark:bg-[#060a1d] text-[#000313] dark:text-white font-mono text-sm font-bold rounded-lg border border-[#00031333] dark:border-white/20">{t}</span>
                           ))}
                         </div>
                       </div>
@@ -412,20 +408,20 @@ export default function TeacherLessonsPage() {
                   {selectedLessonData.lesson.lessonType === 'multiple_choice' && (
                     <div className="space-y-3">
                       <div>
-                        <p className="text-xs font-bold text-[#1C1D20] mb-1">Question</p>
-                        <div className="bg-[#F8F8F8] rounded-xl p-4 text-sm text-[#1C1D20] font-semibold">
+                        <p className="text-xs font-bold text-[#000313] dark:text-white mb-1">Question</p>
+                        <div className="bg-[#F8F8F8] dark:bg-[#060a1d] rounded-xl p-4 text-sm text-[#000313] dark:text-white font-semibold">
                           {selectedLessonData.lesson.question}
                         </div>
                       </div>
                       <div>
-                        <p className="text-xs font-bold text-[#1C1D20] mb-1">Options</p>
+                        <p className="text-xs font-bold text-[#000313] dark:text-white mb-1">Options</p>
                         <div className="space-y-2">
                           {(selectedLessonData.lesson.options || []).map((opt: string, i: number) => (
                             <div key={i} className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold ${i === (selectedLessonData.lesson as any).correctIndex
-                                ? 'bg-[#E8F5E9] text-[#2E7D32] border border-green-200'
-                                : 'bg-[#F8F8F8] text-[#1C1D20]'
+                                ? 'bg-[#E8F5E9] dark:bg-green-950/30 text-[#2E7D32] dark:text-green-400 border border-green-200 dark:border-green-900'
+                                : 'bg-[#F8F8F8] dark:bg-[#060a1d] text-[#000313] dark:text-white'
                               }`}>
-                              <span className="text-xs text-[#1C1D20] font-extrabold">{String.fromCharCode(65 + i)}.</span>
+                              <span className="text-xs text-[#000313] dark:text-white font-extrabold">{String.fromCharCode(65 + i)}.</span>
                               {opt}
                             </div>
                           ))}
@@ -437,12 +433,12 @@ export default function TeacherLessonsPage() {
               </motion.div>
             )
           ) : (
-            <div className="bg-white rounded-2xl border-2 border-[#1C1D2033] h-[400px] flex flex-col items-center justify-center text-center px-6">
-              <div className="w-16 h-16 bg-[#F8F8F8] rounded-full flex items-center justify-center mb-4">
-                <BookOpen size={28} className="text-[#1C1D20]" />
+            <div className="bg-white dark:bg-[#000313] rounded-2xl border-2 border-[#00031333] dark:border-white/20 h-[400px] flex flex-col items-center justify-center text-center px-6">
+              <div className="w-16 h-16 bg-[#F8F8F8] dark:bg-[#060a1d] rounded-full flex items-center justify-center mb-4">
+                <BookOpen size={28} className="text-[#000313] dark:text-white" />
               </div>
-              <h3 className="font-extrabold text-[#1C1D20] mb-1">Select a Lesson</h3>
-              <p className="text-sm text-[#1C1D20] font-semibold">
+              <h3 className="font-extrabold text-[#000313] dark:text-white mb-1">Select a Lesson</h3>
+              <p className="text-sm text-[#000313] dark:text-white font-semibold">
                 ဘယ်ဘက်က syllabus tree ထဲက lesson ကိုရွေးပါ
               </p>
             </div>
@@ -452,13 +448,13 @@ export default function TeacherLessonsPage() {
 
       {/* Add Lesson Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
-          <div className="bg-white rounded-2xl p-6 w-full max-w-[400px]">
-            <h2 className="text-xl font-extrabold text-[#1C1D20] mb-4">Add New Lesson</h2>
+        <div className="fixed inset-0 bg-[#000313]/50 flex items-center justify-center z-50 px-4">
+          <div className="bg-white dark:bg-[#000313] rounded-2xl p-6 w-full max-w-[400px]">
+            <h2 className="text-xl font-extrabold text-[#000313] dark:text-white mb-4">Add New Lesson</h2>
             <div className="space-y-4 mb-6">
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <label className="block text-xs font-bold text-[#1C1D20] uppercase tracking-wider">Select Unit</label>
+                  <label className="block text-xs font-bold text-[#000313] dark:text-white uppercase tracking-wider">Select Unit</label>
                   <button
                     onClick={() => {
                       setEditingUnitId(null);
@@ -466,13 +462,13 @@ export default function TeacherLessonsPage() {
                       setNewUnitDescription('');
                       setShowAddUnitModal(true);
                     }}
-                    className="text-xs font-bold text-[#0ba2b3] hover:bg-[#F4EAF9] px-2 py-0.5 rounded transition"
+                    className="text-xs font-bold text-[#0ba2b3] hover:bg-[#F4EAF9] dark:hover:bg-purple-900/30 px-2 py-0.5 rounded transition"
                   >
                     + New Unit
                   </button>
                 </div>
                 <select
-                  className="w-full border-2 border-[#1C1D2033] rounded-xl p-3 font-bold text-[#1C1D20] outline-none focus:border-[#0ba2b3]"
+                  className="w-full border-2 border-[#00031333] dark:border-white/20 rounded-xl p-3 font-bold text-[#000313] dark:text-white outline-none focus:border-[#0ba2b3]"
                   value={addModalUnitId}
                   onChange={(e) => {
                     setAddModalUnitId(e.target.value);
@@ -487,7 +483,7 @@ export default function TeacherLessonsPage() {
               </div>
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <label className="block text-xs font-bold text-[#1C1D20] uppercase tracking-wider">Select Module</label>
+                  <label className="block text-xs font-bold text-[#000313] dark:text-white uppercase tracking-wider">Select Module</label>
                   <button
                     onClick={() => {
                       if (!addModalUnitId) return alert('Select a unit first.');
@@ -497,13 +493,13 @@ export default function TeacherLessonsPage() {
                       setNewModuleDescription('');
                       setShowAddModuleModal(true);
                     }}
-                    className="text-xs font-bold text-[#0ba2b3] hover:bg-[#F0F8FF] px-2 py-0.5 rounded transition"
+                    className="text-xs font-bold text-[#0ba2b3] hover:bg-[#F0F8FF] dark:bg-[#0a1128] px-2 py-0.5 rounded transition"
                   >
                     + New Module
                   </button>
                 </div>
                 <select
-                  className="w-full border-2 border-[#1C1D2033] rounded-xl p-3 font-bold text-[#1C1D20] outline-none focus:border-[#0ba2b3]"
+                  className="w-full border-2 border-[#00031333] dark:border-white/20 rounded-xl p-3 font-bold text-[#000313] dark:text-white outline-none focus:border-[#0ba2b3]"
                   value={addModalModuleId}
                   onChange={(e) => setAddModalModuleId(e.target.value)}
                 >
@@ -514,7 +510,7 @@ export default function TeacherLessonsPage() {
               </div>
             </div>
             <div className="flex gap-3">
-              <button onClick={() => setShowAddModal(false)} className="flex-1 py-3 rounded-xl font-bold text-[#1C1D20] bg-[#F8F8F8] hover:bg-[#1C1D2033] transition">Cancel</button>
+              <button onClick={() => setShowAddModal(false)} className="flex-1 py-3 rounded-xl font-bold text-[#000313] dark:text-white bg-[#F8F8F8] dark:bg-[#060a1d] hover:bg-[#00031333] dark:bg-white/20 transition">Cancel</button>
               <button
                 onClick={() => {
                   if (!addModalModuleId) return;
@@ -546,18 +542,18 @@ export default function TeacherLessonsPage() {
 
       {/* Add/Edit Unit Modal */}
       {showAddUnitModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] px-4">
-          <div className="bg-white rounded-2xl p-6 w-full max-w-[400px]">
-            <h2 className="text-xl font-extrabold text-[#1C1D20] mb-4">
+        <div className="fixed inset-0 bg-[#000313]/50 flex items-center justify-center z-[60] px-4">
+          <div className="bg-white dark:bg-[#000313] rounded-2xl p-6 w-full max-w-[400px]">
+            <h2 className="text-xl font-extrabold text-[#000313] dark:text-white mb-4">
               {editingUnitId ? 'Edit Unit' : 'Add New Unit'}
             </h2>
             <div className="space-y-4 mb-6">
               <div>
-                <label className="block text-xs font-bold text-[#1C1D20] uppercase tracking-wider mb-2">Unit Title</label>
+                <label className="block text-xs font-bold text-[#000313] dark:text-white uppercase tracking-wider mb-2">Unit Title</label>
                 <input
                   type="text"
                   placeholder="e.g. Unit 1: Python Basics"
-                  className="w-full border-2 border-[#1C1D2033] rounded-xl p-3 font-bold text-[#1C1D20] outline-none focus:border-[#0ba2b3]"
+                  className="w-full border-2 border-[#00031333] dark:border-white/20 rounded-xl p-3 font-bold text-[#000313] dark:text-white outline-none focus:border-[#0ba2b3]"
                   value={newUnitTitle}
                   onChange={(e) => setNewUnitTitle(e.target.value)}
                 />
@@ -571,7 +567,7 @@ export default function TeacherLessonsPage() {
                   setNewUnitDescription('');
                   setEditingUnitId(null);
                 }}
-                className="flex-1 py-3 rounded-xl font-bold text-[#1C1D20] bg-[#F8F8F8] hover:bg-[#1C1D2033] transition"
+                className="flex-1 py-3 rounded-xl font-bold text-[#000313] dark:text-white bg-[#F8F8F8] dark:bg-[#060a1d] hover:bg-[#00031333] dark:bg-white/20 transition"
               >
                 Cancel
               </button>
@@ -601,18 +597,18 @@ export default function TeacherLessonsPage() {
 
       {/* Add/Edit Module Modal */}
       {showAddModuleModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] px-4">
-          <div className="bg-white rounded-2xl p-6 w-full max-w-[400px]">
-            <h2 className="text-xl font-extrabold text-[#1C1D20] mb-4">
+        <div className="fixed inset-0 bg-[#000313]/50 flex items-center justify-center z-[60] px-4">
+          <div className="bg-white dark:bg-[#000313] rounded-2xl p-6 w-full max-w-[400px]">
+            <h2 className="text-xl font-extrabold text-[#000313] dark:text-white mb-4">
               {editingModuleId ? 'Edit Module' : 'Add New Module'}
             </h2>
             <div className="space-y-4 mb-6">
               <div>
-                <label className="block text-xs font-bold text-[#1C1D20] uppercase tracking-wider mb-2">Module Title</label>
+                <label className="block text-xs font-bold text-[#000313] dark:text-white uppercase tracking-wider mb-2">Module Title</label>
                 <input
                   type="text"
                   placeholder="e.g. Variables and Data Types"
-                  className="w-full border-2 border-[#1C1D2033] rounded-xl p-3 font-bold text-[#1C1D20] outline-none focus:border-[#0ba2b3]"
+                  className="w-full border-2 border-[#00031333] dark:border-white/20 rounded-xl p-3 font-bold text-[#000313] dark:text-white outline-none focus:border-[#0ba2b3]"
                   value={newModuleTitle}
                   onChange={(e) => setNewModuleTitle(e.target.value)}
                 />
@@ -626,7 +622,7 @@ export default function TeacherLessonsPage() {
                   setNewModuleDescription('');
                   setEditingModuleId(null);
                 }}
-                className="flex-1 py-3 rounded-xl font-bold text-[#1C1D20] bg-[#F8F8F8] hover:bg-[#1C1D2033] transition"
+                className="flex-1 py-3 rounded-xl font-bold text-[#000313] dark:text-white bg-[#F8F8F8] dark:bg-[#060a1d] hover:bg-[#00031333] dark:bg-white/20 transition"
               >
                 Cancel
               </button>
