@@ -77,12 +77,12 @@ export default function LeaderboardPage() {
   }
 
   // Sort and assign ranks
-  allUsers = allUsers
+  const rankedUsers = allUsers
     .sort((a, b) => b.xp - a.xp)
     .map((user, idx) => ({ ...user, rank: idx + 1 }));
 
   const currentUserRank = isUserInThisTier 
-    ? (allUsers.find((u) => u.id === 0)?.rank ?? allUsers.length)
+    ? (rankedUsers.find((u) => u.id === 0)?.rank ?? rankedUsers.length)
     : '-';
 
   const getRankIcon = (rank: number) => {
@@ -208,7 +208,7 @@ export default function LeaderboardPage() {
           <span>Total XP</span>
         </div>
         
-        {allUsers.map((user, idx) => {
+        {rankedUsers.map((user, idx) => {
           const isCurrentUser = user.id === 0;
           const isTop3 = user.rank <= 3;
 
