@@ -2,36 +2,51 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Trophy, Store, GraduationCap, Target, User, Swords, MoreHorizontal, Settings, HelpCircle, LogOut } from 'lucide-react';
+import {
+  LayoutDashboard,
+  BookOpen,
+  FileText,
+  Target,
+  Settings,
+  HelpCircle,
+  MoreHorizontal,
+  LogOut,
+  GraduationCap,
+  User,
+} from 'lucide-react';
 import { motion } from 'framer-motion';
 
-const navItems = [
-  { href: '/', label: 'Learn', icon: Home, color: 'text-[#0ba2b3]' },
-  { href: '/leaderboard', label: 'Leaderboard', icon: Trophy, color: 'text-[#0ba2b3]' },
-  { href: '/quests', label: 'Quests', icon: Target, color: 'text-[#0ba2b3]' },
-  { href: '/shop', label: 'Shop', icon: Store, color: 'text-[#0ba2b3]' },
-  { href: '/profile', label: 'Profile', icon: User, color: 'text-[#0ba2b3]' },
-  { href: '/challenge', label: 'Challenge', icon: Swords, color: 'text-[#0ba2b3]' },
+const teacherNavItems = [
+  { href: '/teacher', label: 'Dashboard', icon: LayoutDashboard, color: 'text-[#0ba2b3]' },
+  { href: '/teacher/lessons', label: 'Lessons', icon: BookOpen, color: 'text-[#0ba2b3]' },
+  { href: '/teacher/challenges', label: 'Challenges', icon: Target, color: 'text-[#0ba2b3]' },
+  { href: '/teacher/submissions', label: 'Submissions', icon: FileText, color: 'text-[#0ba2b3]' },
+  { href: '/teacher/profile', label: 'Profile', icon: User, color: 'text-[#0ba2b3]' },
 ];
 
-export const Sidebar = () => {
+export const TeacherSidebar = () => {
   const pathname = usePathname();
 
   return (
     <div className="h-full w-[256px] lg:flex flex-col hidden left-0 top-0 border-r-2 border-[#00031333] dark:border-white/20 px-4 fixed bg-white dark:bg-[#000313] z-30">
       {/* Logo */}
-      <Link href="/">
-        <div className="pt-8 pl-4 pb-7 flex items-center gap-x-3">
+      <Link href="/teacher">
+        <div className="pt-8 pl-4 pb-3 flex items-center gap-x-3">
           <GraduationCap size={32} className="text-[#0ba2b3]" strokeWidth={2.5} />
           <h1 className="text-2xl font-extrabold text-[#0ba2b3] tracking-wide">
             DeepDive
           </h1>
         </div>
       </Link>
+      <div className="pl-4 pb-6">
+        <span className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-white bg-[#0ba2b3] px-2.5 py-1 rounded-full">
+          Teacher
+        </span>
+      </div>
 
       {/* Navigation */}
       <div className="flex flex-col gap-y-1 flex-1">
-        {navItems.map((item) => {
+        {teacherNavItems.map((item) => {
           const Icon = item.icon;
           const isActive = pathname === item.href;
 
@@ -73,10 +88,10 @@ export const Sidebar = () => {
             {/* Invisible bridge for hover */}
             <div className="absolute -left-8 -top-8 -bottom-8 w-16 bg-transparent" />
             <div className="flex flex-col bg-white dark:bg-[#000313] border-2 border-[#00031333] dark:border-white/20 rounded-xl shadow-[0_4px_12px_rgba(0,0,0,0.1)] w-56 overflow-hidden py-2 relative">
-              <Link href="/settings" className="flex items-center gap-3 px-4 py-3 hover:bg-[#F8F8F8] dark:hover:bg-white/5 font-bold text-[#000313] dark:text-white text-sm uppercase transition cursor-pointer">
+              <Link href="/teacher/settings" className="flex items-center gap-3 px-4 py-3 hover:bg-[#F8F8F8] dark:hover:bg-white/5 font-bold text-[#000313] dark:text-white text-sm uppercase transition cursor-pointer">
                 <Settings size={22} className="text-[#0ba2b3]" strokeWidth={2.5} /> Settings
               </Link>
-              <Link href="/help" className="flex items-center gap-3 px-4 py-3 hover:bg-[#F8F8F8] dark:hover:bg-white/5 font-bold text-[#000313] dark:text-white text-sm uppercase transition cursor-pointer">
+              <Link href="/teacher/help" className="flex items-center gap-3 px-4 py-3 hover:bg-[#F8F8F8] dark:hover:bg-white/5 font-bold text-[#000313] dark:text-white text-sm uppercase transition cursor-pointer">
                 <HelpCircle size={22} className="text-[#0ba2b3]" strokeWidth={2.5} /> Help
               </Link>
               <div className="h-[2px] bg-[#00031333] dark:bg-white/20 w-full my-1" />
@@ -86,6 +101,16 @@ export const Sidebar = () => {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Bottom: Switch to Student */}
+      <div className="border-t-2 border-[#00031333] dark:border-white/20 pt-4 pb-6 flex flex-col gap-2">
+        <Link href="/">
+          <div className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-bold text-[#0ba2b3] hover:bg-[#F0F8FF] dark:bg-[#0a1128] transition-colors cursor-pointer">
+            <GraduationCap size={20} strokeWidth={2.5} />
+            Student View
+          </div>
+        </Link>
       </div>
     </div>
   );
