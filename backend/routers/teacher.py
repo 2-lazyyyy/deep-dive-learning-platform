@@ -125,6 +125,7 @@ def create_lesson(payload: LessonCreate):
             "theory_content": payload.theory_content,
             "starter_code": payload.starter_code,
             "expected_output": payload.expected_output,
+            "test_code": payload.test_code,
             "xp_reward": payload.xp_reward,
             "order_index": payload.order_index
         }).execute()
@@ -140,6 +141,7 @@ def create_lesson(payload: LessonCreate):
             theory_content=l.get("theory_content"),
             starter_code=l.get("starter_code", ""),
             expected_output=l.get("expected_output", ""),
+            test_code=l.get("test_code", ""),
             xp_reward=l.get("xp_reward", 15),
             order_index=l.get("order_index", 0),
             created_at=str(l.get("created_at", ""))
@@ -172,6 +174,7 @@ def update_lesson(lesson_id: str, payload: LessonUpdate):
             theory_content=l.get("theory_content"),
             starter_code=l.get("starter_code", ""),
             expected_output=l.get("expected_output", ""),
+            test_code=l.get("test_code", ""),
             xp_reward=l.get("xp_reward", 15),
             order_index=l.get("order_index", 0),
             created_at=str(l.get("created_at", ""))

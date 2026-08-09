@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+
+  api:
+    build:
+      context: ./backend
+    ports:
+      - "8000:8000"
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+    env_file:
+      - ./backend/.env
+    depends_on:
+      - redis
+
+  worker:
+    build:
+      context: ./backend
+    command: ["celery", "-A", "worker.celery_app", "worker", "--loglevel=info"]
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+    env_file:
+      - ./backend/.env
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      - redis

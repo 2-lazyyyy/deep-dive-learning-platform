@@ -50,6 +50,7 @@ class LessonCreate(BaseModel):
     theory_content: Optional[str] = ""
     starter_code: str = ""
     expected_output: str = ""
+    test_code: Optional[str] = ""
     xp_reward: int = 15
     order_index: int = 0
 
@@ -58,6 +59,7 @@ class LessonUpdate(BaseModel):
     theory_content: Optional[str] = None
     starter_code: Optional[str] = None
     expected_output: Optional[str] = None
+    test_code: Optional[str] = None
     xp_reward: Optional[int] = None
     order_index: Optional[int] = None
 
@@ -68,6 +70,7 @@ class LessonResponse(BaseModel):
     theory_content: Optional[str] = None
     starter_code: str
     expected_output: str
+    test_code: Optional[str] = None
     xp_reward: int
     order_index: int
     created_at: Optional[str] = None
@@ -104,3 +107,19 @@ class DashboardStatsResponse(BaseModel):
     passed_submissions: int
     failed_submissions: int
     total_lessons: int
+
+# ============================================================
+# GAMIFICATION SCHEMAS
+# ============================================================
+class UserProgressResponse(BaseModel):
+    id: str
+    name: str
+    role: str
+    xp: int
+    hearts: int
+
+class LeaderboardEntry(BaseModel):
+    id: str
+    name: str
+    xp: int
+    rank: int
