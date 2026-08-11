@@ -7,7 +7,9 @@ from models import (
     SubmissionDetail,
     LessonResponse,
     UnitResponse,
-    ModuleResponse
+    ModuleResponse,
+    UserProgressResponse,
+    LeaderboardEntry
 )
 from worker import queue_submission
 
@@ -107,6 +109,7 @@ def list_all_lessons():
                     theory_content=l.get("theory_content"),
                     starter_code=l.get("starter_code", ""),
                     expected_output=l.get("expected_output", ""),
+                    test_code=l.get("test_code", ""),
                     xp_reward=l.get("xp_reward", 15),
                     order_index=l.get("order_index", 0),
                     created_at=str(l.get("created_at", ""))
@@ -166,6 +169,7 @@ def get_lesson_detail(lesson_id: str):
             theory_content=l.get("theory_content"),
             starter_code=l.get("starter_code", ""),
             expected_output=l.get("expected_output", ""),
+            test_code=l.get("test_code", ""),
             xp_reward=l.get("xp_reward", 15),
             order_index=l.get("order_index", 0),
             created_at=str(l.get("created_at", ""))
@@ -174,3 +178,51 @@ def get_lesson_detail(lesson_id: str):
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching lesson: {str(e)}")
+
+
+@router.get("/users/{user_id}/progress", response_model=UserProgressResponse)
+def get_user_progress(user_id: str):
+    """
+    Fetches the student's current XP and Hearts for Gamification logic.
+    """
+    try:
+        res = supabase.table("users").select("id, name, role, xp, hearts").eq("id", user_id).execute()
+        if not res.data or len(res.data) == 0:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        u = res.data[0]
+        return UserProgressResponse(
+            id=u["id"],
+            name=u["name"],
+            role=u["role"],
+            xp=u.get("xp", 0),
+            hearts=u.get("hearts", 5)
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching user progress: {str(e)}")
+
+@router.get("/leaderboard", response_model=List[LeaderboardEntry])
+def get_leaderboard(limit: int = 10):
+    """
+    Fetches the top students ordered by XP for the Leaderboard.
+    """
+    try:
+        res = supabase.table("users").select("id, name, xp").eq("role", "student").order("xp", desc=True).limit(limit).execute()
+        
+        result = []
+        for index, u in enumerate(res.data or []):
+            result.append(
+                LeaderboardEntry(
+                    id=u["id"],
+                    name=u["name"],
+                    xp=u.get("xp", 0),
+                    rank=index + 1
+                )
+            )
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching leaderboard: {str(e)}")
+
+
