@@ -1,11 +1,11 @@
 'use client';
 
 import React, { useState, useCallback } from 'react';
-import { usePython } from 'react-py';
 import { Play, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 interface CodeSandboxProps {
+  lessonId: string;
   initialCode: string;
   expectedOutput?: string;
   onSuccess?: () => void;
@@ -14,6 +14,7 @@ interface CodeSandboxProps {
 }
 
 export const CodeSandbox = ({
+  lessonId,
   initialCode,
   expectedOutput,
   onSuccess,
@@ -23,50 +24,79 @@ export const CodeSandbox = ({
   const [code, setCode] = useState(initialCode);
   const [hasResult, setHasResult] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
-  const [hasChecked, setHasChecked] = useState(true);
-  const { runPython, stdout, stderr, isLoading, isRunning } = usePython();
+  const [isRunning, setIsRunning] = useState(false);
+  const [stdout, setStdout] = useState('');
+  const [stderr, setStderr] = useState('');
 
   const handleRun = useCallback(async () => {
-    if (disabled) return;
+    if (disabled || isRunning) return;
     setHasResult(false);
     setIsCorrect(false);
-    setHasChecked(false);
+    setIsRunning(true);
+    setStdout('');
+    setStderr('');
 
     try {
-      await runPython(code);
-    } catch {
-      // Errors are captured in stderr by react-py
-    }
-  }, [code, runPython, disabled]);
+      // 1. Submit Code to FastAPI Backend
+      const response = await fetch('http://localhost:8000/api/v1/submissions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_id: '00000000-0000-0000-0000-000000000002', // Hardcoded Demo Student ID
+          lesson_id: lessonId,
+          code: code,
+          language: 'python'
+        })
+      });
+      
+      if (!response.ok) {
+        throw new Error(`API Error: ${response.statusText}`);
+      }
 
-  // Check result after execution completes
-  React.useEffect(() => {
-    if (!isRunning && !isLoading && (stdout || stderr) && !hasChecked) {
-      setHasResult(true);
-      setHasChecked(true);
+      const data = await response.json();
+      const submissionId = data.submission_id;
 
-      if (expectedOutput && !stderr) {
-        const normalize = (str: string) => str.split('\n').map(l => l.trim()).filter(Boolean).join('\n');
-        const normalizedStdout = normalize(stdout);
-        const normalizedExpected = normalize(expectedOutput);
-
-        const cleanStdout = normalizedStdout.replace(/[^a-zA-Z0-9-]/g, '');
-        const cleanExpected = normalizedExpected.replace(/[^a-zA-Z0-9-]/g, '');
-        const isMatch = cleanStdout === cleanExpected;
-
-        if (isMatch) {
-          setIsCorrect(true);
-          onSuccess?.();
-        } else {
+      // 2. Poll the API every 1 second until completed or error
+      const pollInterval = setInterval(async () => {
+        try {
+          const checkRes = await fetch(`http://localhost:8000/api/v1/submissions/${submissionId}`);
+          if (!checkRes.ok) throw new Error('Failed to check submission status');
+          
+          const checkData = await checkRes.json();
+          
+          if (checkData.status === 'completed' || checkData.status === 'error') {
+            clearInterval(pollInterval);
+            setIsRunning(false);
+            setStdout(checkData.output || '');
+            setStderr(checkData.error || '');
+            setHasResult(true);
+            
+            if (checkData.passed) {
+              setIsCorrect(true);
+              onSuccess?.();
+            } else {
+              setIsCorrect(false);
+              onError?.();
+            }
+          }
+        } catch (pollErr) {
+          clearInterval(pollInterval);
+          setIsRunning(false);
+          setStderr(String(pollErr));
           setIsCorrect(false);
+          setHasResult(true);
           onError?.();
         }
-      } else if (stderr) {
-        setIsCorrect(false);
-        onError?.();
-      }
+      }, 1000);
+
+    } catch (err) {
+      setIsRunning(false);
+      setStderr(String(err));
+      setIsCorrect(false);
+      setHasResult(true);
+      onError?.();
     }
-  }, [isRunning, isLoading, stdout, stderr, expectedOutput, onSuccess, onError, hasChecked]);
+  }, [code, disabled, isRunning, lessonId, onSuccess, onError]);
 
   return (
     <div className="flex flex-col gap-4 w-full">
@@ -85,22 +115,22 @@ export const CodeSandbox = ({
           onChange={(e) => setCode(e.target.value)}
           className="w-full h-44 p-4 font-mono text-sm bg-gray-900 text-green-400 outline-none resize-none leading-relaxed"
           spellCheck="false"
-          disabled={disabled}
+          disabled={disabled || isRunning}
         />
       </div>
 
       {/* Run Button */}
       <motion.button
-        whileHover={!disabled ? { scale: 1.02 } : {}}
-        whileTap={!disabled ? { scale: 0.98 } : {}}
+        whileHover={!disabled && !isRunning ? { scale: 1.02 } : {}}
+        whileTap={!disabled && !isRunning ? { scale: 0.98 } : {}}
         onClick={handleRun}
-        disabled={isLoading || isRunning || disabled}
+        disabled={isRunning || disabled}
         className="flex items-center justify-center gap-2.5 bg-[#0ba2b3] hover:bg-[#1e91a3] text-white font-extrabold py-3.5 px-8 rounded-xl border-b-4 border-[#1e91a3] active:border-b-0 active:translate-y-1 transition-all disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-wide"
       >
-        {isLoading || isRunning ? (
+        {isRunning ? (
           <>
             <Loader2 size={20} className="animate-spin" strokeWidth={3} />
-            {isLoading ? 'LOADING ENGINE...' : 'RUNNING...'}
+            RUNNING ON CLOUD...
           </>
         ) : (
           <>
@@ -139,7 +169,6 @@ export const CodeSandbox = ({
                 Expected Output:
               </p>
               <pre className="text-gray-800 whitespace-pre-wrap">{expectedOutput}</pre>
-
             </div>
           )}
         </motion.div>

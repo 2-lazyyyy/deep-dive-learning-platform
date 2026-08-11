@@ -21,9 +21,12 @@ export default function LessonPage() {
   const [isMounted, setIsMounted] = useState(false);
   const [mobileTab, setMobileTab] = useState<'lesson' | 'code'>('lesson');
 
+  const { fetchProgress } = useUserStore();
+
   useEffect(() => {
     setIsMounted(true);
-  }, []);
+    fetchProgress('00000000-0000-0000-0000-000000000002');
+  }, [fetchProgress]);
   const { units, getLessonById, getNextLessonId, getAllLessons } = useLessonStore();
   const lesson = getLessonById(lessonId);
   const allLessons = getAllLessons();
@@ -342,6 +345,7 @@ export default function LessonPage() {
               {lesson.lessonType === 'code_fix' && (
                 <CodeSandbox
                   key={`${lesson.id}-${retryCount}`}
+                  lessonId={lesson.id}
                   initialCode={(lesson as any).initialCode}
                   expectedOutput={(lesson as any).expectedOutput}
                   onSuccess={handleSuccess}

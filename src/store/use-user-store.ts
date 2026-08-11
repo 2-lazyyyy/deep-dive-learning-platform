@@ -23,6 +23,7 @@ interface UserState {
   refillHearts: () => void;
   spendGems: (amount: number) => boolean;
   addGems: (amount: number) => void;
+  fetchProgress: (userId: string) => Promise<void>;
 
   // Actions — Progress
   completeLesson: (lessonId: string) => void;
@@ -64,6 +65,18 @@ export const useUserStore = create<UserState>((set, get) => ({
     return true;
   },
   addGems: (amount) => set((state) => ({ gems: state.gems + amount })),
+
+  fetchProgress: async (userId: string) => {
+    try {
+      const res = await fetch(`http://localhost:8000/api/v1/users/${userId}/progress`);
+      if (res.ok) {
+        const data = await res.json();
+        set({ xp: data.xp, hearts: data.hearts });
+      }
+    } catch (e) {
+      console.error("Failed to fetch progress:", e);
+    }
+  },
 
   completeLesson: (lessonId) =>
     set((state) => {
