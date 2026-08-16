@@ -26,6 +26,7 @@ export default function LessonPage() {
   useEffect(() => {
     setIsMounted(true);
     fetchProgress('00000000-0000-0000-0000-000000000002');
+    useLessonStore.getState().fetchLessons();
   }, [fetchProgress]);
   const { units, getLessonById, getNextLessonId, getAllLessons } = useLessonStore();
   const lesson = getLessonById(lessonId);
@@ -71,23 +72,50 @@ export default function LessonPage() {
   const [retryCount, setRetryCount] = useState(0);
   const [isFinished, setIsFinished] = useState(false);
 
-  const xpReward = lesson?.xpReward || 0;
+  const isPractice = completedLessonIds.includes(lessonId);
+  const xpReward = isPractice ? 5 : (lesson?.xpReward || 0);
 
-  const handleSuccess = useCallback(() => {
+  const handleSuccess = useCallback(async () => {
     setIsCorrect(true);
     setShowResult(true);
     addXp(xpReward);
     completeLesson(lessonId);
-  }, [lessonId, xpReward, addXp, completeLesson]);
 
-  const handleError = useCallback(() => {
-    reduceHeart();
+    if (lesson?.lessonType !== 'code_fix') {
+      try {
+        await fetch(`http://localhost:8000/api/v1/users/00000000-0000-0000-0000-000000000002/progress/update`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ lesson_id: lessonId, passed: true, is_practice: isPractice })
+        });
+      } catch (e) {
+        console.error("Failed to update progress on backend", e);
+      }
+    }
+  }, [lessonId, xpReward, addXp, completeLesson, lesson?.lessonType, isPractice]);
+
+  const handleError = useCallback(async () => {
+    if (!isPractice) {
+      reduceHeart();
+    }
     setIsCorrect(false);
     setShowResult(true);
-    if (hearts <= 1) {
+    if (!isPractice && hearts <= 1) {
       setTimeout(() => setShowHeartsModal(true), 1500);
     }
-  }, [reduceHeart, hearts]);
+    
+    if (lesson?.lessonType !== 'code_fix') {
+      try {
+        await fetch(`http://localhost:8000/api/v1/users/00000000-0000-0000-0000-000000000002/progress/update`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ lesson_id: lessonId, passed: false, is_practice: isPractice })
+        });
+      } catch (e) {
+        console.error("Failed to update progress on backend", e);
+      }
+    }
+  }, [hearts, reduceHeart, lessonId, lesson?.lessonType, isPractice]);
 
   const handleContinue = useCallback(() => {
     setShowResult(false);
@@ -350,6 +378,7 @@ export default function LessonPage() {
                   expectedOutput={(lesson as any).expectedOutput}
                   onSuccess={handleSuccess}
                   onError={handleError}
+                  isPractice={isPractice}
                 />
               )}
 
@@ -408,7 +437,7 @@ export default function LessonPage() {
         <ResultModal
           isOpen={true}
           isSuccess={isCorrect}
-          xpEarned={isCorrect ? (lesson?.xpReward || 0) : 0}
+          xpEarned={isCorrect ? xpReward : 0}
           onContinue={handleContinue}
           onRetry={() => {
             setShowResult(false);

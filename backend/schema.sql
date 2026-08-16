@@ -11,6 +11,8 @@ CREATE TABLE IF NOT EXISTS users (
     role TEXT NOT NULL CHECK (role IN ('student', 'teacher')),
     xp INTEGER NOT NULL DEFAULT 0,
     hearts INTEGER NOT NULL DEFAULT 5,
+    gems INTEGER NOT NULL DEFAULT 500,
+    last_heart_update TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
@@ -36,10 +38,9 @@ CREATE TABLE IF NOT EXISTS lessons (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     module_id UUID NOT NULL REFERENCES modules(id) ON DELETE CASCADE,
     title TEXT NOT NULL,
-    theory_content TEXT,
-    starter_code TEXT NOT NULL DEFAULT '',
-    expected_output TEXT NOT NULL DEFAULT '',
-    test_code TEXT,
+    lesson_type TEXT NOT NULL DEFAULT 'code_fix' CHECK (lesson_type IN ('code_fix', 'fill_blanks', 'multiple_choice')),
+    content_blocks JSONB NOT NULL DEFAULT '[]'::jsonb,
+    exercise_data JSONB NOT NULL DEFAULT '{}'::jsonb,
     xp_reward INTEGER NOT NULL DEFAULT 15,
     order_index INTEGER NOT NULL DEFAULT 0,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
@@ -73,27 +74,31 @@ CREATE INDEX IF NOT EXISTS idx_lessons_module_id ON lessons(module_id);
 -- ============================================================
 -- SEED DATA: Teacher Account (Phase 1 Demo)
 -- ============================================================
-INSERT INTO users (id, name, email, role, xp, hearts)
+INSERT INTO users (id, name, email, role, xp, hearts, gems, last_heart_update)
 VALUES (
     '00000000-0000-0000-0000-000000000001',
     'Demo Teacher',
     'teacher@deepdive.edu',
     'teacher',
     0,
-    5
+    5,
+    500,
+    NOW()
 ) ON CONFLICT (email) DO NOTHING;
 
 -- ============================================================
 -- SEED DATA: Sample Student Account (For Demo)
 -- ============================================================
-INSERT INTO users (id, name, email, role, xp, hearts)
+INSERT INTO users (id, name, email, role, xp, hearts, gems, last_heart_update)
 VALUES (
     '00000000-0000-0000-0000-000000000002',
     'Demo Student',
     'student@deepdive.edu',
     'student',
     45,
-    5
+    5,
+    500,
+    NOW()
 ) ON CONFLICT (email) DO NOTHING;
 
 -- ============================================================
@@ -120,57 +125,17 @@ VALUES (
 -- ============================================================
 -- SEED DATA: 5 Sample Lessons (Python Basics)
 -- ============================================================
-INSERT INTO lessons (id, module_id, title, theory_content, starter_code, expected_output, xp_reward, order_index)
+INSERT INTO lessons (id, module_id, title, lesson_type, content_blocks, exercise_data, xp_reward, order_index)
 VALUES
 (
     '30000000-0000-0000-0000-000000000001',
     '20000000-0000-0000-0000-000000000001',
     'Lesson 1: Hello World ထုတ်ခြင်း',
-    '## Hello World\nPython မှာ screen ပေါ်သို့ text ထုတ်ရန် `print()` function ကို သုံးသည်။\n\nprint() function သည် parentheses ထဲ ထည့်သော text ကို screen ပေါ်တွင် ပြသည်။',
-    'print("___")',
-    'Hello, World!',
+    'code_fix',
+    '[{"type":"text","content":"## Hello World\nPython မှာ screen ပေါ်သို့ text ထုတ်ရန် `print()` function ကို သုံးသည်။"}]'::jsonb,
+    '{"initialCode":"print(\"___\")","expectedOutput":"Hello, World!","testCode":"import sys"}',
     15,
     1
-),
-(
-    '30000000-0000-0000-0000-000000000002',
-    '20000000-0000-0000-0000-000000000001',
-    'Lesson 2: Variable သတ်မှတ်ခြင်း',
-    '## Variables\nVariable ဆိုသည်မှာ data ကို သိမ်းဆည်းသော နေရာတစ်ခုဖြစ်သည်။\n\nname = "Alice"\nprint(name)',
-    'name = "___"\nprint(name)',
-    'Alice',
-    15,
-    2
-),
-(
-    '30000000-0000-0000-0000-000000000003',
-    '20000000-0000-0000-0000-000000000001',
-    'Lesson 3: Number ထုတ်ခြင်း',
-    '## Numbers\nPython မှာ Integer နဲ့ Float ဆိုသော number types ၂ မျိုးရှိသည်။\n\nage = 20\nprint(age)',
-    'age = ___\nprint(age)',
-    '20',
-    15,
-    3
-),
-(
-    '30000000-0000-0000-0000-000000000004',
-    '20000000-0000-0000-0000-000000000001',
-    'Lesson 4: String Concatenation',
-    '## String တွေ ပေါင်းခြင်း\n+ operator ဖြင့် string နှစ်ခု ပေါင်းနိုင်သည်။\n\nfirst = "Hello"\nsecond = "World"\nprint(first + " " + second)',
-    'first = "Hello"\nsecond = "___"\nprint(first + " " + second)',
-    'Hello Myanmar',
-    20,
-    4
-),
-(
-    '30000000-0000-0000-0000-000000000005',
-    '20000000-0000-0000-0000-000000000001',
-    'Lesson 5: User Input ယူခြင်း',
-    '## Input ယူခြင်း\ninput() function ဖြင့် user ထံမှ data ယူနိုင်သည်။\n\nname = input("Enter your name: ")\nprint("Welcome, " + name)',
-    'name = "DeepDive"\nprint("Welcome, " + name)',
-    'Welcome, DeepDive',
-    20,
-    5
 )
 ON CONFLICT DO NOTHING;
 
@@ -191,4 +156,12 @@ SELECT 'submissions', COUNT(*) FROM submissions;
 -- ============================================================
 -- MIGRATIONS (Run if updating an existing database)
 -- ============================================================
--- ALTER TABLE lessons ADD COLUMN IF NOT EXISTS test_code TEXT;
+-- ALTER TABLE lessons ADD COLUMN IF NOT EXISTS lesson_type TEXT NOT NULL DEFAULT 'code_fix';
+-- ALTER TABLE lessons ADD COLUMN IF NOT EXISTS content_blocks JSONB NOT NULL DEFAULT '[]'::jsonb;
+-- ALTER TABLE lessons ADD COLUMN IF NOT EXISTS exercise_data JSONB NOT NULL DEFAULT '{}'::jsonb;
+-- ALTER TABLE lessons DROP COLUMN IF EXISTS theory_content;
+-- ALTER TABLE lessons DROP COLUMN IF EXISTS starter_code;
+-- ALTER TABLE lessons DROP COLUMN IF EXISTS expected_output;
+-- ALTER TABLE lessons DROP COLUMN IF EXISTS test_code;
+-- ALTER TABLE users ADD COLUMN IF NOT EXISTS gems INTEGER NOT NULL DEFAULT 500;
+-- ALTER TABLE users ADD COLUMN IF NOT EXISTS last_heart_update TIMESTAMPTZ NOT NULL DEFAULT NOW();

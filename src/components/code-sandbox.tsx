@@ -11,6 +11,7 @@ interface CodeSandboxProps {
   onSuccess?: () => void;
   onError?: () => void;
   disabled?: boolean;
+  isPractice?: boolean;
 }
 
 export const CodeSandbox = ({
@@ -20,6 +21,7 @@ export const CodeSandbox = ({
   onSuccess,
   onError,
   disabled = false,
+  isPractice = false,
 }: CodeSandboxProps) => {
   const [code, setCode] = useState(initialCode);
   const [hasResult, setHasResult] = useState(false);
@@ -45,7 +47,8 @@ export const CodeSandbox = ({
           user_id: '00000000-0000-0000-0000-000000000002', // Hardcoded Demo Student ID
           lesson_id: lessonId,
           code: code,
-          language: 'python'
+          language: 'python',
+          is_practice: isPractice
         })
       });
       

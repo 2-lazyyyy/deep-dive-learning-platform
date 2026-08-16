@@ -1,4 +1,5 @@
 from typing import List
+from datetime import datetime, timezone, timedelta
 from fastapi import APIRouter, HTTPException, status
 from database import supabase
 from models import (
@@ -9,6 +10,7 @@ from models import (
     UnitResponse,
     ModuleResponse,
     UserProgressResponse,
+    ProgressUpdateRequest,
     LeaderboardEntry
 )
 from worker import queue_submission
@@ -39,7 +41,7 @@ def submit_code(payload: SubmissionCreate):
         sub_id = res.data[0]["id"]
 
         # Queue submission for execution worker
-        queue_submission(submission_id=sub_id, code=payload.code, language=payload.language)
+        queue_submission(submission_id=sub_id, code=payload.code, language=payload.language, is_practice=payload.is_practice)
 
         return SubmissionCreateResponse(submission_id=sub_id, status="queued")
 
@@ -106,10 +108,9 @@ def list_all_lessons():
                     id=l["id"],
                     module_id=l["module_id"],
                     title=l["title"],
-                    theory_content=l.get("theory_content"),
-                    starter_code=l.get("starter_code", ""),
-                    expected_output=l.get("expected_output", ""),
-                    test_code=l.get("test_code", ""),
+                    lesson_type=l.get("lesson_type", "code_fix"),
+                    content_blocks=l.get("content_blocks", []),
+                    exercise_data=l.get("exercise_data", {}),
                     xp_reward=l.get("xp_reward", 15),
                     order_index=l.get("order_index", 0),
                     created_at=str(l.get("created_at", ""))
@@ -166,10 +167,9 @@ def get_lesson_detail(lesson_id: str):
             id=l["id"],
             module_id=l["module_id"],
             title=l["title"],
-            theory_content=l.get("theory_content"),
-            starter_code=l.get("starter_code", ""),
-            expected_output=l.get("expected_output", ""),
-            test_code=l.get("test_code", ""),
+            lesson_type=l.get("lesson_type", "code_fix"),
+            content_blocks=l.get("content_blocks", []),
+            exercise_data=l.get("exercise_data", {}),
             xp_reward=l.get("xp_reward", 15),
             order_index=l.get("order_index", 0),
             created_at=str(l.get("created_at", ""))
@@ -186,22 +186,171 @@ def get_user_progress(user_id: str):
     Fetches the student's current XP and Hearts for Gamification logic.
     """
     try:
-        res = supabase.table("users").select("id, name, role, xp, hearts").eq("id", user_id).execute()
+        res = supabase.table("users").select("id, name, role, xp, hearts, gems, last_heart_update").eq("id", user_id).execute()
         if not res.data or len(res.data) == 0:
             raise HTTPException(status_code=404, detail="User not found")
         
         u = res.data[0]
+        hearts = u.get("hearts", 5)
+        gems = u.get("gems", 500)
+        last_update_str = u.get("last_heart_update")
+        
+        # Passive auto-regeneration (1 heart every 4 hours)
+        REGEN_HOURS = 4
+        if hearts < 5 and last_update_str:
+            try:
+                # Handle ISO 8601 strings from postgres
+                last_update = datetime.fromisoformat(last_update_str.replace("Z", "+00:00"))
+                now = datetime.now(timezone.utc)
+                hours_passed = (now - last_update).total_seconds() / 3600
+                
+                hearts_to_add = int(hours_passed // REGEN_HOURS)
+                if hearts_to_add > 0:
+                    new_hearts = min(5, hearts + hearts_to_add)
+                    # If we haven't reached 5 yet, advance the timestamp by the number of hearts generated.
+                    # If we reached 5, timestamp doesn't matter until they lose a heart again.
+                    if new_hearts < 5:
+                        new_last_update = last_update + timedelta(hours=hearts_to_add * REGEN_HOURS)
+                        new_last_update_str = new_last_update.isoformat()
+                    else:
+                        new_last_update_str = now.isoformat()
+                        
+                    # Update DB
+                    update_res = supabase.table("users").update({
+                        "hearts": new_hearts, 
+                        "last_heart_update": new_last_update_str
+                    }).eq("id", user_id).execute()
+                    
+                    if update_res.data:
+                        u = update_res.data[0]
+                        hearts = new_hearts
+                        last_update_str = new_last_update_str
+            except Exception as ex:
+                print(f"Error processing heart regen: {ex}")
+
         return UserProgressResponse(
             id=u["id"],
             name=u["name"],
             role=u["role"],
             xp=u.get("xp", 0),
-            hearts=u.get("hearts", 5)
+            hearts=hearts,
+            gems=gems,
+            last_heart_update=last_update_str or ""
         )
     except HTTPException:
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching user progress: {str(e)}")
+
+
+@router.post("/users/{user_id}/progress/update", response_model=UserProgressResponse)
+def update_user_progress(user_id: str, payload: ProgressUpdateRequest):
+    """
+    Updates the student's XP and Hearts directly for non-code exercises (e.g. multiple choice, fill in the blanks).
+    """
+    try:
+        # Fetch lesson to get XP reward
+        lesson_res = supabase.table("lessons").select("xp_reward, lesson_type").eq("id", payload.lesson_id).execute()
+        if not lesson_res.data or len(lesson_res.data) == 0:
+            raise HTTPException(status_code=404, detail="Lesson not found")
+            
+        lesson = lesson_res.data[0]
+        if lesson.get("lesson_type") == "code_fix":
+            raise HTTPException(status_code=400, detail="Use code submission for code_fix lessons")
+            
+        xp_reward = lesson.get("xp_reward", 15)
+
+        # Fetch current user
+        user_res = supabase.table("users").select("id, name, role, xp, hearts").eq("id", user_id).execute()
+        if not user_res.data or len(user_res.data) == 0:
+            raise HTTPException(status_code=404, detail="User not found")
+            
+        user = user_res.data[0]
+        new_xp = user.get("xp", 0)
+        new_hearts = user.get("hearts", 5)
+        old_hearts = new_hearts
+        updates = {}
+
+        if payload.passed:
+            if payload.is_practice:
+                new_xp += 5
+            else:
+                new_xp += xp_reward
+        else:
+            if not payload.is_practice:
+                new_hearts = max(0, new_hearts - 1)
+
+        updates["xp"] = new_xp
+        updates["hearts"] = new_hearts
+        
+        # If dropping from 5 to 4 hearts, start the regen timer
+        if old_hearts == 5 and new_hearts < 5:
+            updates["last_heart_update"] = datetime.now(timezone.utc).isoformat()
+
+        # Update user
+        update_res = supabase.table("users").update(updates).eq("id", user_id).execute()
+        if not update_res.data or len(update_res.data) == 0:
+            raise HTTPException(status_code=500, detail="Failed to update progress")
+
+        u = update_res.data[0]
+        return UserProgressResponse(
+            id=u["id"],
+            name=u["name"],
+            role=u["role"],
+            xp=u.get("xp", 0),
+            hearts=u.get("hearts", 5),
+            gems=u.get("gems", 500),
+            last_heart_update=u.get("last_heart_update", "")
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error updating user progress: {str(e)}")
+
+@router.post("/users/{user_id}/shop/refill-hearts", response_model=UserProgressResponse)
+def refill_hearts(user_id: str):
+    """
+    Shop API: Refill hearts to 5 for 350 gems.
+    """
+    try:
+        user_res = supabase.table("users").select("id, name, role, xp, hearts, gems, last_heart_update").eq("id", user_id).execute()
+        if not user_res.data or len(user_res.data) == 0:
+            raise HTTPException(status_code=404, detail="User not found")
+            
+        u = user_res.data[0]
+        hearts = u.get("hearts", 5)
+        gems = u.get("gems", 500)
+        
+        if hearts >= 5:
+            raise HTTPException(status_code=400, detail="Hearts are already full")
+            
+        if gems < 350:
+            raise HTTPException(status_code=400, detail="Not enough gems")
+            
+        updates = {
+            "hearts": 5,
+            "gems": gems - 350,
+            "last_heart_update": datetime.now(timezone.utc).isoformat()
+        }
+        
+        update_res = supabase.table("users").update(updates).eq("id", user_id).execute()
+        if not update_res.data:
+            raise HTTPException(status_code=500, detail="Failed to refill hearts")
+            
+        updated_user = update_res.data[0]
+        return UserProgressResponse(
+            id=updated_user["id"],
+            name=updated_user["name"],
+            role=updated_user["role"],
+            xp=updated_user.get("xp", 0),
+            hearts=updated_user.get("hearts", 5),
+            gems=updated_user.get("gems", 500),
+            last_heart_update=updated_user.get("last_heart_update", "")
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error refilling hearts: {str(e)}")
 
 @router.get("/leaderboard", response_model=List[LeaderboardEntry])
 def get_leaderboard(limit: int = 10):

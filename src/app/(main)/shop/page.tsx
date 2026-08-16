@@ -13,7 +13,7 @@ interface ShopItem {
   icon: React.ReactNode;
   color: string;
   borderColor: string;
-  action: () => void;
+  action: () => void | Promise<boolean | void>;
 }
 
 export default function ShopPage() {
@@ -25,16 +25,25 @@ export default function ShopPage() {
     setTimeout(() => setToast(null), 2000);
   };
 
-  const handlePurchase = (item: ShopItem) => {
+  const handlePurchase = async (item: ShopItem) => {
     if (gems < item.price) {
       showToast('💎 Gems မလုံလောက်ပါ!');
       return;
     }
 
-    const success = spendGems(item.price);
-    if (success) {
-      item.action();
-      showToast(`Successfully purchased ${item.name}!`);
+    if (item.id === 'heart-refill') {
+      const success = await refillHearts();
+      if (success) {
+        showToast(`Successfully purchased ${item.name}!`);
+      } else {
+        showToast(`Failed to purchase ${item.name}. (Check if hearts are already full)`);
+      }
+    } else {
+      const success = spendGems(item.price);
+      if (success) {
+        await item.action();
+        showToast(`Successfully purchased ${item.name}!`);
+      }
     }
   };
 

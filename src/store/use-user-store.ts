@@ -20,7 +20,7 @@ interface UserState {
   // Actions — Gamification
   addXp: (amount: number) => void;
   reduceHeart: () => void;
-  refillHearts: () => void;
+  refillHearts: () => Promise<boolean>;
   spendGems: (amount: number) => boolean;
   addGems: (amount: number) => void;
   fetchProgress: (userId: string) => Promise<void>;
@@ -56,7 +56,22 @@ export const useUserStore = create<UserState>((set, get) => ({
       return { xp: newXp, level: newLevel };
     }),
   reduceHeart: () => set((state) => ({ hearts: Math.max(0, state.hearts - 1) })),
-  refillHearts: () => set({ hearts: 5 }),
+  refillHearts: async () => {
+    try {
+      const res = await fetch(`http://localhost:8000/api/v1/users/00000000-0000-0000-0000-000000000002/shop/refill-hearts`, {
+        method: 'POST'
+      });
+      if (res.ok) {
+        const data = await res.json();
+        set({ hearts: data.hearts, gems: data.gems });
+        return true;
+      }
+      return false;
+    } catch (e) {
+      console.error("Failed to refill hearts:", e);
+      return false;
+    }
+  },
 
   spendGems: (amount) => {
     const current = get().gems;
@@ -71,7 +86,7 @@ export const useUserStore = create<UserState>((set, get) => ({
       const res = await fetch(`http://localhost:8000/api/v1/users/${userId}/progress`);
       if (res.ok) {
         const data = await res.json();
-        set({ xp: data.xp, hearts: data.hearts });
+        set({ xp: data.xp, hearts: data.hearts, gems: data.gems });
       }
     } catch (e) {
       console.error("Failed to fetch progress:", e);

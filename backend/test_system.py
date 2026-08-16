@@ -1,114 +1,155 @@
-import time
 import requests
+import time
+import sys
 
-API_URL = "http://localhost:8000/api/v1"
-USER_ID = "00000000-0000-0000-0000-000000000002" # Demo Student
-LESSON_ID = "30000000-0000-0000-0000-000000000001" # Unit 1 Lesson 1
+BASE_URL = "http://localhost:8000"
+STUDENT_ID = "00000000-0000-0000-0000-000000000002"
 
-def print_step(msg):
-    print(f"\n[{time.strftime('%H:%M:%S')}] 🚀 {msg}")
+def print_step(step_name):
+    print(f"\n[{'='*10} {step_name} {'='*10}]")
 
-def test_system():
-    print("=========================================")
-    print("🕵️  DEEPDIVE LEARN - SYSTEM DEEP TEST  🕵️")
-    print("=========================================")
+def test():
+    # 1. Get Curriculum to find a Module ID
+    print_step("1. Fetching Curriculum & Finding Module ID")
+    res = requests.get(f"{BASE_URL}/api/v1/lessons")
+    assert res.status_code == 200, "Failed to fetch curriculum"
+    units = res.json()
+    module_id = None
+    for unit in units:
+        if unit.get("modules"):
+            module_id = unit["modules"][0]["id"]
+            break
+    
+    assert module_id is not None, "No module found in the database. Please run migrations!"
+    print(f"Found Module ID: {module_id}")
 
-    # 1. Fetch initial progress
-    print_step("Fetching initial Gamification Progress...")
-    try:
-        resp = requests.get(f"{API_URL}/users/{USER_ID}/progress")
-        if resp.status_code != 200:
-            print(f"❌ Failed to fetch progress: {resp.text}")
-            return
-        initial_progress = resp.json()
-        print(f"✅ Initial Progress: XP={initial_progress['xp']}, Hearts={initial_progress['hearts']}")
-        initial_xp = initial_progress["xp"]
-        initial_hearts = initial_progress["hearts"]
-    except Exception as e:
-        print(f"❌ API Connection Error. Is FastAPI running? {e}")
-        return
+    # 2. Get Initial Student Progress
+    print_step("2. Fetching Initial Student Progress")
+    res = requests.get(f"{BASE_URL}/api/v1/users/{STUDENT_ID}/progress")
+    assert res.status_code == 200, "Failed to fetch progress"
+    initial_progress = res.json()
+    print(f"Initial Progress: XP={initial_progress['xp']}, Hearts={initial_progress['hearts']}")
 
-    # 2. Submit Correct Code (Success Flow)
-    print_step("Submitting Correct Code (Expected to pass)...")
-    payload = {
-        "user_id": USER_ID,
-        "lesson_id": LESSON_ID,
-        "code": "print('Hello Python!')",
-        "language": "python"
+    # 3. Create a Multiple Choice Lesson
+    print_step("3. Creating Multiple Choice Lesson")
+    mc_payload = {
+        "module_id": module_id,
+        "title": "Deep Test: Multiple Choice",
+        "lesson_type": "multiple_choice",
+        "content_blocks": [{"type": "text", "content": "Test MC"}],
+        "exercise_data": {
+            "question": "What is 2 + 2?",
+            "options": ["3", "4", "5"],
+            "correctIndex": 1
+        },
+        "xp_reward": 20,
+        "order_index": 99
     }
-    resp = requests.post(f"{API_URL}/submissions", json=payload)
-    if resp.status_code != 200:
-        print(f"❌ Failed to submit code: {resp.text}")
-        return
-    sub_data = resp.json()
-    submission_id = sub_data["submission_id"]
-    print(f"✅ Submission created! ID: {submission_id}")
+    res = requests.post(f"{BASE_URL}/api/teacher/lessons", json=mc_payload)
+    assert res.status_code == 201, f"Failed to create MC lesson: {res.text}"
+    mc_lesson_id = res.json()["id"]
+    print(f"Created MC Lesson ID: {mc_lesson_id}")
 
-    # 3. Poll for result
-    print_step("Polling for execution result...")
-    success_passed = False
-    for i in range(15):
-        poll_resp = requests.get(f"{API_URL}/submissions/{submission_id}")
-        poll_data = poll_resp.json()
-        status = poll_data["status"]
-        print(f"   Status: {status}...")
-        if status in ["completed", "error"]:
-            print(f"✅ Final Result: Passed={poll_data['passed']}")
-            print(f"   Output: {poll_data['output']}")
-            success_passed = poll_data["passed"]
-            break
+    # 4. Create a Fill in the Blanks Lesson
+    print_step("4. Creating Fill in the Blanks Lesson")
+    fb_payload = {
+        "module_id": module_id,
+        "title": "Deep Test: Fill in the Blanks",
+        "lesson_type": "fill_blanks",
+        "content_blocks": [{"type": "text", "content": "Test FB"}],
+        "exercise_data": {
+            "codeTemplate": ["print('Hello')"],
+            "correctTokens": ["print"],
+            "tokenPool": ["print", "echo"]
+        },
+        "xp_reward": 15,
+        "order_index": 100
+    }
+    res = requests.post(f"{BASE_URL}/api/teacher/lessons", json=fb_payload)
+    assert res.status_code == 201, f"Failed to create FB lesson: {res.text}"
+    fb_lesson_id = res.json()["id"]
+    print(f"Created FB Lesson ID: {fb_lesson_id}")
+
+    # 5. Create a Code Fix Lesson
+    print_step("5. Creating Code Fix Lesson")
+    cf_payload = {
+        "module_id": module_id,
+        "title": "Deep Test: Code Fix",
+        "lesson_type": "code_fix",
+        "content_blocks": [{"type": "text", "content": "Test CF"}],
+        "exercise_data": {
+            "initialCode": "print('Wrong')",
+            "expectedOutput": "Right\n"
+        },
+        "xp_reward": 50,
+        "order_index": 101
+    }
+    res = requests.post(f"{BASE_URL}/api/teacher/lessons", json=cf_payload)
+    assert res.status_code == 201, f"Failed to create CF lesson: {res.text}"
+    cf_lesson_id = res.json()["id"]
+    print(f"Created CF Lesson ID: {cf_lesson_id}")
+
+    # 6. Test Non-Code Exercise (Multiple Choice Success)
+    print_step("6. Testing MC Success (API Progress Update)")
+    res = requests.post(
+        f"{BASE_URL}/api/v1/users/{STUDENT_ID}/progress/update",
+        json={"lesson_id": mc_lesson_id, "passed": True}
+    )
+    assert res.status_code == 200, f"Failed progress update: {res.text}"
+    prog = res.json()
+    print(f"Progress after MC Success: XP={prog['xp']} (Expected: {initial_progress['xp'] + 20})")
+    assert prog['xp'] == initial_progress['xp'] + 20
+
+    # 7. Test Non-Code Exercise (Fill Blanks Failure)
+    print_step("7. Testing FB Failure (API Progress Update)")
+    res = requests.post(
+        f"{BASE_URL}/api/v1/users/{STUDENT_ID}/progress/update",
+        json={"lesson_id": fb_lesson_id, "passed": False}
+    )
+    assert res.status_code == 200, f"Failed progress update: {res.text}"
+    prog = res.json()
+    print(f"Progress after FB Failure: Hearts={prog['hearts']} (Expected: {initial_progress['hearts'] - 1})")
+    assert prog['hearts'] == max(0, initial_progress['hearts'] - 1)
+
+    # 8. Test Code Execution (Code Fix Success)
+    print_step("8. Testing CF Success (Celery execution)")
+    code = "print('Right')"
+    sub_res = requests.post(
+        f"{BASE_URL}/api/v1/submissions",
+        json={
+            "user_id": STUDENT_ID,
+            "lesson_id": cf_lesson_id,
+            "code": code,
+            "language": "python"
+        }
+    )
+    assert sub_res.status_code == 201, f"Failed submission: {sub_res.text}"
+    sub_id = sub_res.json()["submission_id"]
+    print(f"Submitted code, tracking ID: {sub_id}")
+
+    # Poll until done
+    for _ in range(15):
         time.sleep(1)
-
-    if not success_passed:
-        print("❌ Test Failed: Expected code to pass, but it failed.")
-    
-    # 4. Check XP increase
-    print_step("Checking if XP increased...")
-    resp = requests.get(f"{API_URL}/users/{USER_ID}/progress")
-    new_progress = resp.json()
-    print(f"✅ New Progress: XP={new_progress['xp']}, Hearts={new_progress['hearts']}")
-    if new_progress["xp"] > initial_xp:
-        print(f"🎉 SUCCESS: XP increased! {initial_xp} -> {new_progress['xp']}")
-    else:
-        print("❌ FAILURE: XP did not increase!")
-
-    # 5. Submit Wrong Code (Error Flow)
-    print_step("Submitting Wrong Code (Expected to fail)...")
-    payload["code"] = "print('Wrong Answer')"
-    resp = requests.post(f"{API_URL}/submissions", json=payload)
-    sub_data = resp.json()
-    submission_id = sub_data["submission_id"]
-    print(f"✅ Submission created! ID: {submission_id}")
-
-    # 6. Poll for result
-    print_step("Polling for execution result...")
-    error_passed = True
-    for i in range(15):
-        poll_resp = requests.get(f"{API_URL}/submissions/{submission_id}")
-        poll_data = poll_resp.json()
-        status = poll_data["status"]
-        print(f"   Status: {status}...")
-        if status in ["completed", "error"]:
-            print(f"✅ Final Result: Passed={poll_data['passed']}")
-            print(f"   Output: {poll_data['output']}")
-            error_passed = poll_data["passed"]
+        check_res = requests.get(f"{BASE_URL}/api/v1/submissions/{sub_id}")
+        data = check_res.json()
+        print(f"Status: {data['status']}")
+        if data['status'] in ['completed', 'error']:
             break
-        time.sleep(1)
     
-    if error_passed:
-        print("❌ Test Failed: Expected code to fail, but it passed.")
+    assert data['status'] == 'completed', "Execution failed or timed out"
+    assert data['passed'] is True, f"Expected passed=True but got False. Output: {data.get('output')} Error: {data.get('error')}"
 
-    # 7. Check Heart deduction
-    print_step("Checking if Hearts decreased...")
-    resp = requests.get(f"{API_URL}/users/{USER_ID}/progress")
-    final_progress = resp.json()
-    print(f"✅ Final Progress: XP={final_progress['xp']}, Hearts={final_progress['hearts']}")
-    if final_progress["hearts"] < new_progress["hearts"]:
-        print(f"💔 SUCCESS: Hearts decreased! {new_progress['hearts']} -> {final_progress['hearts']}")
-    else:
-        print("❌ FAILURE: Hearts did not decrease!")
-        
-    print_step("✅ ALL DEEP TESTS COMPLETED!")
+    # Verify XP updated by Celery
+    res = requests.get(f"{BASE_URL}/api/v1/users/{STUDENT_ID}/progress")
+    final_prog = res.json()
+    print(f"Final Progress: XP={final_prog['xp']} (Expected: {prog['xp'] + 50})")
+    assert final_prog['xp'] == prog['xp'] + 50, "XP was not added by Celery!"
+
+    print_step("ALL DEEP TESTS PASSED SUCCESSFULLY!")
 
 if __name__ == "__main__":
-    test_system()
+    try:
+        test()
+    except Exception as e:
+        print(f"TEST FAILED: {e}")
+        sys.exit(1)

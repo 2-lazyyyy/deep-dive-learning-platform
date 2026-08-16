@@ -10,6 +10,7 @@ class SubmissionCreate(BaseModel):
     lesson_id: str = Field(..., description="UUID of the lesson being submitted", example="30000000-0000-0000-0000-000000000001")
     code: str = Field(..., description="Source code to execute", example="print('Hello World')")
     language: str = Field(default="python", description="Programming language", example="python")
+    is_practice: bool = Field(default=False, description="Flag indicating if the lesson is a practice retake")
 
     model_config = {
         "json_schema_extra": {
@@ -47,19 +48,17 @@ class SubmissionDetail(BaseModel):
 class LessonCreate(BaseModel):
     module_id: str
     title: str
-    theory_content: Optional[str] = ""
-    starter_code: str = ""
-    expected_output: str = ""
-    test_code: Optional[str] = ""
+    lesson_type: str = "code_fix"
+    content_blocks: list = []
+    exercise_data: dict = {}
     xp_reward: int = 15
     order_index: int = 0
 
 class LessonUpdate(BaseModel):
     title: Optional[str] = None
-    theory_content: Optional[str] = None
-    starter_code: Optional[str] = None
-    expected_output: Optional[str] = None
-    test_code: Optional[str] = None
+    lesson_type: Optional[str] = None
+    content_blocks: Optional[list] = None
+    exercise_data: Optional[dict] = None
     xp_reward: Optional[int] = None
     order_index: Optional[int] = None
 
@@ -67,10 +66,9 @@ class LessonResponse(BaseModel):
     id: str
     module_id: str
     title: str
-    theory_content: Optional[str] = None
-    starter_code: str
-    expected_output: str
-    test_code: Optional[str] = None
+    lesson_type: str
+    content_blocks: list
+    exercise_data: dict
     xp_reward: int
     order_index: int
     created_at: Optional[str] = None
@@ -117,6 +115,13 @@ class UserProgressResponse(BaseModel):
     role: str
     xp: int
     hearts: int
+    gems: int
+    last_heart_update: str
+
+class ProgressUpdateRequest(BaseModel):
+    lesson_id: str
+    passed: bool
+    is_practice: bool = False
 
 class LeaderboardEntry(BaseModel):
     id: str

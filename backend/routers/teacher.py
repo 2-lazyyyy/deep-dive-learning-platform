@@ -122,10 +122,9 @@ def create_lesson(payload: LessonCreate):
         res = supabase.table("lessons").insert({
             "module_id": payload.module_id,
             "title": payload.title,
-            "theory_content": payload.theory_content,
-            "starter_code": payload.starter_code,
-            "expected_output": payload.expected_output,
-            "test_code": payload.test_code,
+            "lesson_type": payload.lesson_type,
+            "content_blocks": payload.content_blocks,
+            "exercise_data": payload.exercise_data,
             "xp_reward": payload.xp_reward,
             "order_index": payload.order_index
         }).execute()
@@ -138,10 +137,9 @@ def create_lesson(payload: LessonCreate):
             id=l["id"],
             module_id=l["module_id"],
             title=l["title"],
-            theory_content=l.get("theory_content"),
-            starter_code=l.get("starter_code", ""),
-            expected_output=l.get("expected_output", ""),
-            test_code=l.get("test_code", ""),
+            lesson_type=l.get("lesson_type", "code_fix"),
+            content_blocks=l.get("content_blocks", []),
+            exercise_data=l.get("exercise_data", {}),
             xp_reward=l.get("xp_reward", 15),
             order_index=l.get("order_index", 0),
             created_at=str(l.get("created_at", ""))
@@ -171,10 +169,9 @@ def update_lesson(lesson_id: str, payload: LessonUpdate):
             id=l["id"],
             module_id=l["module_id"],
             title=l["title"],
-            theory_content=l.get("theory_content"),
-            starter_code=l.get("starter_code", ""),
-            expected_output=l.get("expected_output", ""),
-            test_code=l.get("test_code", ""),
+            lesson_type=l.get("lesson_type", "code_fix"),
+            content_blocks=l.get("content_blocks", []),
+            exercise_data=l.get("exercise_data", {}),
             xp_reward=l.get("xp_reward", 15),
             order_index=l.get("order_index", 0),
             created_at=str(l.get("created_at", ""))

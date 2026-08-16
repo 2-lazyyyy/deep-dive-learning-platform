@@ -3,6 +3,7 @@ import logging
 import subprocess
 import tempfile
 import time
+from datetime import datetime, timezone
 from celery import Celery
 
 # Import supabase to update the results directly
@@ -27,7 +28,7 @@ celery_app.conf.update(
 )
 
 @celery_app.task(name="execute_code_task")
-def execute_code_task(submission_id: str, code: str, lang: str):
+def execute_code_task(submission_id: str, code: str, lang: str, is_practice: bool = False):
     logger.info(f"[Celery Worker] Starting execution for submission: {submission_id}")
     
     # Mark as running in DB
@@ -48,9 +49,10 @@ def execute_code_task(submission_id: str, code: str, lang: str):
             sub_res = supabase.table("submissions").select("lesson_id").eq("id", submission_id).execute()
             if sub_res.data and len(sub_res.data) > 0:
                 lesson_id = sub_res.data[0]["lesson_id"]
-                lesson_res = supabase.table("lessons").select("test_code").eq("id", lesson_id).execute()
+                lesson_res = supabase.table("lessons").select("exercise_data").eq("id", lesson_id).execute()
                 if lesson_res.data and len(lesson_res.data) > 0:
-                    test_code = lesson_res.data[0].get("test_code") or ""
+                    exercise_data = lesson_res.data[0].get("exercise_data") or {}
+                    test_code = exercise_data.get("testCode", "")
         except Exception as e:
             logger.error(f"Failed to fetch test code: {e}")
             
@@ -127,24 +129,33 @@ def execute_code_task(submission_id: str, code: str, lang: str):
                 current_hearts = user_res.data[0].get("hearts", 5)
                 
                 if passed:
+                    if is_practice:
+                        xp_reward = 5
                     supabase.table("users").update({"xp": current_xp + xp_reward}).eq("id", user_id).execute()
-                    logger.info(f"[Gamification] Added {xp_reward} XP to user {user_id}")
+                    logger.info(f"[Gamification] Added {xp_reward} XP to user {user_id} (Practice: {is_practice})")
                 else:
-                    new_hearts = max(0, current_hearts - 1)
-                    supabase.table("users").update({"hearts": new_hearts}).eq("id", user_id).execute()
-                    logger.info(f"[Gamification] Deducted 1 heart from user {user_id}. Remaining: {new_hearts}")
+                    if not is_practice:
+                        new_hearts = max(0, current_hearts - 1)
+                        updates = {"hearts": new_hearts}
+                        if current_hearts == 5 and new_hearts < 5:
+                            updates["last_heart_update"] = datetime.now(timezone.utc).isoformat()
+                            
+                        supabase.table("users").update(updates).eq("id", user_id).execute()
+                        logger.info(f"[Gamification] Deducted 1 heart from user {user_id}. Remaining: {new_hearts}")
+                    else:
+                        logger.info(f"[Gamification] Practice mode failed, no hearts deducted for user {user_id}")
     except Exception as e:
         logger.error(f"Failed to update results or gamification progress: {e}")
 
     return {"submission_id": submission_id, "passed": passed}
 
-def queue_submission(submission_id: str, code: str, language: str):
+def queue_submission(submission_id: str, code: str, language: str, is_practice: bool = False):
     """
     Helper function used by FastAPI route to enqueue a submission.
     Falls back gracefully if Celery/Redis connection is offline.
     """
     try:
-        task = execute_code_task.delay(submission_id=submission_id, code=code, lang=language)
+        task = execute_code_task.delay(submission_id=submission_id, code=code, lang=language, is_practice=is_practice)
         logger.info(f"Successfully sent submission {submission_id} to Redis queue. Task ID: {task.id}")
         return True
     except Exception as e:

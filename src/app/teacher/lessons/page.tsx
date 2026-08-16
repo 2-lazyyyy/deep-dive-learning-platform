@@ -14,10 +14,14 @@ import {
   Trash2,
   Edit2
 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export default function TeacherLessonsPage() {
   const { units, addUnit, updateUnit, deleteUnit, addModule, updateModule, deleteModule, addLesson, updateLesson, deleteLesson } = useLessonStore();
+  
+  useEffect(() => {
+    useLessonStore.getState().fetchLessons();
+  }, []);
   const [expandedUnit, setExpandedUnit] = useState<string | null>(units[0]?.id ?? null);
   const [expandedModule, setExpandedModule] = useState<string | null>(null);
   const [selectedLesson, setSelectedLesson] = useState<string | null>(null);

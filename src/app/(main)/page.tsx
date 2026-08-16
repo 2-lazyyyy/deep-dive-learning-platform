@@ -2,7 +2,7 @@
 
 import { useUserStore } from '@/store/use-user-store';
 import { useLessonStore } from '@/store/use-lesson-store';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { LessonNode } from '@/components/lesson-node';
 
 import { Heart, Flame, Star, Trophy, Target, Gem, Award, Shield, Crown, MessageCircle } from 'lucide-react';
@@ -34,6 +34,19 @@ const InteractiveMascot = ({ positionClass }: { positionClass: string }) => {
   const [mascotImg, setMascotImg] = useState('/mascot1.svg');
   const [isAnimating, setIsAnimating] = useState(false);
   const [currentTip, setCurrentTip] = useState('');
+  const mascotRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (mascotRef.current && !mascotRef.current.contains(event.target as Node)) {
+        setCurrentTip('');
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   const handleClick = () => {
     if (isAnimating) return;
@@ -66,6 +79,7 @@ const InteractiveMascot = ({ positionClass }: { positionClass: string }) => {
 
   return (
     <div 
+      ref={mascotRef}
       className={`absolute top-1/2 -translate-y-1/2 ${positionClass} z-20 cursor-pointer`}
       onClick={handleClick}
     >
@@ -73,8 +87,16 @@ const InteractiveMascot = ({ positionClass }: { positionClass: string }) => {
         src={mascotImg} 
         alt="Interactive Mascot" 
         className="w-48 h-48 sm:w-64 sm:h-64 object-contain drop-shadow-2xl select-none relative z-10 hover:scale-105 transition-transform" 
-        animate={isAnimating ? { scale: [1, 1.2, 0.9, 1.1, 1], rotate: [0, -10, 10, -5, 0] } : {}}
-        transition={{ duration: 0.5 }}
+        animate={
+          isAnimating 
+            ? { scale: [1, 1.2, 0.9, 1.1, 1], rotate: [0, -10, 10, -5, 0], y: 0 } 
+            : { y: [-8, 8, -8] }
+        }
+        transition={
+          isAnimating 
+            ? { duration: 0.5 } 
+            : { repeat: Infinity, duration: 4, ease: "easeInOut" }
+        }
       />
       <AnimatePresence>
         {currentTip && (
@@ -104,6 +126,8 @@ export default function Home() {
 
   useEffect(() => {
     setIsMounted(true);
+    // Fetch dynamic lessons from backend
+    useLessonStore.getState().fetchLessons();
   }, []);
 
   // Determine lesson status based on completion
@@ -270,7 +294,7 @@ export default function Home() {
             return Math.abs(offset) >= 55 && idx !== unitLessons.length - 1;
           });
           
-          if (targetMascotGlobalIdx === -1 && unitLessons.length > 1) {
+          if (targetMascotGlobalIdx === -1 && unitLessons.length > 0) {
             targetMascotGlobalIdx = 0;
           }
           
