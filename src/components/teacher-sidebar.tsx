@@ -15,6 +15,7 @@ import {
   User,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useAuthStore } from '@/store/use-auth-store';
 
 const teacherNavItems = [
   { href: '/teacher', label: 'Dashboard', icon: LayoutDashboard, color: 'text-[#0ba2b3]' },
@@ -26,6 +27,7 @@ const teacherNavItems = [
 
 export const TeacherSidebar = () => {
   const pathname = usePathname();
+  const signOut = useAuthStore((state) => state.signOut);
 
   return (
     <div className="h-full w-[256px] lg:flex flex-col hidden left-0 top-0 border-r-2 border-[#00031333] dark:border-white/20 px-4 fixed bg-white dark:bg-[#000313] z-30">
@@ -94,10 +96,15 @@ export const TeacherSidebar = () => {
               <Link href="/teacher/help" className="flex items-center gap-3 px-4 py-3 hover:bg-[#F8F8F8] dark:hover:bg-white/5 font-bold text-[#000313] dark:text-white text-sm uppercase transition cursor-pointer">
                 <HelpCircle size={22} className="text-[#0ba2b3]" strokeWidth={2.5} /> Help
               </Link>
-              <div className="h-[2px] bg-[#00031333] dark:bg-white/20 w-full my-1" />
-              <Link href="/auth" className="flex items-center gap-3 px-4 py-3 hover:bg-[#F8F8F8] dark:hover:bg-white/5 font-bold text-[#FC4B0B] text-sm uppercase transition cursor-pointer">
+              <button
+                onClick={async () => {
+                  await signOut();
+                  window.location.href = '/auth';
+                }}
+                className="flex items-center gap-3 px-4 py-3 hover:bg-[#F8F8F8] dark:hover:bg-white/5 font-bold text-[#FC4B0B] text-sm uppercase transition cursor-pointer w-full text-left"
+              >
                 <LogOut size={22} className="text-[#FC4B0B]" strokeWidth={2.5} /> Log Out
-              </Link>
+              </button>
             </div>
           </div>
         </div>

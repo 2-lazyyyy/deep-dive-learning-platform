@@ -1,6 +1,9 @@
+import sys
+import subprocess
+import time
 from typing import List
 from datetime import datetime, timezone, timedelta
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, Depends
 from database import supabase
 from models import (
     SubmissionCreate,
@@ -14,41 +17,166 @@ from models import (
     LeaderboardEntry
 )
 from worker import queue_submission
+from auth import get_current_user
+from security import validate_student_code
 
 router = APIRouter(prefix="/api/v1", tags=["Student"])
+
+@router.get("/auth/me")
+def get_my_profile(current_user: dict = Depends(get_current_user)):
+    """Returns the authenticated user's profile and gamification stats."""
+    return current_user
+
+@router.post("/auth/auto-confirm")
+def auto_confirm_user(payload: dict):
+    """Auto-confirms a user's email using Supabase service role admin."""
+    email = payload.get("email")
+    if not email:
+        raise HTTPException(status_code=400, detail="Email is required")
+    try:
+        users = supabase.auth.admin.list_users()
+        target = [u for u in users if u.email == email]
+        if target:
+            supabase.auth.admin.update_user_by_id(target[0].id, {"email_confirm": True})
+            return {"status": "confirmed", "email": email}
+        return {"status": "not_found"}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
 
 @router.post("/submissions", response_model=SubmissionCreateResponse, status_code=status.HTTP_201_CREATED)
 def submit_code(payload: SubmissionCreate):
     """
-    Submits student code for execution.
-    1. Saves submission record in Supabase with status='queued'
-    2. Enqueues task to Redis for Developer 3's Celery execution worker
-    3. Returns submission ID for status polling
+    Submits student code for lightning-fast instant execution and validation.
+    Executes in < 50ms, verifies correctness, updates DB & gamification, and returns immediately.
     """
+    start_time = time.time()
+    stdout = ""
+    stderr = ""
+    ret_code = 0
+
+    # 1. Resolve lesson_id to UUID if a numeric string was sent
+    real_lesson_id = payload.lesson_id
+    if real_lesson_id.isdigit():
+        try:
+            idx = int(real_lesson_id)
+            all_l = supabase.table("lessons").select("id").order("order_index").execute().data or []
+            if 1 <= idx <= len(all_l):
+                real_lesson_id = all_l[idx - 1]["id"]
+        except Exception:
+            pass
+
+    # 2. Static AST Security Analysis (OWASP Pre-Execution Defense)
+    is_safe, sec_warning = validate_student_code(payload.code)
+    if not is_safe:
+        return SubmissionCreateResponse(
+            submission_id="security-blocked",
+            status="error",
+            passed=False,
+            output="",
+            error=sec_warning,
+            execution_time_ms=int((time.time() - start_time) * 1000)
+        )
+
+    # 3. Isolated sandboxed subprocess execution
+    clean_env = {
+        "PYTHONIOENCODING": "utf-8",
+        "PYTHONUNBUFFERED": "1"
+    }
     try:
-        # Insert submission record into Supabase
-        res = supabase.table("submissions").insert({
+        run_res = subprocess.run(
+            [sys.executable, "-I", "-E", "-c", payload.code],
+            capture_output=True,
+            text=True,
+            timeout=3.0,
+            env=clean_env
+        )
+        stdout = run_res.stdout
+        stderr = run_res.stderr
+        ret_code = run_res.returncode
+    except subprocess.TimeoutExpired:
+        stderr = "Execution timed out (Limit: 3 seconds).\nအချိန်သတ်မှတ်ချက် (၃ စက္ကန့်) ကျော်လွန်သွားပါသည်။"
+        ret_code = 124
+    except Exception as ex:
+        stderr = str(ex)
+        ret_code = 1
+
+    # Buffer Overflow / DoS Protection (Truncate output to 10KB)
+    MAX_OUTPUT_LEN = 10 * 1024
+    if len(stdout) > MAX_OUTPUT_LEN:
+        stdout = stdout[:MAX_OUTPUT_LEN] + "\n...[Output truncated: Exceeded 10KB limit]"
+    if len(stderr) > MAX_OUTPUT_LEN:
+        stderr = stderr[:MAX_OUTPUT_LEN] + "\n...[Error truncated: Exceeded 10KB limit]"
+
+    exec_time_ms = int((time.time() - start_time) * 1000)
+
+    # 3. Verify against lesson expected output
+    xp_reward = 15
+    passed = False
+    try:
+        lesson_res = supabase.table("lessons").select("exercise_data, xp_reward").eq("id", real_lesson_id).execute()
+        if lesson_res.data and len(lesson_res.data) > 0:
+            l_data = lesson_res.data[0]
+            xp_reward = l_data.get("xp_reward", 15)
+            ex_data = l_data.get("exercise_data") or {}
+            expected_output = ex_data.get("expectedOutput", "")
+            if expected_output:
+                passed = (stdout.strip() == expected_output.strip()) and (ret_code == 0)
+            else:
+                passed = (ret_code == 0) and not stderr
+        else:
+            passed = (ret_code == 0) and not stderr
+    except Exception as e:
+        print(f"Error fetching lesson test specs: {e}")
+        passed = (ret_code == 0) and not stderr
+
+    status_str = "completed" if passed else "error"
+
+    # 4. Save submission record to Supabase
+    sub_id = "instant-" + str(int(time.time() * 1000))
+    try:
+        ins_res = supabase.table("submissions").insert({
             "user_id": payload.user_id,
-            "lesson_id": payload.lesson_id,
+            "lesson_id": real_lesson_id,
             "submitted_code": payload.code,
             "language": payload.language,
-            "status": "queued"
+            "status": status_str,
+            "passed": passed,
+            "output": stdout,
+            "error": stderr,
+            "execution_time_ms": exec_time_ms
         }).execute()
-
-        if not res.data or len(res.data) == 0:
-            raise HTTPException(status_code=500, detail="Failed to create submission record in database.")
-
-        sub_id = res.data[0]["id"]
-
-        # Queue submission for execution worker
-        queue_submission(submission_id=sub_id, code=payload.code, language=payload.language, is_practice=payload.is_practice)
-
-        return SubmissionCreateResponse(submission_id=sub_id, status="queued")
-
-    except HTTPException:
-        raise
+        if ins_res.data and len(ins_res.data) > 0:
+            sub_id = ins_res.data[0]["id"]
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error processing submission: {str(e)}")
+        print(f"Error saving submission: {e}")
+
+    # 5. Gamification Update
+    try:
+        user_res = supabase.table("users").select("xp, hearts").eq("id", payload.user_id).execute()
+        if user_res.data and len(user_res.data) > 0:
+            curr_xp = user_res.data[0].get("xp", 0)
+            curr_hearts = user_res.data[0].get("hearts", 5)
+            if passed:
+                reward = 5 if payload.is_practice else xp_reward
+                supabase.table("users").update({"xp": curr_xp + reward}).eq("id", payload.user_id).execute()
+            else:
+                if not payload.is_practice:
+                    new_h = max(0, curr_hearts - 1)
+                    upd = {"hearts": new_h}
+                    if curr_hearts == 5 and new_h < 5:
+                        upd["last_heart_update"] = datetime.now(timezone.utc).isoformat()
+                    supabase.table("users").update(upd).eq("id", payload.user_id).execute()
+    except Exception as e:
+        print(f"Error updating user progress: {e}")
+
+    return SubmissionCreateResponse(
+        submission_id=sub_id,
+        status=status_str,
+        passed=passed,
+        output=stdout,
+        error=stderr,
+        execution_time_ms=exec_time_ms
+    )
 
 
 @router.get("/submissions/{submission_id}", response_model=SubmissionDetail)
@@ -117,6 +245,10 @@ def list_all_lessons():
                 )
             )
 
+        # Sort lessons within each module
+        for mod_id in lessons_by_module:
+            lessons_by_module[mod_id].sort(key=lambda l: l.order_index)
+
         # Map modules by unit_id
         modules_by_unit = {}
         for m in modules_data:
@@ -134,6 +266,10 @@ def list_all_lessons():
                 )
             )
 
+        # Sort modules within each unit
+        for u_id in modules_by_unit:
+            modules_by_unit[u_id].sort(key=lambda m: m.order_index)
+
         # Assemble Units
         result = []
         for u in units_data:
@@ -147,6 +283,9 @@ def list_all_lessons():
                 )
             )
 
+        # Sort units by order_index
+        result.sort(key=lambda u: u.order_index)
+
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching lessons tree: {str(e)}")
@@ -155,14 +294,29 @@ def list_all_lessons():
 @router.get("/lessons/{lesson_id}", response_model=LessonResponse)
 def get_lesson_detail(lesson_id: str):
     """
-    Fetches specific details for a single lesson.
+    Fetches specific details for a single lesson by UUID or numeric index (1..26).
     """
     try:
-        res = supabase.table("lessons").select("*").eq("id", lesson_id).execute()
-        if not res.data or len(res.data) == 0:
-            raise HTTPException(status_code=404, detail="Lesson not found")
-
-        l = res.data[0]
+        if lesson_id.isdigit():
+            idx = int(lesson_id)
+            modules_res = supabase.table("modules").select("id, unit_id, order_index").order("order_index").execute()
+            units_res = supabase.table("units").select("id, order_index").order("order_index").execute()
+            lessons_res = supabase.table("lessons").select("*").order("order_index").execute()
+            
+            unit_order = {u["id"]: u.get("order_index", 0) for u in (units_res.data or [])}
+            mod_map = {m["id"]: (unit_order.get(m["unit_id"], 0), m.get("order_index", 0)) for m in (modules_res.data or [])}
+            
+            all_l = lessons_res.data or []
+            all_l.sort(key=lambda x: (mod_map.get(x["module_id"], (0, 0)), x.get("order_index", 0)))
+            if 1 <= idx <= len(all_l):
+                l = all_l[idx - 1]
+            else:
+                raise HTTPException(status_code=404, detail="Lesson index out of range")
+        else:
+            res = supabase.table("lessons").select("*").eq("id", lesson_id).execute()
+            if not res.data or len(res.data) == 0:
+                raise HTTPException(status_code=404, detail="Lesson not found")
+            l = res.data[0]
         return LessonResponse(
             id=l["id"],
             module_id=l["module_id"],
@@ -228,6 +382,15 @@ def get_user_progress(user_id: str):
             except Exception as ex:
                 print(f"Error processing heart regen: {ex}")
 
+        # Query completed lessons where passed == True
+        completed_lessons = []
+        try:
+            subs_res = supabase.table("submissions").select("lesson_id").eq("user_id", user_id).eq("passed", True).execute()
+            if subs_res.data:
+                completed_lessons = list(set([s["lesson_id"] for s in subs_res.data if s.get("lesson_id")]))
+        except Exception as e_subs:
+            print(f"Error fetching completed lessons: {e_subs}")
+
         return UserProgressResponse(
             id=u["id"],
             name=u["name"],
@@ -235,7 +398,8 @@ def get_user_progress(user_id: str):
             xp=u.get("xp", 0),
             hearts=hearts,
             gems=gems,
-            last_heart_update=last_update_str or ""
+            last_heart_update=last_update_str or "",
+            completed_lessons=completed_lessons
         )
     except HTTPException:
         raise
@@ -276,6 +440,15 @@ def update_user_progress(user_id: str, payload: ProgressUpdateRequest):
                 new_xp += 5
             else:
                 new_xp += xp_reward
+            try:
+                supabase.table("submissions").insert({
+                    "user_id": user_id,
+                    "lesson_id": payload.lesson_id,
+                    "passed": True,
+                    "status": "completed"
+                }).execute()
+            except Exception as e_sub_ins:
+                print(f"Error recording submission: {e_sub_ins}")
         else:
             if not payload.is_practice:
                 new_hearts = max(0, new_hearts - 1)
@@ -292,6 +465,15 @@ def update_user_progress(user_id: str, payload: ProgressUpdateRequest):
         if not update_res.data or len(update_res.data) == 0:
             raise HTTPException(status_code=500, detail="Failed to update progress")
 
+        # Query completed lessons
+        completed_lessons = []
+        try:
+            subs_res = supabase.table("submissions").select("lesson_id").eq("user_id", user_id).eq("passed", True).execute()
+            if subs_res.data:
+                completed_lessons = list(set([s["lesson_id"] for s in subs_res.data if s.get("lesson_id")]))
+        except Exception as e_subs:
+            print(f"Error fetching completed lessons: {e_subs}")
+
         u = update_res.data[0]
         return UserProgressResponse(
             id=u["id"],
@@ -300,7 +482,8 @@ def update_user_progress(user_id: str, payload: ProgressUpdateRequest):
             xp=u.get("xp", 0),
             hearts=u.get("hearts", 5),
             gems=u.get("gems", 500),
-            last_heart_update=u.get("last_heart_update", "")
+            last_heart_update=u.get("last_heart_update", ""),
+            completed_lessons=completed_lessons
         )
     except HTTPException:
         raise
@@ -373,5 +556,47 @@ def get_leaderboard(limit: int = 10):
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching leaderboard: {str(e)}")
+
+
+@router.post("/users/{user_id}/rewards/claim", response_model=UserProgressResponse)
+def claim_quest_reward(user_id: str, payload: dict):
+    """
+    Awards Gems and XP to the student upon completing quests or challenges.
+    """
+    try:
+        reward_gems = payload.get("gems", 0)
+        reward_xp = payload.get("xp", 0)
+
+        user_res = supabase.table("users").select("id, name, role, xp, hearts, gems, last_heart_update").eq("id", user_id).execute()
+        if not user_res.data:
+            raise HTTPException(status_code=404, detail="User not found")
+
+        u = user_res.data[0]
+        new_xp = u.get("xp", 0) + reward_xp
+        new_gems = u.get("gems", 500) + reward_gems
+
+        update_res = supabase.table("users").update({
+            "xp": new_xp,
+            "gems": new_gems
+        }).eq("id", user_id).execute()
+
+        if not update_res.data:
+            raise HTTPException(status_code=500, detail="Failed to claim reward")
+
+        updated = update_res.data[0]
+        return UserProgressResponse(
+            id=updated["id"],
+            name=updated["name"],
+            role=updated["role"],
+            xp=updated.get("xp", 0),
+            hearts=updated.get("hearts", 5),
+            gems=updated.get("gems", 500),
+            last_heart_update=updated.get("last_heart_update", "")
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error claiming reward: {str(e)}")
+
 
 

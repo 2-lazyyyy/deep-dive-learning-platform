@@ -3,6 +3,7 @@
 import { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Check, RotateCcw, CheckCircle, XCircle } from 'lucide-react';
+import { useUserStore } from '@/store/use-user-store';
 
 interface FillBlanksExerciseProps {
   codeTemplate: string[];
@@ -19,6 +20,7 @@ export const FillBlanksExercise = ({
   onSuccess,
   onError,
 }: FillBlanksExerciseProps) => {
+  const language = useUserStore((state) => state.language);
   const totalBlanks = correctTokens.length;
 
   // Track filled blanks — null means unfilled
@@ -172,7 +174,7 @@ export const FillBlanksExercise = ({
               className="flex items-center gap-1.5 text-xs font-bold text-[#0ba2b3] hover:text-[#1e91a3]"
             >
               <RotateCcw size={14} />
-              Reset
+              <span>{language === 'my' ? 'ပြန်စမည်' : 'Reset'}</span>
             </button>
           )}
         </div>
@@ -184,7 +186,7 @@ export const FillBlanksExercise = ({
         {/* Token Pool */}
         <div className="mb-6">
           <p className="text-xs font-extrabold uppercase tracking-wider text-[#000313] dark:text-white mb-3">
-            Available Tokens
+            {language === 'my' ? 'ရွေးချယ်နိုင်သော Token များ' : 'Available Tokens'}
           </p>
           <div className="flex flex-wrap gap-2">
             {tokenPool.map((token, idx) => {
@@ -228,11 +230,13 @@ export const FillBlanksExercise = ({
         }`}
       >
         {result === 'correct' ? (
-          <span className="flex items-center justify-center gap-2"><Check size={20} /> CONTINUE</span>
+          <span className="flex items-center justify-center gap-2">
+            <Check size={20} /> {language === 'my' ? 'ရှေ့သို့ ဆက်သွားမည်' : 'CONTINUE'}
+          </span>
         ) : result === 'wrong' ? (
-          'TRY AGAIN'
+          language === 'my' ? 'ပြန်ကြိုးစားမည်' : 'TRY AGAIN'
         ) : (
-          'CHECK'
+          language === 'my' ? 'အဖြေ စစ်မည်' : 'CHECK'
         )}
       </motion.button>
     </div>

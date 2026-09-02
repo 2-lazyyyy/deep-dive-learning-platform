@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle, XCircle, ArrowRight, RotateCcw, Star } from 'lucide-react';
+import { useUserStore } from '@/store/use-user-store';
 
 interface ResultModalProps {
   isOpen: boolean;
@@ -21,6 +22,7 @@ export const ResultModal = ({
   onContinue,
   onRetry,
 }: ResultModalProps) => {
+  const language = useUserStore((state) => state.language);
   const [isClicked, setIsClicked] = useState(false);
 
   const handleAction = (action: () => void) => {
@@ -80,7 +82,9 @@ export const ResultModal = ({
                     isSuccess ? 'text-teal-600 dark:text-teal-400' : 'text-red-600 dark:text-red-400'
                   }`}
                 >
-                  {isSuccess ? 'Correct!' : 'Not quite right'}
+                  {isSuccess 
+                    ? (language === 'my' ? 'မှန်ကန်ပါသည်! ထူးချွန်ပါသည်!' : 'Correct!') 
+                    : (language === 'my' ? 'အဖြေ မမှန်သေးပါ' : 'Not quite right')}
                 </h3>
                 <p
                   className={`text-sm font-semibold mt-0.5 ${
@@ -89,8 +93,8 @@ export const ResultModal = ({
                 >
                   {message ||
                     (isSuccess
-                      ? "You're doing great, keep it up!"
-                      : "Don't worry, try again!")}
+                      ? (language === 'my' ? 'သင် အလွန်တော်ပါသည်၊ ဆက်လက်ကြိုးစားပါ!' : "You're doing great, keep it up!")
+                      : (language === 'my' ? 'စိတ်မပူပါနှင့်၊ ပြန်လည်ကြိုးစားကြည့်ပါ!' : "Don't worry, try again!"))}
                 </p>
                 <div className="min-h-[24px] mt-1.5">
                   {isSuccess && xpEarned > 0 && (
@@ -119,7 +123,7 @@ export const ResultModal = ({
                 disabled={isClicked}
                 className="flex items-center gap-2 bg-[#0ba2b3] hover:bg-[#1e91a3] text-white font-extrabold py-3 px-8 rounded-xl border-b-4 border-[#1e91a3] active:border-b-0 active:translate-y-1 transition-all uppercase tracking-wide text-sm disabled:opacity-70 disabled:cursor-not-allowed"
               >
-                CONTINUE
+                <span>{language === 'my' ? 'ရှေ့သို့ ဆက်သွားမည်' : 'CONTINUE'}</span>
                 <ArrowRight size={18} strokeWidth={3} />
               </motion.button>
             ) : (
@@ -130,7 +134,7 @@ export const ResultModal = ({
                 disabled={isClicked}
                 className="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white font-extrabold py-3 px-8 rounded-xl border-b-4 border-red-700 active:border-b-0 active:translate-y-1 transition-all uppercase tracking-wide text-sm disabled:opacity-70 disabled:cursor-not-allowed"
               >
-                TRY AGAIN
+                <span>{language === 'my' ? 'ပြန်ကြိုးစားမည်' : 'TRY AGAIN'}</span>
                 <RotateCcw size={18} strokeWidth={3} />
               </motion.button>
             )}

@@ -3,6 +3,8 @@
 import React, { useState, useCallback } from 'react';
 import { Play, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useAuthStore } from '@/store/use-auth-store';
+import { useUserStore } from '@/store/use-user-store';
 
 interface CodeSandboxProps {
   lessonId: string;
@@ -23,6 +25,7 @@ export const CodeSandbox = ({
   disabled = false,
   isPractice = false,
 }: CodeSandboxProps) => {
+  const language = useUserStore((state) => state.language);
   const [code, setCode] = useState(initialCode);
   const [hasResult, setHasResult] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
@@ -39,12 +42,19 @@ export const CodeSandbox = ({
     setStderr('');
 
     try {
+      const authState = useAuthStore.getState();
+      const currentUserId = authState.user?.id || '00000000-0000-0000-0000-000000000002';
+      const token = authState.token;
+
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
       // 1. Submit Code to FastAPI Backend
       const response = await fetch('http://localhost:8000/api/v1/submissions', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
-          user_id: '00000000-0000-0000-0000-000000000002', // Hardcoded Demo Student ID
+          user_id: currentUserId,
           lesson_id: lessonId,
           code: code,
           language: 'python',
@@ -57,9 +67,27 @@ export const CodeSandbox = ({
       }
 
       const data = await response.json();
+
+      // Instant execution: if backend returned result directly, display immediately!
+      if (data.status === 'completed' || data.status === 'error' || data.output !== undefined) {
+        setIsRunning(false);
+        setStdout(data.output || '');
+        setStderr(data.error || '');
+        setHasResult(true);
+        
+        if (data.passed) {
+          setIsCorrect(true);
+          onSuccess?.();
+        } else {
+          setIsCorrect(false);
+          onError?.();
+        }
+        return;
+      }
+
       const submissionId = data.submission_id;
 
-      // 2. Poll the API every 1 second until completed or error
+      // Fallback: fast polling every 300ms if queued
       const pollInterval = setInterval(async () => {
         try {
           const checkRes = await fetch(`http://localhost:8000/api/v1/submissions/${submissionId}`);
@@ -90,7 +118,7 @@ export const CodeSandbox = ({
           setHasResult(true);
           onError?.();
         }
-      }, 1000);
+      }, 300);
 
     } catch (err) {
       setIsRunning(false);
@@ -133,12 +161,12 @@ export const CodeSandbox = ({
         {isRunning ? (
           <>
             <Loader2 size={20} className="animate-spin" strokeWidth={3} />
-            RUNNING ON CLOUD...
+            <span>{language === 'my' ? 'Cloud ပေါ်တွင် ကုဒ် run နေပါသည်...' : 'RUNNING ON CLOUD...'}</span>
           </>
         ) : (
           <>
             <Play size={20} fill="currentColor" strokeWidth={0} />
-            CHECK
+            <span>{language === 'my' ? 'ကုဒ် စစ်ဆေးမည်' : 'CHECK'}</span>
           </>
         )}
       </motion.button>
@@ -158,7 +186,7 @@ export const CodeSandbox = ({
           <p className={`mb-2 font-bold uppercase text-xs tracking-wider ${
             isCorrect ? 'text-green-500' : 'text-red-500'
           }`}>
-            Console Output:
+            {language === 'my' ? 'စနစ် ထွက်ပေါ်ရလဒ် (Console Output):' : 'Console Output:'}
           </p>
           {stdout && (
             <pre className="text-gray-800 whitespace-pre-wrap">{stdout}</pre>
@@ -169,7 +197,7 @@ export const CodeSandbox = ({
           {!isCorrect && expectedOutput && !stderr && (
             <div className="mt-4 border-t border-red-200 pt-4">
               <p className="mb-2 font-bold uppercase text-xs tracking-wider text-red-500">
-                Expected Output:
+                {language === 'my' ? 'မျှော်မှန်းရလဒ် (Expected Output):' : 'Expected Output:'}
               </p>
               <pre className="text-gray-800 whitespace-pre-wrap">{expectedOutput}</pre>
             </div>

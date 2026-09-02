@@ -28,6 +28,10 @@ class SubmissionCreate(BaseModel):
 class SubmissionCreateResponse(BaseModel):
     submission_id: str
     status: str
+    passed: Optional[bool] = None
+    output: Optional[str] = None
+    error: Optional[str] = None
+    execution_time_ms: Optional[int] = None
 
 class SubmissionDetail(BaseModel):
     id: str
@@ -41,6 +45,8 @@ class SubmissionDetail(BaseModel):
     error: Optional[str] = None
     execution_time_ms: Optional[int] = None
     created_at: str
+    user_name: Optional[str] = None
+    lesson_title: Optional[str] = None
 
 # ============================================================
 # SYLLABUS & LESSON SCHEMAS
@@ -117,6 +123,7 @@ class UserProgressResponse(BaseModel):
     hearts: int
     gems: int
     last_heart_update: str
+    completed_lessons: List[str] = []
 
 class ProgressUpdateRequest(BaseModel):
     lesson_id: str
@@ -128,3 +135,33 @@ class LeaderboardEntry(BaseModel):
     name: str
     xp: int
     rank: int
+
+class UnitCreate(BaseModel):
+    title: str
+    order_index: Optional[int] = 0
+
+class UnitUpdate(BaseModel):
+    title: Optional[str] = None
+    order_index: Optional[int] = None
+
+class ModuleCreate(BaseModel):
+    unit_id: str
+    title: str
+    order_index: Optional[int] = 0
+
+class ModuleUpdate(BaseModel):
+    title: Optional[str] = None
+    order_index: Optional[int] = None
+
+class AIChatRequest(BaseModel):
+    message: str
+    lesson_id: Optional[str] = None
+    lesson_title: Optional[str] = None
+    student_code: Optional[str] = None
+    error_message: Optional[str] = None
+    language: Optional[str] = "python"
+    chat_history: Optional[List[dict]] = []
+
+class AIChatResponse(BaseModel):
+    reply: str
+    hint_type: Optional[str] = "guidance"

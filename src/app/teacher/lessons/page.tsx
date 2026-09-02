@@ -199,7 +199,7 @@ export default function TeacherLessonsPage() {
                                 <Layers size={12} className="text-[#0ba2b3]" />
                               </div>
                               <p className="font-semibold text-[#000313] dark:text-white text-sm">
-                                Module {modIdx + 1}: {mod.title}
+                                {mod.title.startsWith('Module') ? mod.title : `Module ${modIdx + 1}: ${mod.title}`}
                               </p>
                             </div>
                             <div className="flex items-center gap-2">

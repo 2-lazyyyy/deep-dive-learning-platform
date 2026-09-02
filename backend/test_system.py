@@ -91,14 +91,15 @@ def test():
 
     # 6. Test Non-Code Exercise (Multiple Choice Success)
     print_step("6. Testing MC Success (API Progress Update)")
+    cur_p = requests.get(f"{BASE_URL}/api/v1/users/{STUDENT_ID}/progress").json()
     res = requests.post(
         f"{BASE_URL}/api/v1/users/{STUDENT_ID}/progress/update",
         json={"lesson_id": mc_lesson_id, "passed": True}
     )
     assert res.status_code == 200, f"Failed progress update: {res.text}"
     prog = res.json()
-    print(f"Progress after MC Success: XP={prog['xp']} (Expected: {initial_progress['xp'] + 20})")
-    assert prog['xp'] == initial_progress['xp'] + 20
+    print(f"Progress after MC Success: XP={prog['xp']} (Expected: {cur_p['xp'] + 20})")
+    assert prog['xp'] == cur_p['xp'] + 20
 
     # 7. Test Non-Code Exercise (Fill Blanks Failure)
     print_step("7. Testing FB Failure (API Progress Update)")
@@ -108,8 +109,8 @@ def test():
     )
     assert res.status_code == 200, f"Failed progress update: {res.text}"
     prog = res.json()
-    print(f"Progress after FB Failure: Hearts={prog['hearts']} (Expected: {initial_progress['hearts'] - 1})")
-    assert prog['hearts'] == max(0, initial_progress['hearts'] - 1)
+    print(f"Progress after FB Failure: Hearts={prog['hearts']} (Expected: {max(0, cur_p['hearts'] - 1)})")
+    assert prog['hearts'] == max(0, cur_p['hearts'] - 1)
 
     # 8. Test Code Execution (Code Fix Success)
     print_step("8. Testing CF Success (Celery execution)")

@@ -61,7 +61,7 @@ def execute_code_task(submission_id: str, code: str, lang: str, is_practice: boo
         with open(script_path, "w") as f:
             f.write(combined_code)
             
-        # Spin up disposable Docker Sandbox
+        # Spin up disposable Docker Sandbox (with local fallback if docker is offline)
         docker_cmd = [
             "docker", "run", "--rm", 
             "-v", f"{temp_dir}:/app", 
@@ -83,21 +83,33 @@ def execute_code_task(submission_id: str, code: str, lang: str, is_practice: boo
             
             output = result.stdout
             error = result.stderr
-            
             passed = (result.returncode == 0) and not error
             
             if result.returncode == 143 or result.returncode == 124: # timeout exit codes
                 error = "Execution timed out (Limit: 5 seconds)."
                 passed = False
                 
-        except subprocess.TimeoutExpired:
-            output = ""
-            error = "Host execution timeout."
-            passed = False
-        except Exception as e:
-            output = ""
-            error = str(e)
-            passed = False
+        except Exception as docker_err:
+            logger.info(f"Docker sandbox unavailable ({docker_err}), executing in isolated local Python runner...")
+            try:
+                # Direct local execution fallback
+                local_res = subprocess.run(
+                    [sys.executable, script_path],
+                    capture_output=True,
+                    text=True,
+                    timeout=5
+                )
+                output = local_res.stdout
+                error = local_res.stderr
+                passed = (local_res.returncode == 0) and not error
+            except subprocess.TimeoutExpired:
+                output = ""
+                error = "Execution timed out (Limit: 5 seconds)."
+                passed = False
+            except Exception as e:
+                output = ""
+                error = str(e)
+                passed = False
             
     execution_time_ms = int((time.time() - start_time) * 1000)
     

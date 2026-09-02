@@ -165,3 +165,33 @@ SELECT 'submissions', COUNT(*) FROM submissions;
 -- ALTER TABLE lessons DROP COLUMN IF EXISTS test_code;
 -- ALTER TABLE users ADD COLUMN IF NOT EXISTS gems INTEGER NOT NULL DEFAULT 500;
 -- ALTER TABLE users ADD COLUMN IF NOT EXISTS last_heart_update TIMESTAMPTZ NOT NULL DEFAULT NOW();
+
+-- ============================================================
+-- 6. AUTH SYNC TRIGGER (Sync auth.users -> public.users)
+-- ============================================================
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER AS $$
+BEGIN
+    INSERT INTO public.users (id, email, name, role, xp, hearts, gems, last_heart_update)
+    VALUES (
+        new.id,
+        new.email,
+        COALESCE(new.raw_user_meta_data->>'name', split_part(new.email, '@', 1)),
+        COALESCE(new.raw_user_meta_data->>'role', 'student'),
+        0,
+        5,
+        500,
+        NOW()
+    )
+    ON CONFLICT (id) DO UPDATE SET
+        email = EXCLUDED.email,
+        name = COALESCE(EXCLUDED.name, public.users.name);
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Drop trigger if it already exists to allow re-running
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+    AFTER INSERT ON auth.users
+    FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();

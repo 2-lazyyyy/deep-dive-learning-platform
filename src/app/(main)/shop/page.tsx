@@ -4,11 +4,11 @@ import { useUserStore } from '@/store/use-user-store';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Heart, Gem, Star, Snowflake, ShieldCheck, Store } from 'lucide-react';
 import { useState } from 'react';
+import { translations } from '@/lib/i18n';
 
 interface ShopItem {
   id: string;
-  name: string;
-  description: string;
+  key: 'heartRefill' | 'streakFreeze' | 'doubleXp' | 'heartShield';
   price: number;
   icon: React.ReactNode;
   color: string;
@@ -17,7 +17,8 @@ interface ShopItem {
 }
 
 export default function ShopPage() {
-  const { gems, hearts, spendGems, refillHearts, addXp } = useUserStore();
+  const { gems, hearts, spendGems, refillHearts, addXp, language } = useUserStore();
+  const t = translations.shop;
   const [toast, setToast] = useState<string | null>(null);
 
   const showToast = (message: string) => {
@@ -26,23 +27,24 @@ export default function ShopPage() {
   };
 
   const handlePurchase = async (item: ShopItem) => {
+    const itemName = t.items[item.key].name[language];
     if (gems < item.price) {
-      showToast('💎 Gems မလုံလောက်ပါ!');
+      showToast(t.insufficientGems[language]);
       return;
     }
 
     if (item.id === 'heart-refill') {
       const success = await refillHearts();
       if (success) {
-        showToast(`Successfully purchased ${item.name}!`);
+        showToast(`${t.successPurchased[language]} ${itemName}!`);
       } else {
-        showToast(`Failed to purchase ${item.name}. (Check if hearts are already full)`);
+        showToast(t.failedPurchased[language]);
       }
     } else {
       const success = spendGems(item.price);
       if (success) {
         await item.action();
-        showToast(`Successfully purchased ${item.name}!`);
+        showToast(`${t.successPurchased[language]} ${itemName}!`);
       }
     }
   };
@@ -50,8 +52,7 @@ export default function ShopPage() {
   const shopItems: ShopItem[] = [
     {
       id: 'heart-refill',
-      name: 'Heart Refill',
-      description: 'Hearts ပြန်ဖြည့်ပါ (5 hearts)',
+      key: 'heartRefill',
       price: 350,
       icon: <Heart size={32} className="text-[#FC4B0B]" fill="currentColor" />,
       color: 'bg-red-50 dark:bg-red-950/30',
@@ -60,8 +61,7 @@ export default function ShopPage() {
     },
     {
       id: 'streak-freeze',
-      name: 'Streak Freeze',
-      description: 'တစ်ရက်မလေ့ကျင့်ရင်တောင် streak မကျပါ',
+      key: 'streakFreeze',
       price: 200,
       icon: <Snowflake size={32} className="text-[#0ba2b3]" />,
       color: 'bg-blue-50 dark:bg-blue-950/30',
@@ -70,8 +70,7 @@ export default function ShopPage() {
     },
     {
       id: 'xp-boost',
-      name: 'Double XP (15 min)',
-      description: '၁၅ မိနစ်အတွင်း XP ၂ ဆ ရပါမယ်',
+      key: 'doubleXp',
       price: 300,
       icon: <Star size={32} className="text-[#FFC800]" fill="currentColor" />,
       color: 'bg-yellow-50 dark:bg-yellow-900/20',
@@ -80,8 +79,7 @@ export default function ShopPage() {
     },
     {
       id: 'shield',
-      name: 'Heart Shield',
-      description: 'နောက်တစ်ခေါက် မှားရင် heart မနုတ်ပါ',
+      key: 'heartShield',
       price: 450,
       icon: <ShieldCheck size={32} className="text-[#0ba2b3]" />,
       color: 'bg-green-50 dark:bg-green-950/30',
@@ -95,13 +93,13 @@ export default function ShopPage() {
       {/* Header */}
       <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-extrabold text-[#000313] dark:text-white">Shop</h1>
+          <h1 className="text-3xl font-extrabold text-[#000313] dark:text-white">{t.title[language]}</h1>
         </div>
 
         {/* Gem Balance - Only visible on desktop since we have a mobile top bar */}
         <div className="hidden lg:flex items-center gap-2 bg-white dark:bg-[#000313] border-2 border-[#00031333] dark:border-white/20 px-4 py-2 rounded-xl">
           <Gem size={20} className="text-[#00BCD4]" fill="currentColor" />
-          <span className="font-extrabold text-[#00BCD4]">{gems}</span>
+          <span className="font-extrabold text-[#00BCD4]">{gems} {t.currentGems[language]}</span>
         </div>
       </div>
 
@@ -112,7 +110,7 @@ export default function ShopPage() {
         className="bg-white dark:bg-[#000313] border-2 border-[#00031333] dark:border-white/20 rounded-2xl p-5 mb-8"
       >
         <p className="text-xs font-extrabold uppercase tracking-widest text-[#000313] dark:text-white mb-3">
-          CURRENT HEARTS
+          {t.currentHearts[language]}
         </p>
         <div className="flex gap-2">
           {Array.from({ length: 5 }).map((_, i) => (
@@ -142,9 +140,11 @@ export default function ShopPage() {
             </div>
 
             {/* Info */}
-            <h3 className="font-extrabold text-[#000313] dark:text-white text-base mb-1">{item.name}</h3>
+            <h3 className="font-extrabold text-[#000313] dark:text-white text-base mb-1">
+              {t.items[item.key].name[language]}
+            </h3>
             <p className="text-sm text-[#000313] dark:text-white font-semibold mb-4 leading-snug">
-              {item.description}
+              {t.items[item.key].desc[language]}
             </p>
 
             {/* Buy Button */}

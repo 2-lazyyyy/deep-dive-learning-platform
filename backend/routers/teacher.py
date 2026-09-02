@@ -1,7 +1,7 @@
 import random
 import time
 from typing import List, Optional
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, Depends
 from database import supabase
 from models import (
     TeacherLoginRequest,
@@ -13,6 +13,7 @@ from models import (
     SubmissionDetail
 )
 from worker import queue_submission
+from auth import get_current_user, require_teacher
 
 router = APIRouter(prefix="/api/teacher", tags=["Teacher"])
 
@@ -88,11 +89,13 @@ def get_audit_trail(limit: int = 50):
     Returns audit trail list of student submissions for Teacher Dashboard tables.
     """
     try:
-        res = supabase.table("submissions").select("*").order("created_at", desc=True).limit(limit).execute()
+        res = supabase.table("submissions").select("*, users(name), lessons(title)").order("created_at", desc=True).limit(limit).execute()
         items = res.data or []
         
         result = []
         for item in items:
+            u_info = item.get("users") or {}
+            l_info = item.get("lessons") or {}
             result.append(
                 SubmissionDetail(
                     id=item["id"],
@@ -105,7 +108,9 @@ def get_audit_trail(limit: int = 50):
                     output=item.get("output"),
                     error=item.get("error"),
                     execution_time_ms=item.get("execution_time_ms"),
-                    created_at=str(item.get("created_at", ""))
+                    created_at=str(item.get("created_at", "")),
+                    user_name=u_info.get("name") if isinstance(u_info, dict) else None,
+                    lesson_title=l_info.get("title") if isinstance(l_info, dict) else None
                 )
             )
         return result
@@ -232,3 +237,83 @@ def simulate_student_submissions():
         "message": f"Simulated {len(created_submissions)} submissions successfully.",
         "submission_ids": created_submissions
     }
+
+
+# ============================================================
+# UNIT & MODULE CRUD
+# ============================================================
+
+@router.post("/units", status_code=status.HTTP_201_CREATED)
+def create_unit(payload: dict):
+    """Creates a new curriculum Unit."""
+    try:
+        res = supabase.table("units").insert({
+            "title": payload["title"],
+            "order_index": payload.get("order_index", 0)
+        }).execute()
+        if not res.data:
+            raise HTTPException(status_code=500, detail="Failed to create unit")
+        return res.data[0]
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.put("/units/{unit_id}")
+def update_unit(unit_id: str, payload: dict):
+    """Updates an existing curriculum Unit."""
+    try:
+        res = supabase.table("units").update(payload).eq("id", unit_id).execute()
+        if not res.data:
+            raise HTTPException(status_code=404, detail="Unit not found")
+        return res.data[0]
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.delete("/units/{unit_id}")
+def delete_unit(unit_id: str):
+    """Deletes a curriculum Unit and cascades its modules and lessons."""
+    try:
+        supabase.table("units").delete().eq("id", unit_id).execute()
+        return {"success": True, "message": f"Unit {unit_id} deleted."}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/modules", status_code=status.HTTP_201_CREATED)
+def create_module(payload: dict):
+    """Creates a new Module inside a Unit."""
+    try:
+        res = supabase.table("modules").insert({
+            "unit_id": payload["unit_id"],
+            "title": payload["title"],
+            "order_index": payload.get("order_index", 0)
+        }).execute()
+        if not res.data:
+            raise HTTPException(status_code=500, detail="Failed to create module")
+        return res.data[0]
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.put("/modules/{module_id}")
+def update_module(module_id: str, payload: dict):
+    """Updates an existing curriculum Module."""
+    try:
+        res = supabase.table("modules").update(payload).eq("id", module_id).execute()
+        if not res.data:
+            raise HTTPException(status_code=404, detail="Module not found")
+        return res.data[0]
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.delete("/modules/{module_id}")
+def delete_module(module_id: str):
+    """Deletes a curriculum Module and its lessons."""
+    try:
+        supabase.table("modules").delete().eq("id", module_id).execute()
+        return {"success": True, "message": f"Module {module_id} deleted."}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
