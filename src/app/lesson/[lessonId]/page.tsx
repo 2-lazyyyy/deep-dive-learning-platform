@@ -70,13 +70,6 @@ export default function LessonPage() {
     });
   });
 
-  const moduleLessons = currentModule?.lessons || [];
-  const totalModuleLessons = moduleLessons.length;
-  const completedInModuleCount = moduleLessons.filter(
-    l => completedLessonIds.includes(l.id) || (isCorrect && l.id === lessonId)
-  ).length;
-  const isModuleFullyComplete = totalModuleLessons > 0 && completedInModuleCount >= totalModuleLessons;
-
   const lessonIndex = currentUnitLessons.findIndex(l => l.id === lessonId);
   const unitNumber = currentUnit?.orderIndex || (currentUnit as any)?.order_index || (currentUnit?.title?.match(/Unit\s*(\d+)/i)?.[1]) || (units.findIndex(u => u.id === currentUnit?.id) + 1);
 
@@ -93,8 +86,16 @@ export default function LessonPage() {
   const [retryCount, setRetryCount] = useState(0);
   const [isFinished, setIsFinished] = useState(false);
 
+  const moduleLessons = currentModule?.lessons || [];
+  const totalModuleLessons = moduleLessons.length;
+  const completedInModuleCount = moduleLessons.filter(
+    l => completedLessonIds.includes(l.id) || (isCorrect && l.id === lessonId)
+  ).length;
+  const isModuleFullyComplete = totalModuleLessons > 0 && completedInModuleCount >= totalModuleLessons;
+
   const isPractice = completedLessonIds.includes(lessonId);
   const xpReward = isPractice ? 5 : (lesson?.xpReward || 0);
+
 
   const handleSuccess = useCallback(async () => {
     setIsCorrect(true);
