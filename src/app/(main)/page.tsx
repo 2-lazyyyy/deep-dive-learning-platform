@@ -9,7 +9,8 @@ import { Heart, Flame, Star, Trophy, Target, Gem, Award, Shield, Crown, MessageC
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { translations, getLocalizedUnitTitle } from '@/lib/i18n';
+import { translations, getLocalizedUnitTitle, getLocalizedModuleTitle } from '@/lib/i18n';
+
 
 // Duolingo color pairs per unit
 const unitThemes = [
@@ -379,9 +380,10 @@ export default function Home() {
                     {/* Section label */}
                     <div className="flex items-center justify-center mb-4">
                       <span className="text-xs font-extrabold uppercase tracking-widest text-[#000313] dark:text-white">
-                        {section.title}
+                        {getLocalizedModuleTitle(section.title, language)}
                       </span>
                     </div>
+
 
                     {/* Lesson Nodes — Snake path */}
                     <div className="flex flex-col items-center">

@@ -348,21 +348,43 @@ export const getLocalizedLessonTitle = (title: string, lang: Language): string =
 
 export const getLocalizedModuleTitle = (title: string, lang: Language): string => {
   if (!title) return '';
+  const burmeseRegex = /[\u1000-\u109F\uAA60-\uAA7F\uA9E0-\uA9FF]/;
+  const burmeseParenthesesRegex = /\s*\([\u1000-\u109F\uAA60-\uAA7F\uA9E0-\uA9FF\s\S]*?\)/g;
+
   if (lang === 'en') {
-    // Return clean English portion
-    return title.replace(/\s*\([က-႟ꩠ-ꩿ\s\S]*?\)/g, '').trim();
+    // English mode: Return clean English portion with any Burmese text or parentheses completely stripped
+    return title.replace(burmeseParenthesesRegex, '').replace(/[\u1000-\u109F\uAA60-\uAA7F\uA9E0-\uA9FF]+/g, '').trim() || title;
+  }
+
+  // Myanmar mode: Extract clean Burmese title if available
+  const match = title.match(/\(([\u1000-\u109F\uAA60-\uAA7F\uA9E0-\uA9FF\s\S]+?)\)/);
+  if (match && match[1] && burmeseRegex.test(match[1])) {
+    const prefixMatch = title.match(/^(MODULE\s*[\d.]+:?)\s*/i);
+    const prefix = prefixMatch ? prefixMatch[1] + ' ' : '';
+    return `${prefix}${match[1].trim()}`;
   }
   return title;
 };
 
 export const getLocalizedUnitTitle = (title: string, lang: Language): string => {
   if (!title) return '';
+  const burmeseRegex = /[\u1000-\u109F\uAA60-\uAA7F\uA9E0-\uA9FF]/;
+  const burmeseParenthesesRegex = /\s*\([\u1000-\u109F\uAA60-\uAA7F\uA9E0-\uA9FF\s\S]*?\)/g;
+
   if (lang === 'en') {
     // Strip Myanmar portion in parentheses
-    return title.replace(/\s*\([က-႟ꩠ-ꩿ\s\S]*?\)/g, '').trim();
+    return title.replace(burmeseParenthesesRegex, '').replace(/[\u1000-\u109F\uAA60-\uAA7F\uA9E0-\uA9FF]+/g, '').trim() || title;
+  }
+
+  const match = title.match(/\(([\u1000-\u109F\uAA60-\uAA7F\uA9E0-\uA9FF\s\S]+?)\)/);
+  if (match && match[1] && burmeseRegex.test(match[1])) {
+    const prefixMatch = title.match(/^(Unit\s*\d+:?)\s*/i);
+    const prefix = prefixMatch ? prefixMatch[1] + ' ' : '';
+    return `${prefix}${match[1].trim()}`;
   }
   return title;
 };
+
 
 const contentTranslations: Record<string, string> = {
   // Lesson 6

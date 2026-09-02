@@ -386,8 +386,9 @@ export default function LessonPage() {
                     {/* Popover Header: Current Unit & Module Info */}
                     <div className="p-2 border-b-2 border-gray-100 dark:border-white/10 mb-2">
                       <span className="text-[10px] font-black uppercase tracking-wider text-[#0ba2b3]">
-                        {currentUnit.title}
+                        {getLocalizedUnitTitle(currentUnit.title, language)}
                       </span>
+
                       <h4 className="text-xs font-bold text-gray-500 dark:text-gray-400 truncate mt-0.5">
                         {getLocalizedModuleTitle(currentModule?.title || 'Lessons', language)}
                       </h4>
