@@ -123,34 +123,42 @@ def call_groq_api(payload: AIChatRequest) -> Optional[str]:
     # Append latest student question
     messages.append({"role": "user", "content": payload.message})
 
-    req_body = {
-        "model": "llama-3.3-70b-versatile",
-        "messages": messages,
-        "temperature": 0.3, # Low temperature ensures strict rule compliance
-        "max_tokens": 800
-    }
+    candidate_models = [
+        os.getenv("GROQ_MODEL", "openai/gpt-oss-120b"),
+        "qwen/qwen3.8-27b",
+        "openai/gpt-oss-20b"
+    ]
 
     headers = {
         "Authorization": f"Bearer {groq_api_key}",
         "Content-Type": "application/json"
     }
 
-    try:
-        res = requests.post(
-            "https://api.groq.com/openai/v1/chat/completions",
-            headers=headers,
-            json=req_body,
-            timeout=10
-        )
-        if res.status_code == 200:
-            res_json = res.json()
-            return res_json["choices"][0]["message"]["content"]
-        else:
-            logger.warning(f"Groq API returned HTTP {res.status_code}: {res.text}")
-            return None
-    except Exception as e:
-        logger.error(f"Failed to query Groq API: {e}")
-        return None
+    for model_name in candidate_models:
+        req_body = {
+            "model": model_name,
+            "messages": messages,
+            "temperature": 0.3, # Low temperature ensures strict rule compliance
+            "max_tokens": 800
+        }
+
+        try:
+            res = requests.post(
+                "https://api.groq.com/openai/v1/chat/completions",
+                headers=headers,
+                json=req_body,
+                timeout=12
+            )
+            if res.status_code == 200:
+                res_json = res.json()
+                return res_json["choices"][0]["message"]["content"]
+            else:
+                logger.warning(f"Groq API ({model_name}) returned HTTP {res.status_code}: {res.text}")
+        except Exception as e:
+            logger.error(f"Failed to query Groq API ({model_name}): {e}")
+
+    return None
+
 
 def generate_heuristic_tutor_response(payload: AIChatRequest) -> str:
     """

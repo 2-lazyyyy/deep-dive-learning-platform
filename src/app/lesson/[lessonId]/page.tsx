@@ -14,6 +14,7 @@ import { ContentBlock } from '@/types';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Heart, X, BookOpen, Code, Image as ImageIcon, Video, ChevronLeft, ChevronRight, ChevronDown, CheckCircle2, Lock, Star, Target } from 'lucide-react';
 import Link from 'next/link';
+import { Chatbot } from '@/components/chatbot';
 import { translations, getLocalizedLessonTitle, getLocalizedModuleTitle, getLocalizedUnitTitle, getLocalizedContentText, Language } from '@/lib/i18n';
 
 export default function LessonPage() {
@@ -557,6 +558,9 @@ export default function LessonPage() {
       {showHeartsModal && (
         <HeartsModal onClose={() => setShowHeartsModal(false)} />
       )}
+
+      {/* Floating AI Coding Tutor */}
+      <Chatbot lessonTitle={lesson?.title} />
     </div>
   );
 }

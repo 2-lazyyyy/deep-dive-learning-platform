@@ -9,7 +9,6 @@ import { Heart, Flame, Star, Trophy, Target, Gem, Award, Shield, Crown, MessageC
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Chatbot } from '@/components/chatbot';
 import { translations, getLocalizedUnitTitle } from '@/lib/i18n';
 
 // Duolingo color pairs per unit
@@ -424,9 +423,6 @@ export default function Home() {
           );
         })}
       </div>
-
-      {/* Floating Chatbot Box */}
-      <Chatbot />
     </div>
   );
 }

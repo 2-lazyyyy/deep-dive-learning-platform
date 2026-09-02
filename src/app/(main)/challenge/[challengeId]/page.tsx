@@ -8,6 +8,7 @@ import { ResultModal } from '@/components/result-modal';
 import { useState, useCallback } from 'react';
 import { ArrowLeft, BookOpen, Code, Swords, Star, Gem } from 'lucide-react';
 import Link from 'next/link';
+import { Chatbot } from '@/components/chatbot';
 
 export default function ChallengeWorkspace() {
   const params = useParams();
@@ -197,6 +198,9 @@ export default function ChallengeWorkspace() {
           }}
         />
       )}
+
+      {/* Floating AI Coding Tutor */}
+      <Chatbot lessonTitle={challenge?.title} />
     </div>
   );
 }
