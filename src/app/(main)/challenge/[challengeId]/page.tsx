@@ -174,7 +174,7 @@ export default function ChallengeWorkspace() {
               : 'text-[#000313] dark:text-white/70 hover:bg-[#F8F8F8] dark:hover:bg-white/5 border-t-4 border-transparent'
           }`}
         >
-          Problem
+          {language === 'my' ? 'ပုစ္ဆာ' : 'Problem'}
         </button>
         <button
           onClick={() => setMobileTab('code')}
@@ -184,9 +184,10 @@ export default function ChallengeWorkspace() {
               : 'text-[#000313] dark:text-white/70 hover:bg-[#F8F8F8] dark:hover:bg-white/5 border-t-4 border-transparent'
           }`}
         >
-          Code
+          {language === 'my' ? 'ကုဒ်လေ့ကျင့်ခန်း' : 'Code'}
         </button>
       </div>
+
 
       {showResult && (
         <ResultModal

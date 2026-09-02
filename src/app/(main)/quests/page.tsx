@@ -55,9 +55,10 @@ export default function QuestsPage() {
           <div className="flex items-center gap-2 bg-[#F0F8FF] dark:bg-[#0a1128] px-4 py-2 rounded-xl text-[#FFC800] font-bold">
             <Star size={20} fill="currentColor" /> {xp} XP
           </div>
-          <div className="flex items-center gap-2 bg-[#F3F3F3] px-4 py-2 rounded-xl text-[#00BCD4] font-bold">
+          <div className="flex items-center gap-2 bg-[#F0F8FF] dark:bg-[#0a1128] border border-[#84D8FF]/40 dark:border-blue-900/40 px-4 py-2 rounded-xl text-[#00BCD4] font-bold">
             <Gem size={20} fill="currentColor" /> {gems}
           </div>
+
         </div>
       </div>
 
