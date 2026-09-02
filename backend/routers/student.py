@@ -46,13 +46,11 @@ def auto_confirm_user(payload: dict):
 @router.post("/submissions", response_model=SubmissionCreateResponse, status_code=status.HTTP_201_CREATED)
 def submit_code(payload: SubmissionCreate):
     """
-    Submits student code for lightning-fast instant execution and validation.
-    Executes in < 50ms, verifies correctness, updates DB & gamification, and returns immediately.
+    Submits student code to the Celery + Redis Distributed Task Queue.
+    The Celery Worker node executes the task inside an AST Hardened Sandbox.
+    Waits for worker result via Redis; falls back to async polling or local execution if queue is busy.
     """
     start_time = time.time()
-    stdout = ""
-    stderr = ""
-    ret_code = 0
 
     # 1. Resolve lesson_id to UUID if a numeric string was sent
     real_lesson_id = payload.lesson_id
@@ -65,118 +63,144 @@ def submit_code(payload: SubmissionCreate):
         except Exception:
             pass
 
-    # 2. Static AST Security Analysis (OWASP Pre-Execution Defense)
-    is_safe, sec_warning = validate_student_code(payload.code)
-    if not is_safe:
-        return SubmissionCreateResponse(
-            submission_id="security-blocked",
-            status="error",
-            passed=False,
-            output="",
-            error=sec_warning,
-            execution_time_ms=int((time.time() - start_time) * 1000)
-        )
-
-    # 3. Isolated sandboxed subprocess execution
-    clean_env = {
-        "PYTHONIOENCODING": "utf-8",
-        "PYTHONUNBUFFERED": "1"
-    }
-    try:
-        run_res = subprocess.run(
-            [sys.executable, "-I", "-E", "-c", payload.code],
-            capture_output=True,
-            text=True,
-            timeout=3.0,
-            env=clean_env
-        )
-        stdout = run_res.stdout
-        stderr = run_res.stderr
-        ret_code = run_res.returncode
-    except subprocess.TimeoutExpired:
-        stderr = "Execution timed out (Limit: 3 seconds).\nအချိန်သတ်မှတ်ချက် (၃ စက္ကန့်) ကျော်လွန်သွားပါသည်။"
-        ret_code = 124
-    except Exception as ex:
-        stderr = str(ex)
-        ret_code = 1
-
-    # Buffer Overflow / DoS Protection (Truncate output to 10KB)
-    MAX_OUTPUT_LEN = 10 * 1024
-    if len(stdout) > MAX_OUTPUT_LEN:
-        stdout = stdout[:MAX_OUTPUT_LEN] + "\n...[Output truncated: Exceeded 10KB limit]"
-    if len(stderr) > MAX_OUTPUT_LEN:
-        stderr = stderr[:MAX_OUTPUT_LEN] + "\n...[Error truncated: Exceeded 10KB limit]"
-
-    exec_time_ms = int((time.time() - start_time) * 1000)
-
-    # 3. Verify against lesson expected output
-    xp_reward = 15
-    passed = False
-    try:
-        lesson_res = supabase.table("lessons").select("exercise_data, xp_reward").eq("id", real_lesson_id).execute()
-        if lesson_res.data and len(lesson_res.data) > 0:
-            l_data = lesson_res.data[0]
-            xp_reward = l_data.get("xp_reward", 15)
-            ex_data = l_data.get("exercise_data") or {}
-            expected_output = ex_data.get("expectedOutput", "")
-            if expected_output:
-                passed = (stdout.strip() == expected_output.strip()) and (ret_code == 0)
-            else:
-                passed = (ret_code == 0) and not stderr
-        else:
-            passed = (ret_code == 0) and not stderr
-    except Exception as e:
-        print(f"Error fetching lesson test specs: {e}")
-        passed = (ret_code == 0) and not stderr
-
-    status_str = "completed" if passed else "error"
-
-    # 4. Save submission record to Supabase
-    sub_id = "instant-" + str(int(time.time() * 1000))
+    # 2. Insert initial submission record with status 'queued'
+    sub_id = "sub-" + str(int(time.time() * 1000))
     try:
         ins_res = supabase.table("submissions").insert({
             "user_id": payload.user_id,
             "lesson_id": real_lesson_id,
             "submitted_code": payload.code,
             "language": payload.language,
-            "status": status_str,
-            "passed": passed,
-            "output": stdout,
-            "error": stderr,
-            "execution_time_ms": exec_time_ms
+            "status": "queued",
+            "passed": False,
+            "output": "",
+            "error": "",
+            "execution_time_ms": 0
         }).execute()
         if ins_res.data and len(ins_res.data) > 0:
             sub_id = ins_res.data[0]["id"]
     except Exception as e:
-        print(f"Error saving submission: {e}")
+        print(f"Failed to insert queued submission: {e}")
 
-    # 5. Gamification Update
+    # 3. Distributed Execution: Dispatch to Redis Message Broker & Celery Worker
     try:
-        user_res = supabase.table("users").select("xp, hearts").eq("id", payload.user_id).execute()
-        if user_res.data and len(user_res.data) > 0:
-            curr_xp = user_res.data[0].get("xp", 0)
-            curr_hearts = user_res.data[0].get("hearts", 5)
-            if passed:
-                reward = 5 if payload.is_practice else xp_reward
-                supabase.table("users").update({"xp": curr_xp + reward}).eq("id", payload.user_id).execute()
-            else:
-                if not payload.is_practice:
-                    new_h = max(0, curr_hearts - 1)
-                    upd = {"hearts": new_h}
-                    if curr_hearts == 5 and new_h < 5:
-                        upd["last_heart_update"] = datetime.now(timezone.utc).isoformat()
-                    supabase.table("users").update(upd).eq("id", payload.user_id).execute()
-    except Exception as e:
-        print(f"Error updating user progress: {e}")
+        from worker import execute_code_task
+        task = execute_code_task.delay(
+            submission_id=sub_id,
+            code=payload.code,
+            lang=payload.language,
+            is_practice=payload.is_practice
+        )
+        
+        # Non-blocking check for fast Celery execution (up to 2.5s)
+        poll_start = time.time()
+        while time.time() - poll_start < 2.5:
+            if task.ready():
+                result = task.result
+                if isinstance(result, dict):
+                    return SubmissionCreateResponse(
+                        submission_id=sub_id,
+                        status=result.get("status", "completed"),
+                        passed=result.get("passed", False),
+                        output=result.get("output", ""),
+                        error=result.get("error", ""),
+                        execution_time_ms=result.get("execution_time_ms", int((time.time() - start_time) * 1000))
+                    )
+                break
+            time.sleep(0.05)
+            
+        # Return queued status so frontend polling seamlessly takes over
+        return SubmissionCreateResponse(
+            submission_id=sub_id,
+            status="queued",
+            passed=False,
+            output="",
+            error="",
+            execution_time_ms=int((time.time() - start_time) * 1000)
+        )
+    except Exception as dist_err:
+        print(f"[Distributed Dispatch Fallback] Queue error: {dist_err}")
+        # Local resilience fallback
+        from security import validate_code_ast
+        is_safe, sec_warning = validate_code_ast(payload.code)
+        if not is_safe:
+            output = ""
+            error = sec_warning
+            passed = False
+        else:
+            clean_env = {"PYTHONIOENCODING": "utf-8", "PYTHONUNBUFFERED": "1"}
+            try:
+                run_res = subprocess.run(
+                    [sys.executable, "-I", "-E", "-c", payload.code],
+                    capture_output=True,
+                    text=True,
+                    timeout=3.0,
+                    env=clean_env
+                )
+                output = run_res.stdout
+                error = run_res.stderr
+                passed = (run_res.returncode == 0) and not error
+            except Exception as ex:
+                output = ""
+                error = str(ex)
+                passed = False
 
-    return SubmissionCreateResponse(
-        submission_id=sub_id,
-        status=status_str,
-        passed=passed,
-        output=stdout,
-        error=stderr,
-        execution_time_ms=exec_time_ms
-    )
+        # Verify against lesson expected output if available
+        xp_reward = 15
+        try:
+            lesson_res = supabase.table("lessons").select("exercise_data, xp_reward").eq("id", real_lesson_id).execute()
+            if lesson_res.data and len(lesson_res.data) > 0:
+                l_data = lesson_res.data[0]
+                xp_reward = l_data.get("xp_reward", 15)
+                ex_data = l_data.get("exercise_data") or {}
+                expected_output = ex_data.get("expectedOutput", "")
+                if expected_output and is_safe:
+                    passed = (output.strip() == expected_output.strip()) and (run_res.returncode == 0)
+        except Exception:
+            pass
+
+        status_str = "completed" if passed else "error"
+        exec_ms = int((time.time() - start_time) * 1000)
+        try:
+            supabase.table("submissions").update({
+                "status": status_str,
+                "passed": passed,
+                "output": output,
+                "error": error,
+                "execution_time_ms": exec_ms
+            }).eq("id", sub_id).execute()
+        except Exception:
+            pass
+
+        # Gamification Update in Fallback
+        try:
+            user_res = supabase.table("users").select("xp, hearts").eq("id", payload.user_id).execute()
+            if user_res.data and len(user_res.data) > 0:
+                curr_xp = user_res.data[0].get("xp", 0)
+                curr_hearts = user_res.data[0].get("hearts", 5)
+                if passed:
+                    reward = 5 if payload.is_practice else xp_reward
+                    supabase.table("users").update({"xp": curr_xp + reward}).eq("id", payload.user_id).execute()
+                else:
+                    if not payload.is_practice:
+                        new_h = max(0, curr_hearts - 1)
+                        upd = {"hearts": new_h}
+                        if curr_hearts == 5 and new_h < 5:
+                            upd["last_heart_update"] = datetime.now(timezone.utc).isoformat()
+                        supabase.table("users").update(upd).eq("id", payload.user_id).execute()
+        except Exception:
+            pass
+
+        return SubmissionCreateResponse(
+            submission_id=sub_id,
+            status=status_str,
+            passed=passed,
+            output=output,
+            error=error,
+            execution_time_ms=exec_ms
+        )
+
+
 
 
 @router.get("/submissions/{submission_id}", response_model=SubmissionDetail)

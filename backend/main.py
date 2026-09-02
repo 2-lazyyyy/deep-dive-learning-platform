@@ -1,4 +1,18 @@
 import os
+from pathlib import Path
+from dotenv import load_dotenv
+
+# Load env variables from root .env and .env.local
+root_env = Path(__file__).resolve().parent.parent / ".env"
+root_env_local = Path(__file__).resolve().parent.parent / ".env.local"
+backend_env = Path(__file__).resolve().parent / ".env"
+if root_env.exists():
+    load_dotenv(dotenv_path=root_env, override=True)
+if root_env_local.exists():
+    load_dotenv(dotenv_path=root_env_local, override=True)
+if backend_env.exists():
+    load_dotenv(dotenv_path=backend_env, override=True)
+
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from routers.student import router as student_router

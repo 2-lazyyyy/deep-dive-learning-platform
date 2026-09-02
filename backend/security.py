@@ -106,3 +106,6 @@ def validate_student_code(code: str) -> Tuple[bool, str]:
                 )
 
     return True, ""
+
+# Alias for security validator
+validate_code_ast = validate_student_code
