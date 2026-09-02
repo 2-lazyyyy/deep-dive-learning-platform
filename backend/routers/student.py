@@ -559,7 +559,53 @@ def refill_hearts(user_id: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error refilling hearts: {str(e)}")
 
+@router.post("/users/{user_id}/shop/purchase", response_model=UserProgressResponse)
+def purchase_shop_item(user_id: str, payload: dict):
+    """
+    Shop API: Purchases an item with gems (e.g. streak freeze, xp boost, shield).
+    """
+    try:
+        item_id = payload.get("item_id", "")
+        price = int(payload.get("price", 0))
+        xp_reward = int(payload.get("xp_reward", 0))
+
+        user_res = supabase.table("users").select("id, name, role, xp, hearts, gems, last_heart_update").eq("id", user_id).execute()
+        if not user_res.data or len(user_res.data) == 0:
+            raise HTTPException(status_code=404, detail="User not found")
+            
+        u = user_res.data[0]
+        curr_gems = u.get("gems", 500)
+        curr_xp = u.get("xp", 0)
+        
+        if curr_gems < price:
+            raise HTTPException(status_code=400, detail="Not enough gems")
+            
+        updates = {
+            "gems": curr_gems - price,
+            "xp": curr_xp + xp_reward
+        }
+        
+        update_res = supabase.table("users").update(updates).eq("id", user_id).execute()
+        if not update_res.data:
+            raise HTTPException(status_code=500, detail="Failed to purchase item")
+            
+        updated_user = update_res.data[0]
+        return UserProgressResponse(
+            id=updated_user["id"],
+            name=updated_user["name"],
+            role=updated_user["role"],
+            xp=updated_user.get("xp", 0),
+            hearts=updated_user.get("hearts", 5),
+            gems=updated_user.get("gems", 500),
+            last_heart_update=updated_user.get("last_heart_update", "")
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error purchasing item: {str(e)}")
+
 @router.get("/leaderboard", response_model=List[LeaderboardEntry])
+
 def get_leaderboard(limit: int = 10):
     """
     Fetches the top students ordered by XP for the Leaderboard.

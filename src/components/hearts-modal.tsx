@@ -3,9 +3,11 @@
 import { motion } from 'framer-motion';
 import { Heart, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useUserStore } from '@/store/use-user-store';
 
 export const HeartsModal = ({ onClose }: { onClose: () => void }) => {
   const router = useRouter();
+  const language = useUserStore((state) => state.language);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#000313]/60">
@@ -21,7 +23,7 @@ export const HeartsModal = ({ onClose }: { onClose: () => void }) => {
           <X size={24} strokeWidth={3} />
         </button>
 
-        <div className="w-24 h-24 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6 relative">
+        <div className="w-24 h-24 bg-red-50 dark:bg-red-950/40 rounded-full flex items-center justify-center mx-auto mb-6 relative">
           <Heart size={48} className="text-[#FC4B0B]" fill="currentColor" />
           <motion.div
             animate={{ scale: [1, 1.2, 1], opacity: [1, 0, 1] }}
@@ -31,10 +33,12 @@ export const HeartsModal = ({ onClose }: { onClose: () => void }) => {
         </div>
 
         <h2 className="text-2xl font-extrabold text-[#000313] dark:text-white mb-2">
-          You ran out of hearts!
+          {language === 'my' ? 'သင်၏ အသက်များ ကုန်ဆုံးသွားပါပြီ!' : 'You ran out of hearts!'}
         </h2>
-        <p className="text-[#000313] dark:text-white font-bold mb-8">
-          Don't worry, you can refill them in the shop or wait for them to regenerate.
+        <p className="text-[#000313] dark:text-white font-bold mb-8 text-sm leading-relaxed">
+          {language === 'my' 
+            ? 'စိတ်မပူပါနှင့်! ဆိုင် (Shop) တွင် ကျောက်မျက် (Gems) ဖြင့် ပြန်ဖြည့်နိုင်သည် သို့မဟုတ် အချိန်စောင့်ဆိုင်းနိုင်ပါသည်။'
+            : "Don't worry, you can refill them in the shop or wait for them to regenerate."}
         </p>
 
         <div className="space-y-3">
@@ -45,19 +49,20 @@ export const HeartsModal = ({ onClose }: { onClose: () => void }) => {
             }}
             className="w-full py-3.5 bg-[#0ba2b3] hover:bg-[#1e91a3] text-white font-extrabold rounded-2xl border-b-4 border-[#1e91a3] active:border-b-0 active:translate-y-1 transition-all uppercase tracking-wide"
           >
-            Refill in Shop
+            {language === 'my' ? 'ဆိုင်တွင် ပြန်ဖြည့်မည်' : 'Refill in Shop'}
           </button>
           <button
             onClick={() => {
               onClose();
               router.push('/');
             }}
-            className="w-full py-3.5 bg-white dark:bg-[#000313] text-[#0ba2b3] font-extrabold rounded-2xl border-2 border-[#00031333] dark:border-white/20 hover:bg-[#F8F8F8] dark:bg-[#060a1d] active:border-b-0 active:translate-y-1 transition-all uppercase tracking-wide"
+            className="w-full py-3.5 bg-white dark:bg-[#000313] text-[#0ba2b3] font-extrabold rounded-2xl border-2 border-[#00031333] dark:border-white/20 hover:bg-[#F8F8F8] dark:hover:bg-[#060a1d] active:border-b-0 active:translate-y-1 transition-all uppercase tracking-wide"
           >
-            End Lesson
+            {language === 'my' ? 'သင်ခန်းစာ အဆုံးသတ်မည်' : 'End Lesson'}
           </button>
         </div>
       </motion.div>
     </div>
   );
 };
+
