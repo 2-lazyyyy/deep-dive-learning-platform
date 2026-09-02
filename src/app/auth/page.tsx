@@ -243,11 +243,16 @@ export default function DuolingoAuthPage() {
                 transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
                 className="relative select-none"
               >
-                <div className="w-64 h-64 sm:w-80 sm:h-80 rounded-full bg-gradient-to-tr from-[#0ba2b3]/20 via-[#84D8FF]/30 to-emerald-200/40 dark:from-[#0ba2b3]/10 dark:to-blue-900/20 flex items-center justify-center border-4 border-dashed border-[#0ba2b3]/40">
-                  <span className="text-8xl sm:text-9xl filter drop-shadow-xl animate-pulse">
-                    🦉
-                  </span>
+                <div className="w-64 h-64 sm:w-80 sm:h-80 rounded-full bg-gradient-to-tr from-[#0ba2b3]/20 via-[#84D8FF]/30 to-emerald-200/40 dark:from-[#0ba2b3]/10 dark:to-blue-900/20 flex items-center justify-center border-4 border-dashed border-[#0ba2b3]/40 p-3">
+                  <motion.img
+                    src="/snake-mascot.png"
+                    alt="Python Snake Mascot"
+                    className="w-52 h-52 sm:w-64 sm:h-64 object-contain filter drop-shadow-2xl select-none"
+                    animate={{ y: [-4, 4, -4], rotate: [-1, 1, -1] }}
+                    transition={{ repeat: Infinity, duration: 3, ease: 'easeInOut' }}
+                  />
                 </div>
+
                 {/* Floating Skill Badges */}
                 <div className="absolute -top-2 -right-2 bg-white dark:bg-[#060a1d] border-2 border-[#84D8FF] px-4 py-2 rounded-2xl shadow-lg flex items-center gap-2 text-xs font-extrabold text-[#0ba2b3]">
                   <span>🐍</span> Python 3.12
