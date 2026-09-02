@@ -70,7 +70,12 @@ export default function LessonPage() {
     });
   });
 
-  const isLastInModule = currentModule?.lessons[currentModule.lessons.length - 1].id === lessonId;
+  const moduleLessons = currentModule?.lessons || [];
+  const totalModuleLessons = moduleLessons.length;
+  const completedInModuleCount = moduleLessons.filter(
+    l => completedLessonIds.includes(l.id) || (isCorrect && l.id === lessonId)
+  ).length;
+  const isModuleFullyComplete = totalModuleLessons > 0 && completedInModuleCount >= totalModuleLessons;
 
   const lessonIndex = currentUnitLessons.findIndex(l => l.id === lessonId);
   const unitNumber = currentUnit?.orderIndex || (currentUnit as any)?.order_index || (currentUnit?.title?.match(/Unit\s*(\d+)/i)?.[1]) || (units.findIndex(u => u.id === currentUnit?.id) + 1);
@@ -149,25 +154,41 @@ export default function LessonPage() {
 
   const handleContinue = useCallback(() => {
     setShowResult(false);
-    if (isCorrect) {
-      if (isLastInModule) {
-        setIsFinished(true);
+    if (!isCorrect) return;
+
+    // Check if ALL lessons in the current module are completed
+    const currentCompleted = new Set([...completedLessonIds, lessonId]);
+    const currentModuleLessons = currentModule?.lessons || [];
+    const isAllModuleDone = currentModuleLessons.length > 0 && currentModuleLessons.every(l => currentCompleted.has(l.id));
+
+    if (isAllModuleDone) {
+      // ONLY show Module Complete if all lessons in this module have been finished!
+      setIsFinished(true);
+    } else {
+      // If there are skipped/uncompleted lessons in this module, guide the user to the missing lesson!
+      const nextIncompleteInModule = currentModuleLessons.find(l => !currentCompleted.has(l.id));
+      if (nextIncompleteInModule) {
+        router.push(`/lesson/${nextIncompleteInModule.id}`);
       } else {
         const nextId = getNextLessonId(lessonId);
         if (nextId) router.push(`/lesson/${nextId}`);
         else router.push('/');
       }
     }
-  }, [isCorrect, isLastInModule, lessonId, getNextLessonId, router]);
+  }, [isCorrect, completedLessonIds, lessonId, currentModule, getNextLessonId, router]);
 
   const handleFinalComplete = useCallback(() => {
-    const nextId = getNextLessonId(lessonId);
-    if (nextId) {
-      router.push(`/lesson/${nextId}`);
+    const all = useLessonStore.getState().getAllLessons();
+    const currentCompleted = new Set([...useUserStore.getState().completedLessonIds, lessonId]);
+    const nextIncompleteInCourse = all.find(l => !currentCompleted.has(l.id));
+
+    if (nextIncompleteInCourse) {
+      router.push(`/lesson/${nextIncompleteInCourse.id}`);
     } else {
       router.push('/');
     }
-  }, [lessonId, getNextLessonId, router]);
+  }, [lessonId, router]);
+
 
   if (!isMounted) return null;
 
@@ -188,6 +209,7 @@ export default function LessonPage() {
   }
 
   if (isFinished) {
+    const localizedModule = getLocalizedModuleTitle(currentModule?.title || '', language);
     return (
       <div className="min-h-screen flex flex-col bg-white dark:bg-[#000313]">
         <div className="flex-1 flex flex-col items-center justify-center p-6 text-center mt-10">
@@ -203,10 +225,20 @@ export default function LessonPage() {
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.4 }}
-            className="text-4xl font-extrabold text-[#FFC800] mb-8"
+            className="text-3xl sm:text-4xl font-extrabold text-[#FFC800] mb-2"
           >
-            Module Complete!
+            {language === 'my' ? 'မော်ဂျူး ပြီးမြောက်ပါပြီ!' : 'Module Complete!'}
           </motion.h1>
+          {localizedModule && (
+            <motion.p
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.5 }}
+              className="text-base sm:text-lg font-bold text-slate-500 dark:text-slate-400 mb-8"
+            >
+              {localizedModule}
+            </motion.p>
+          )}
           <motion.div 
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
@@ -214,14 +246,18 @@ export default function LessonPage() {
             className="flex items-center gap-4 flex-wrap justify-center"
           >
             <div className="flex flex-col items-center p-4 border-2 border-[#FFC800] rounded-2xl bg-[#FFC800]/10 min-w-[140px]">
-              <span className="text-sm font-bold text-[#FFC800] uppercase mb-1">Total XP</span>
+              <span className="text-sm font-bold text-[#FFC800] uppercase mb-1">
+                {language === 'my' ? 'ရရှိသည့် XP' : 'Total XP'}
+              </span>
               <div className="flex items-center gap-1.5 text-2xl font-extrabold text-[#FFC800]">
                 <Star size={24} fill="currentColor" />
                 <span>+{xpReward}</span>
               </div>
             </div>
             <div className="flex flex-col items-center p-4 border-2 border-[#0ba2b3] rounded-2xl bg-[#0ba2b3]/10 min-w-[140px]">
-              <span className="text-sm font-bold text-[#0ba2b3] uppercase mb-1">Accuracy</span>
+              <span className="text-sm font-bold text-[#0ba2b3] uppercase mb-1">
+                {language === 'my' ? 'တိကျမှုနှုန်း' : 'Accuracy'}
+              </span>
               <div className="flex items-center gap-1.5 text-2xl font-extrabold text-[#0ba2b3]">
                 <Target size={24} strokeWidth={3} />
                 <span>100%</span>
@@ -240,18 +276,19 @@ export default function LessonPage() {
             onClick={() => router.push('/')}
             className="w-full bg-white dark:bg-[#000313] text-[#0ba2b3] border-2 border-[#0ba2b3] font-extrabold py-4 rounded-2xl text-lg hover:bg-[#0ba2b3]/10 transition uppercase"
           >
-            Home
+            {language === 'my' ? 'ပင်မစာမျက်နှာ' : 'Home'}
           </button>
           <button
             onClick={handleFinalComplete}
             className="w-full bg-[#0ba2b3] text-white font-extrabold py-4 rounded-2xl text-lg hover:bg-[#1e91a3] transition shadow-[0_4px_0_0_#157a87] active:shadow-none active:translate-y-1 uppercase"
           >
-            Continue
+            {language === 'my' ? 'ရှေ့သို့ ဆက်သွားမည်' : 'Continue'}
           </button>
         </motion.div>
       </div>
     );
   }
+
 
   return (
     <div className="h-screen flex flex-col bg-[#F8F8F8] dark:bg-[#060a1d]">
@@ -532,6 +569,17 @@ export default function LessonPage() {
           isOpen={true}
           isSuccess={isCorrect}
           xpEarned={isCorrect ? xpReward : 0}
+          message={
+            isCorrect
+              ? isModuleFullyComplete
+                ? (language === 'my'
+                    ? `ဂုဏ်ယူပါသည်! ဤမော်ဂျူးရှိ သင်ခန်းစာအားလုံး (${completedInModuleCount}/${totalModuleLessons}) ကို ပြီးမြောက်အောင်မြင်ပါပြီ!`
+                    : `Congratulations! You've completed all ${completedInModuleCount}/${totalModuleLessons} lessons in this module!`)
+                : (language === 'my'
+                    ? `သင်ခန်းစာ ဖြေဆိုအောင်မြင်ပါသည်! (မော်ဂျူး တိုးတက်မှု: ${completedInModuleCount}/${totalModuleLessons})`
+                    : `Lesson completed! (Module progress: ${completedInModuleCount}/${totalModuleLessons})`)
+              : undefined
+          }
           onContinue={handleContinue}
           onRetry={() => {
             setShowResult(false);
@@ -539,6 +587,7 @@ export default function LessonPage() {
           }}
         />
       )}
+
       {showHeartsModal && (
         <HeartsModal onClose={() => setShowHeartsModal(false)} />
       )}
