@@ -14,6 +14,8 @@ import { ContentBlock } from '@/types';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Heart, X, BookOpen, Code, Image as ImageIcon, Video, ChevronLeft, ChevronRight, ChevronDown, CheckCircle2, Lock, Star, Target } from 'lucide-react';
 import Link from 'next/link';
+import { Chatbot } from '@/components/chatbot';
+import { LectureViewer } from '@/components/lecture-viewer';
 import { translations, getLocalizedLessonTitle, getLocalizedModuleTitle, getLocalizedUnitTitle, getLocalizedContentText, Language } from '@/lib/i18n';
 
 export default function LessonPage() {
@@ -68,8 +70,6 @@ export default function LessonPage() {
     });
   });
 
-  const isLastInModule = currentModule?.lessons[currentModule.lessons.length - 1].id === lessonId;
-
   const lessonIndex = currentUnitLessons.findIndex(l => l.id === lessonId);
   const unitNumber = currentUnit?.orderIndex || (currentUnit as any)?.order_index || (currentUnit?.title?.match(/Unit\s*(\d+)/i)?.[1]) || (units.findIndex(u => u.id === currentUnit?.id) + 1);
 
@@ -86,8 +86,16 @@ export default function LessonPage() {
   const [retryCount, setRetryCount] = useState(0);
   const [isFinished, setIsFinished] = useState(false);
 
+  const moduleLessons = currentModule?.lessons || [];
+  const totalModuleLessons = moduleLessons.length;
+  const completedInModuleCount = moduleLessons.filter(
+    l => completedLessonIds.includes(l.id) || (isCorrect && l.id === lessonId)
+  ).length;
+  const isModuleFullyComplete = totalModuleLessons > 0 && completedInModuleCount >= totalModuleLessons;
+
   const isPractice = completedLessonIds.includes(lessonId);
   const xpReward = isPractice ? 5 : (lesson?.xpReward || 0);
+
 
   const handleSuccess = useCallback(async () => {
     setIsCorrect(true);
@@ -147,25 +155,41 @@ export default function LessonPage() {
 
   const handleContinue = useCallback(() => {
     setShowResult(false);
-    if (isCorrect) {
-      if (isLastInModule) {
-        setIsFinished(true);
+    if (!isCorrect) return;
+
+    // Check if ALL lessons in the current module are completed
+    const currentCompleted = new Set([...completedLessonIds, lessonId]);
+    const currentModuleLessons = currentModule?.lessons || [];
+    const isAllModuleDone = currentModuleLessons.length > 0 && currentModuleLessons.every(l => currentCompleted.has(l.id));
+
+    if (isAllModuleDone) {
+      // ONLY show Module Complete if all lessons in this module have been finished!
+      setIsFinished(true);
+    } else {
+      // If there are skipped/uncompleted lessons in this module, guide the user to the missing lesson!
+      const nextIncompleteInModule = currentModuleLessons.find(l => !currentCompleted.has(l.id));
+      if (nextIncompleteInModule) {
+        router.push(`/lesson/${nextIncompleteInModule.id}`);
       } else {
         const nextId = getNextLessonId(lessonId);
         if (nextId) router.push(`/lesson/${nextId}`);
         else router.push('/');
       }
     }
-  }, [isCorrect, isLastInModule, lessonId, getNextLessonId, router]);
+  }, [isCorrect, completedLessonIds, lessonId, currentModule, getNextLessonId, router]);
 
   const handleFinalComplete = useCallback(() => {
-    const nextId = getNextLessonId(lessonId);
-    if (nextId) {
-      router.push(`/lesson/${nextId}`);
+    const all = useLessonStore.getState().getAllLessons();
+    const currentCompleted = new Set([...useUserStore.getState().completedLessonIds, lessonId]);
+    const nextIncompleteInCourse = all.find(l => !currentCompleted.has(l.id));
+
+    if (nextIncompleteInCourse) {
+      router.push(`/lesson/${nextIncompleteInCourse.id}`);
     } else {
       router.push('/');
     }
-  }, [lessonId, getNextLessonId, router]);
+  }, [lessonId, router]);
+
 
   if (!isMounted) return null;
 
@@ -186,6 +210,7 @@ export default function LessonPage() {
   }
 
   if (isFinished) {
+    const localizedModule = getLocalizedModuleTitle(currentModule?.title || '', language);
     return (
       <div className="min-h-screen flex flex-col bg-white dark:bg-[#000313]">
         <div className="flex-1 flex flex-col items-center justify-center p-6 text-center mt-10">
@@ -201,10 +226,20 @@ export default function LessonPage() {
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.4 }}
-            className="text-4xl font-extrabold text-[#FFC800] mb-8"
+            className="text-3xl sm:text-4xl font-extrabold text-[#FFC800] mb-2"
           >
-            Module Complete!
+            {language === 'my' ? 'မော်ဂျူး ပြီးမြောက်ပါပြီ!' : 'Module Complete!'}
           </motion.h1>
+          {localizedModule && (
+            <motion.p
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.5 }}
+              className="text-base sm:text-lg font-bold text-slate-500 dark:text-slate-400 mb-8"
+            >
+              {localizedModule}
+            </motion.p>
+          )}
           <motion.div 
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
@@ -212,14 +247,18 @@ export default function LessonPage() {
             className="flex items-center gap-4 flex-wrap justify-center"
           >
             <div className="flex flex-col items-center p-4 border-2 border-[#FFC800] rounded-2xl bg-[#FFC800]/10 min-w-[140px]">
-              <span className="text-sm font-bold text-[#FFC800] uppercase mb-1">Total XP</span>
+              <span className="text-sm font-bold text-[#FFC800] uppercase mb-1">
+                {language === 'my' ? 'ရရှိသည့် XP' : 'Total XP'}
+              </span>
               <div className="flex items-center gap-1.5 text-2xl font-extrabold text-[#FFC800]">
                 <Star size={24} fill="currentColor" />
                 <span>+{xpReward}</span>
               </div>
             </div>
             <div className="flex flex-col items-center p-4 border-2 border-[#0ba2b3] rounded-2xl bg-[#0ba2b3]/10 min-w-[140px]">
-              <span className="text-sm font-bold text-[#0ba2b3] uppercase mb-1">Accuracy</span>
+              <span className="text-sm font-bold text-[#0ba2b3] uppercase mb-1">
+                {language === 'my' ? 'တိကျမှုနှုန်း' : 'Accuracy'}
+              </span>
               <div className="flex items-center gap-1.5 text-2xl font-extrabold text-[#0ba2b3]">
                 <Target size={24} strokeWidth={3} />
                 <span>100%</span>
@@ -238,18 +277,19 @@ export default function LessonPage() {
             onClick={() => router.push('/')}
             className="w-full bg-white dark:bg-[#000313] text-[#0ba2b3] border-2 border-[#0ba2b3] font-extrabold py-4 rounded-2xl text-lg hover:bg-[#0ba2b3]/10 transition uppercase"
           >
-            Home
+            {language === 'my' ? 'ပင်မစာမျက်နှာ' : 'Home'}
           </button>
           <button
             onClick={handleFinalComplete}
             className="w-full bg-[#0ba2b3] text-white font-extrabold py-4 rounded-2xl text-lg hover:bg-[#1e91a3] transition shadow-[0_4px_0_0_#157a87] active:shadow-none active:translate-y-1 uppercase"
           >
-            Continue
+            {language === 'my' ? 'ရှေ့သို့ ဆက်သွားမည်' : 'Continue'}
           </button>
         </motion.div>
       </div>
     );
   }
+
 
   return (
     <div className="h-screen flex flex-col bg-[#F8F8F8] dark:bg-[#060a1d]">
@@ -346,8 +386,9 @@ export default function LessonPage() {
                     {/* Popover Header: Current Unit & Module Info */}
                     <div className="p-2 border-b-2 border-gray-100 dark:border-white/10 mb-2">
                       <span className="text-[10px] font-black uppercase tracking-wider text-[#0ba2b3]">
-                        {currentUnit.title}
+                        {getLocalizedUnitTitle(currentUnit.title, language)}
                       </span>
+
                       <h4 className="text-xs font-bold text-gray-500 dark:text-gray-400 truncate mt-0.5">
                         {getLocalizedModuleTitle(currentModule?.title || 'Lessons', language)}
                       </h4>
@@ -435,30 +476,13 @@ export default function LessonPage() {
       {/* Main Content — Split Layout */}
       <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
         {/* LEFT: Lesson Content */}
-        <div className={`w-full lg:w-1/2 h-full lg:h-full overflow-y-auto border-b-2 lg:border-b-0 lg:border-r-2 border-[#00031333] dark:border-white/20 bg-white dark:bg-[#000313] ${mobileTab === 'lesson' ? 'block' : 'hidden'} lg:block`}>
-          <div className="p-8 max-w-xl mx-auto pb-24 lg:pb-8">
-            {/* Lesson Title & Badges */}
-            <div className="mb-6">
-              <div className="flex items-center gap-3 mb-5">
-                <span className="text-xs font-extrabold uppercase tracking-wider text-[#0ba2b3] bg-[#F0F8FF] dark:bg-[#0a1128] px-2.5 py-1 rounded-full">
-                  {getLocalizedUnitTitle(lesson.unitTitle || '', language).replace(/^Unit \d+:\s*/, '')}
-                </span>
-                <span className="text-xs font-extrabold uppercase tracking-wider text-[#0ba2b3] bg-[#F0F8FF] dark:bg-[#0a1128] px-2.5 py-1 rounded-full">
-                  {getLocalizedModuleTitle(lesson.moduleTitle || '', language)}
-                </span>
-              </div>
-              <h1 className="text-2xl font-extrabold text-[#000313] dark:text-white mb-4">{getLocalizedLessonTitle(lesson.title, language)}</h1>
-              <div className="flex items-center gap-3 mt-4">
-                <span className="text-xs font-bold text-[#0ba2b3]">+{lesson.xpReward} XP</span>
-              </div>
-            </div>
-
-            {/* Content Blocks */}
-            <div className="space-y-5">
-              {lesson.contentBlocks.map((block, idx) => (
-                <ContentBlockRenderer key={idx} block={block} language={language} />
-              ))}
-            </div>
+        <div className={`w-full lg:w-1/2 h-full lg:h-full overflow-y-auto border-b-2 lg:border-b-0 lg:border-r-2 border-[#00031333] dark:border-white/20 bg-[#FDFEFE] dark:bg-[#000313] ${mobileTab === 'lesson' ? 'block' : 'hidden'} lg:block`}>
+          <div className="p-6 sm:p-8 max-w-xl mx-auto pb-24 lg:pb-12">
+            <LectureViewer 
+              lesson={lesson} 
+              language={language} 
+              isPractice={isPractice} 
+            />
           </div>
         </div>
 
@@ -547,6 +571,17 @@ export default function LessonPage() {
           isOpen={true}
           isSuccess={isCorrect}
           xpEarned={isCorrect ? xpReward : 0}
+          message={
+            isCorrect
+              ? isModuleFullyComplete
+                ? (language === 'my'
+                    ? `ဂုဏ်ယူပါသည်! ဤမော်ဂျူးရှိ သင်ခန်းစာအားလုံး (${completedInModuleCount}/${totalModuleLessons}) ကို ပြီးမြောက်အောင်မြင်ပါပြီ!`
+                    : `Congratulations! You've completed all ${completedInModuleCount}/${totalModuleLessons} lessons in this module!`)
+                : (language === 'my'
+                    ? `သင်ခန်းစာ ဖြေဆိုအောင်မြင်ပါသည်! (မော်ဂျူး တိုးတက်မှု: ${completedInModuleCount}/${totalModuleLessons})`
+                    : `Lesson completed! (Module progress: ${completedInModuleCount}/${totalModuleLessons})`)
+              : undefined
+          }
           onContinue={handleContinue}
           onRetry={() => {
             setShowResult(false);
@@ -554,106 +589,13 @@ export default function LessonPage() {
           }}
         />
       )}
+
       {showHeartsModal && (
         <HeartsModal onClose={() => setShowHeartsModal(false)} />
       )}
+
+      {/* Floating AI Coding Tutor */}
+      <Chatbot lessonTitle={lesson?.title} />
     </div>
   );
-}
-
-// Render a single content block
-function ContentBlockRenderer({ block, language }: { block: ContentBlock; language: Language }) {
-  switch (block.type) {
-    case 'text':
-      const contentToRender = getLocalizedContentText(block.content, language);
-      return (
-        <div className="text-[15px] text-[#000313] dark:text-white leading-[1.8] font-medium space-y-4">
-          {/* Simple markdown-like rendering */}
-          {contentToRender.split('\n').map((line, i) => {
-            if (!line.trim()) return null;
-            // Bold
-            const rendered = line.replace(
-              /\*\*(.*?)\*\*/g,
-              '<strong class="font-extrabold text-[#000313] dark:text-white">$1</strong>'
-            ).replace(
-              /`([^`]+)`/g,
-              '<code class="bg-[#F0F8FF] dark:bg-[#0a1128] border-2 border-[#84D8FF] text-[#0ba2b3] px-2 py-0.5 rounded-md text-[13px] font-mono font-bold">$1</code>'
-            );
-            return (
-              <p
-                key={i}
-                className="py-1"
-                dangerouslySetInnerHTML={{ __html: rendered }}
-              />
-            );
-          })}
-        </div>
-      );
-
-    case 'code':
-      return (
-        <div className="rounded-xl overflow-hidden border-2 border-[#84D8FF]">
-          <pre className="bg-[#F0F8FF] dark:bg-[#0a1128] text-[#0ba2b3] p-4 text-sm font-mono font-bold overflow-x-auto leading-relaxed">
-            {block.content}
-          </pre>
-        </div>
-      );
-
-    case 'image':
-      return (
-        <div className="rounded-xl overflow-hidden border-2 border-[#00031333] dark:border-white/20">
-          {block.content ? (
-            <img src={block.content} alt={block.caption || 'Lesson image'} className="w-full object-cover" />
-          ) : (
-            <div className="bg-[#F8F8F8] dark:bg-[#060a1d] h-[180px] flex flex-col items-center justify-center">
-              <ImageIcon size={32} className="text-[#000313] dark:text-white mb-2" />
-              <p className="text-xs font-bold text-[#000313] dark:text-white">Image URL not provided</p>
-            </div>
-          )}
-          {block.caption && (
-            <div className="px-4 py-2 bg-white dark:bg-[#000313]">
-              <p className="text-xs font-semibold text-[#000313] dark:text-white text-center">{block.caption}</p>
-            </div>
-          )}
-        </div>
-      );
-
-    case 'video':
-      const getEmbedUrl = (url: string) => {
-        if (!url) return '';
-        const ytMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&]+)/);
-        if (ytMatch && ytMatch[1]) {
-          return `https://www.youtube.com/embed/${ytMatch[1]}`;
-        }
-        return url;
-      };
-      
-      return (
-        <div className="rounded-xl overflow-hidden border-2 border-[#00031333] dark:border-white/20">
-          {block.content ? (
-            <div className="relative pt-[56.25%] bg-[#000313]">
-              <iframe 
-                src={getEmbedUrl(block.content)} 
-                className="absolute top-0 left-0 w-full h-full"
-                allowFullScreen
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              />
-            </div>
-          ) : (
-            <div className="bg-[#1E293B] h-[200px] flex flex-col items-center justify-center">
-              <Video size={40} className="text-[#0ba2b3] mb-2" />
-              <p className="text-xs font-bold text-[#6B7280] dark:text-gray-400">Video URL not provided</p>
-            </div>
-          )}
-          {block.caption && (
-            <div className="px-4 py-2 bg-white dark:bg-[#000313]">
-              <p className="text-xs font-semibold text-[#000313] dark:text-white text-center">{block.caption}</p>
-            </div>
-          )}
-        </div>
-      );
-
-    default:
-      return null;
-  }
 }

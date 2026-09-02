@@ -165,3 +165,26 @@ class AIChatRequest(BaseModel):
 class AIChatResponse(BaseModel):
     reply: str
     hint_type: Optional[str] = "guidance"
+
+# ============================================================
+# SOCIAL / COMMUNITY SCHEMAS
+# ============================================================
+class SocialUser(BaseModel):
+    id: str
+    name: str
+    username: str
+    email: str
+    avatar: str
+    xp: int
+    streak: int
+    is_follower: bool = False
+    is_following: bool = False
+
+class SocialResponse(BaseModel):
+    following_count: int
+    followers_count: int
+    following_ids: List[str]
+    followers: List[SocialUser]
+    following: List[SocialUser]
+    discover: List[SocialUser]
+

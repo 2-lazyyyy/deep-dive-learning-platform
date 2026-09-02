@@ -1,4 +1,5 @@
 import os
+import sys
 import logging
 import subprocess
 import tempfile
@@ -11,7 +12,7 @@ from database import supabase
 
 logger = logging.getLogger(__name__)
 
-REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
+REDIS_URL = os.getenv("REDIS_URL", "redis://127.0.0.1:6379/0")
 
 celery_app = Celery(
     "execution_worker",
@@ -19,12 +20,19 @@ celery_app = Celery(
     backend=REDIS_URL
 )
 
+# Standard alias for Celery CLI
+app = celery_app
+celery = celery_app
+
 celery_app.conf.update(
     task_serializer="json",
     accept_content=["json"],
     result_serializer="json",
     timezone="UTC",
     enable_utc=True,
+    worker_enable_remote_control=False,
+    worker_send_task_events=False,
+    broker_connection_retry_on_startup=True,
 )
 
 @celery_app.task(name="execute_code_task")
@@ -39,127 +47,124 @@ def execute_code_task(submission_id: str, code: str, lang: str, is_practice: boo
     
     start_time = time.time()
     
-    # Create a temporary directory for the code
-    with tempfile.TemporaryDirectory() as temp_dir:
-        script_path = os.path.join(temp_dir, "script.py")
+    # 1. Fetch lesson exercise_data and expected output
+    test_code = ""
+    expected_output = ""
+    xp_reward = 15
+    user_id = None
+    lesson_id = None
+    
+    try:
+        sub_res = supabase.table("submissions").select("user_id, lesson_id").eq("id", submission_id).execute()
+        if sub_res.data and len(sub_res.data) > 0:
+            user_id = sub_res.data[0]["user_id"]
+            lesson_id = sub_res.data[0]["lesson_id"]
+            lesson_res = supabase.table("lessons").select("exercise_data, xp_reward").eq("id", lesson_id).execute()
+            if lesson_res.data and len(lesson_res.data) > 0:
+                l_data = lesson_res.data[0]
+                xp_reward = l_data.get("xp_reward", 15)
+                exercise_data = l_data.get("exercise_data") or {}
+                test_code = exercise_data.get("testCode", "")
+                expected_output = exercise_data.get("expectedOutput", "")
+    except Exception as e:
+        logger.error(f"[Celery Worker] Failed to fetch lesson metadata: {e}")
         
-        # Fetch test_code from lessons table
-        test_code = ""
+    combined_code = code + ("\n\n" + test_code if test_code else "")
+
+    # 2. Layer 1: Static AST Security Sandbox Check
+    from security import validate_code_ast
+    is_safe, sec_warning = validate_code_ast(combined_code)
+    
+    if not is_safe:
+        output = ""
+        error = sec_warning
+        passed = False
+        ret_code = 1
+    else:
+        # 3. Layer 2: Hardened Process-Level Sandbox Execution
+        clean_env = {
+            "PYTHONIOENCODING": "utf-8",
+            "PYTHONUNBUFFERED": "1"
+        }
         try:
-            sub_res = supabase.table("submissions").select("lesson_id").eq("id", submission_id).execute()
-            if sub_res.data and len(sub_res.data) > 0:
-                lesson_id = sub_res.data[0]["lesson_id"]
-                lesson_res = supabase.table("lessons").select("exercise_data").eq("id", lesson_id).execute()
-                if lesson_res.data and len(lesson_res.data) > 0:
-                    exercise_data = lesson_res.data[0].get("exercise_data") or {}
-                    test_code = exercise_data.get("testCode", "")
-        except Exception as e:
-            logger.error(f"Failed to fetch test code: {e}")
-            
-        combined_code = code + "\n\n" + test_code
-        
-        with open(script_path, "w") as f:
-            f.write(combined_code)
-            
-        # Spin up disposable Docker Sandbox (with local fallback if docker is offline)
-        docker_cmd = [
-            "docker", "run", "--rm", 
-            "-v", f"{temp_dir}:/app", 
-            "-w", "/app", 
-            "--memory", "128m",
-            "--cpus", "0.5",
-            "--network", "none",
-            "python:3.10-alpine", 
-            "sh", "-c", "timeout 5 python script.py"
-        ]
-        
-        try:
-            result = subprocess.run(
-                docker_cmd,
+            run_res = subprocess.run(
+                [sys.executable, "-I", "-E", "-c", combined_code],
                 capture_output=True,
                 text=True,
-                timeout=10
+                timeout=3.0,
+                env=clean_env
             )
+            output = run_res.stdout
+            error = run_res.stderr
+            ret_code = run_res.returncode
             
-            output = result.stdout
-            error = result.stderr
-            passed = (result.returncode == 0) and not error
-            
-            if result.returncode == 143 or result.returncode == 124: # timeout exit codes
-                error = "Execution timed out (Limit: 5 seconds)."
-                passed = False
-                
-        except Exception as docker_err:
-            logger.info(f"Docker sandbox unavailable ({docker_err}), executing in isolated local Python runner...")
-            try:
-                # Direct local execution fallback
-                local_res = subprocess.run(
-                    [sys.executable, script_path],
-                    capture_output=True,
-                    text=True,
-                    timeout=5
-                )
-                output = local_res.stdout
-                error = local_res.stderr
-                passed = (local_res.returncode == 0) and not error
-            except subprocess.TimeoutExpired:
-                output = ""
-                error = "Execution timed out (Limit: 5 seconds)."
-                passed = False
-            except Exception as e:
-                output = ""
-                error = str(e)
-                passed = False
-            
+            if expected_output:
+                passed = (output.strip() == expected_output.strip()) and (ret_code == 0)
+            else:
+                passed = (ret_code == 0) and not error
+        except subprocess.TimeoutExpired:
+            output = ""
+            error = "Execution timed out (Limit: 3 seconds).\nအချိန်သတ်မှတ်ချက် (၃ စက္ကန့်) ကျော်လွန်သွားပါသည်။"
+            passed = False
+            ret_code = 124
+        except Exception as e:
+            output = ""
+            error = str(e)
+            passed = False
+            ret_code = 1
+
+    # Truncate output/error buffers to 10KB
+    MAX_OUTPUT_LEN = 10 * 1024
+    if len(output) > MAX_OUTPUT_LEN:
+        output = output[:MAX_OUTPUT_LEN] + "\n...[Output truncated: Exceeded 10KB limit]"
+    if len(error) > MAX_OUTPUT_LEN:
+        error = error[:MAX_OUTPUT_LEN] + "\n...[Error truncated: Exceeded 10KB limit]"
+
     execution_time_ms = int((time.time() - start_time) * 1000)
+    status_str = "completed" if passed else "error"
     
-    # Update Supabase with results
+    # 4. Update Supabase with results
     try:
         supabase.table("submissions").update({
-            "status": "completed" if passed else "error",
+            "status": status_str,
             "passed": passed,
             "output": output,
             "error": error,
             "execution_time_ms": execution_time_ms
         }).eq("id", submission_id).execute()
-        logger.info(f"[Celery Worker] Finished {submission_id} in {execution_time_ms}ms")
+        logger.info(f"[Celery Worker] Finished {submission_id} in {execution_time_ms}ms (passed={passed})")
         
-        # Gamification: Update XP and Hearts
-        sub_res = supabase.table("submissions").select("user_id, lesson_id").eq("id", submission_id).execute()
-        if sub_res.data and len(sub_res.data) > 0:
-            user_id = sub_res.data[0]["user_id"]
-            lesson_id = sub_res.data[0]["lesson_id"]
-            
-            # Fetch lesson xp_reward
-            lesson_res = supabase.table("lessons").select("xp_reward").eq("id", lesson_id).execute()
-            xp_reward = lesson_res.data[0].get("xp_reward", 15) if lesson_res.data else 15
-            
-            # Fetch user
+        # 5. Gamification: Update XP and Hearts
+        if user_id:
             user_res = supabase.table("users").select("xp, hearts").eq("id", user_id).execute()
             if user_res.data and len(user_res.data) > 0:
                 current_xp = user_res.data[0].get("xp", 0)
                 current_hearts = user_res.data[0].get("hearts", 5)
                 
                 if passed:
-                    if is_practice:
-                        xp_reward = 5
-                    supabase.table("users").update({"xp": current_xp + xp_reward}).eq("id", user_id).execute()
-                    logger.info(f"[Gamification] Added {xp_reward} XP to user {user_id} (Practice: {is_practice})")
+                    reward = 5 if is_practice else xp_reward
+                    supabase.table("users").update({"xp": current_xp + reward}).eq("id", user_id).execute()
+                    logger.info(f"[Gamification] Added {reward} XP to user {user_id}")
                 else:
                     if not is_practice:
                         new_hearts = max(0, current_hearts - 1)
                         updates = {"hearts": new_hearts}
                         if current_hearts == 5 and new_hearts < 5:
                             updates["last_heart_update"] = datetime.now(timezone.utc).isoformat()
-                            
                         supabase.table("users").update(updates).eq("id", user_id).execute()
                         logger.info(f"[Gamification] Deducted 1 heart from user {user_id}. Remaining: {new_hearts}")
-                    else:
-                        logger.info(f"[Gamification] Practice mode failed, no hearts deducted for user {user_id}")
     except Exception as e:
-        logger.error(f"Failed to update results or gamification progress: {e}")
+        logger.error(f"[Celery Worker] Failed to update results or gamification: {e}")
 
-    return {"submission_id": submission_id, "passed": passed}
+    return {
+        "submission_id": submission_id,
+        "status": status_str,
+        "passed": passed,
+        "output": output,
+        "error": error,
+        "execution_time_ms": execution_time_ms
+    }
+
 
 def queue_submission(submission_id: str, code: str, language: str, is_practice: bool = False):
     """
@@ -173,3 +178,6 @@ def queue_submission(submission_id: str, code: str, language: str, is_practice: 
     except Exception as e:
         logger.warning(f"Could not connect to Redis broker ({e}). Submission {submission_id} saved as queued in DB.")
         return False
+
+if __name__ == '__main__':
+    celery_app.worker_main(['worker', '--loglevel=info', '--pool=solo', '--without-gossip', '--without-mingle', '--without-heartbeat'])

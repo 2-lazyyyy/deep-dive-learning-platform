@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { MessageCircle, X, Send, Sparkles, HelpCircle, Code2, Lightbulb } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useUserStore } from '@/store/use-user-store';
 
 interface Message {
   id: string;
@@ -10,19 +11,29 @@ interface Message {
   text: string;
 }
 
-const QUICK_PROMPTS = [
-  { label: 'ဒီ code မှာ ဘာမှားနေလဲ?', text: 'ဒီ code မှာ ဘာမှားနေလဲ? စစ်ဆေးပေးပါ', icon: Code2 },
-  { label: 'Hint ပေးပါ', text: 'ဒီ lesson အတွက် hint လမ်းညွှန်ပေးပါ', icon: Lightbulb },
-  { label: 'Explain print()', text: 'Python print() function အကြောင်း ရှင်းပြပေးပါ', icon: HelpCircle },
-];
+interface ChatbotProps {
+  lessonTitle?: string;
+  studentCode?: string;
+  errorMessage?: string;
+}
 
-export const Chatbot = () => {
+export const Chatbot: React.FC<ChatbotProps> = ({
+  lessonTitle,
+  studentCode,
+  errorMessage,
+}) => {
+  const language = useUserStore((state) => state.language);
   const [isOpen, setIsOpen] = useState(false);
+
+  const welcomeText = language === 'my'
+    ? 'မင်္ဂလာပါ! DeepDive AI Coding Tutor ဖြစ်ပါတယ်။ Python သင်ခန်းစာနှင့် ပတ်သက်ပြီး မေးလိုသည်များကို မေးမြန်းနိုင်ပါသည်ခင်ဗျာ။ (အဆင့်ဆင့် လမ်းညွှန်ပေးပါမည်)'
+    : 'Hello! I am DeepDive AI Coding Tutor. Feel free to ask me anything about your Python lesson or errors! (I guide you step-by-step)';
+
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 'init-1',
       sender: 'bot',
-      text: 'မင်္ဂလာပါ! DeepDive AI Coding Tutor ဖြစ်ပါတယ်။ Python သင်ခန်းစာများနဲ့ ပတ်သက်ပြီး မေးလိုသည်များကို မြန်မာလိုဖြစ်စေ၊ English လိုဖြစ်စေ မေးမြန်းနိုင်ပါတယ်ခင်ဗျာ။',
+      text: welcomeText,
     },
   ]);
   const [inputValue, setInputValue] = useState('');
@@ -51,12 +62,17 @@ export const Chatbot = () => {
     setInputValue('');
     setIsTyping(true);
 
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
+
     try {
-      const res = await fetch('http://localhost:8000/api/v1/ai/tutor', {
+      const res = await fetch(`${apiUrl}/api/v1/ai/tutor`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           message: queryText,
+          lesson_title: lessonTitle || undefined,
+          student_code: studentCode || undefined,
+          error_message: errorMessage || undefined,
           chat_history: messages.slice(-4).map((m) => ({
             role: m.sender === 'user' ? 'user' : 'assistant',
             content: m.text,
@@ -80,7 +96,9 @@ export const Chatbot = () => {
           {
             id: (Date.now() + 1).toString(),
             sender: 'bot',
-            text: 'ခေတ္တစောင့်ဆိုင်းပြီး ပြန်လည်မေးမြန်းပေးပါခင်ဗျာ။ AI Tutor ဆာဗာ ချိတ်ဆက်မှု အခက်အခဲ ဖြစ်ပေါ်နေပါသည်။',
+            text: language === 'my'
+              ? 'ခေတ္တစောင့်ဆိုင်းပြီး ပြန်လည်မေးမြန်းပေးပါခင်ဗျာ။ AI Tutor ဆာဗာ ချိတ်ဆက်မှု အခက်အခဲ ဖြစ်ပေါ်နေပါသည်။'
+              : 'Please wait a moment and try again. The AI Tutor service encountered a connection issue.',
           },
         ]);
       }
@@ -90,7 +108,9 @@ export const Chatbot = () => {
         {
           id: (Date.now() + 1).toString(),
           sender: 'bot',
-          text: 'AI Tutor Backend အား ချိတ်ဆက်၍ မရပါ (http://localhost:8000)။ ဆာဗာ ဖွင့်ထားခြင်း ရှိမရှိ စစ်ဆေးပေးပါ။',
+          text: language === 'my'
+            ? 'AI Tutor Backend အား ချိတ်ဆက်၍ မရပါ (http://127.0.0.1:8000)။ ဆာဗာ ဖွင့်ထားခြင်း ရှိမရှိ စစ်ဆေးပေးပါ။'
+            : 'Cannot connect to AI Tutor Backend (http://127.0.0.1:8000). Please verify the server is running.',
         },
       ]);
     } finally {
@@ -173,7 +193,15 @@ export const Chatbot = () => {
 
             {/* Quick Prompts */}
             <div className="px-3 py-2 bg-white dark:bg-[#000313] border-t border-[#00031333] dark:border-white/20 flex gap-1.5 overflow-x-auto no-scrollbar">
-              {QUICK_PROMPTS.map((qp, idx) => (
+              {(language === 'my' ? [
+                { label: 'ဒီ code မှာ ဘာမှားနေလဲ?', text: 'ဒီ code မှာ ဘာမှားနေလဲ? စစ်ဆေးပေးပါ (အဆင့်ဆင့် လမ်းညွှန်ပေးပါ)', icon: Code2 },
+                { label: 'Hint ပေးပါ', text: 'ဒီ lesson အတွက် hint လမ်းညွှန်ပေးပါ', icon: Lightbulb },
+                { label: 'Explain print()', text: 'Python print() function အကြောင်း ရှင်းပြပေးပါ', icon: HelpCircle },
+              ] : [
+                { label: "What's wrong in my code?", text: "Can you analyze what is wrong in my current code? Guide me step by step.", icon: Code2 },
+                { label: 'Give me a hint', text: 'Please give me a hint for this exercise.', icon: Lightbulb },
+                { label: 'Explain print()', text: 'Explain how Python print() function works.', icon: HelpCircle },
+              ]).map((qp, idx) => (
                 <button
                   key={idx}
                   onClick={() => sendQuery(qp.text)}
@@ -194,7 +222,7 @@ export const Chatbot = () => {
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                  placeholder="မေးလိုသည်ကို ရေးသားပါ..."
+                  placeholder={language === 'my' ? "မေးလိုသည်ကို ရေးသားပါ..." : "Ask your Python question..."}
                   disabled={isTyping}
                   className="flex-1 bg-[#F8F8F8] dark:bg-[#060a1d] border-2 border-[#00031333] dark:border-white/20 rounded-xl px-3.5 py-2.5 text-xs font-bold text-[#000313] dark:text-white focus:outline-none focus:border-[#0ba2b3] transition-colors"
                 />

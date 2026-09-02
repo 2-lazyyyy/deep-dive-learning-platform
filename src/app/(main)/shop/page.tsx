@@ -1,6 +1,7 @@
 'use client';
 
 import { useUserStore } from '@/store/use-user-store';
+import { useAuthStore } from '@/store/use-auth-store';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Heart, Gem, Star, Snowflake, ShieldCheck, Store } from 'lucide-react';
 import { useState } from 'react';
@@ -41,13 +42,46 @@ export default function ShopPage() {
         showToast(t.failedPurchased[language]);
       }
     } else {
-      const success = spendGems(item.price);
-      if (success) {
-        await item.action();
-        showToast(`${t.successPurchased[language]} ${itemName}!`);
+      const authUser = useAuthStore.getState().user;
+      const targetUserId = authUser?.id || '00000000-0000-0000-0000-000000000002';
+      const token = useAuthStore.getState().token;
+
+      try {
+        const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+
+        const res = await fetch(`http://localhost:8000/api/v1/users/${targetUserId}/shop/purchase`, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({
+            item_id: item.id,
+            price: item.price,
+            xp_reward: item.id === 'xp-boost' ? 50 : 0
+          })
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          useUserStore.setState({ gems: data.gems, xp: data.xp });
+          await item.action();
+          showToast(`${t.successPurchased[language]} ${itemName}!`);
+        } else {
+          const success = spendGems(item.price);
+          if (success) {
+            await item.action();
+            showToast(`${t.successPurchased[language]} ${itemName}!`);
+          }
+        }
+      } catch {
+        const success = spendGems(item.price);
+        if (success) {
+          await item.action();
+          showToast(`${t.successPurchased[language]} ${itemName}!`);
+        }
       }
     }
   };
+
 
   const shopItems: ShopItem[] = [
     {

@@ -9,8 +9,8 @@ import { Heart, Flame, Star, Trophy, Target, Gem, Award, Shield, Crown, MessageC
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Chatbot } from '@/components/chatbot';
-import { translations, getLocalizedUnitTitle } from '@/lib/i18n';
+import { translations, getLocalizedUnitTitle, getLocalizedModuleTitle } from '@/lib/i18n';
+
 
 // Duolingo color pairs per unit
 const unitThemes = [
@@ -95,8 +95,9 @@ const InteractiveMascot = ({ positionClass }: { positionClass: string }) => {
       <motion.img 
         src={mascotImg} 
         alt="Interactive Mascot" 
-        className="w-48 h-48 sm:w-64 sm:h-64 object-contain drop-shadow-2xl select-none relative z-10 hover:scale-105 transition-transform" 
+        className="w-28 h-28 sm:w-48 sm:h-48 md:w-64 md:h-64 object-contain drop-shadow-2xl select-none relative z-10 hover:scale-105 transition-transform" 
         animate={
+
           isAnimating 
             ? { scale: [1, 1.2, 0.9, 1.1, 1], rotate: [0, -10, 10, -5, 0], y: 0 } 
             : { y: [-8, 8, -8] }
@@ -178,8 +179,9 @@ export default function Home() {
   const xpProgressPercent = Math.min(100, Math.max(0, ((xp - currentLeague.min) / (currentLeague.max - currentLeague.min)) * 100));
 
   return (
-    <div className="flex flex-row-reverse gap-[48px] px-6">
+    <div className="flex flex-row-reverse gap-[48px] px-3 sm:px-6 overflow-x-hidden">
       {/* Right Sidebar (Stats) */}
+
       <div className="w-[368px] sticky top-6 flex-col gap-y-4 hidden lg:flex self-start">
         <div className="flex items-center justify-between w-full border-2 border-[#00031333] dark:border-white/20 p-4 rounded-xl bg-white dark:bg-[#000313]">
           <div className="flex items-center gap-x-1.5 text-[#FC4B0B] font-bold">
@@ -378,9 +380,10 @@ export default function Home() {
                     {/* Section label */}
                     <div className="flex items-center justify-center mb-4">
                       <span className="text-xs font-extrabold uppercase tracking-widest text-[#000313] dark:text-white">
-                        {section.title}
+                        {getLocalizedModuleTitle(section.title, language)}
                       </span>
                     </div>
+
 
                     {/* Lesson Nodes — Snake path */}
                     <div className="flex flex-col items-center">
@@ -397,8 +400,9 @@ export default function Home() {
 
                         // If offset < 0 (left bend), put on right (ml). If offset > 0 (right bend), put on left (mr).
                         const mascotPositionClass = offset < 0 
-                          ? "left-[50%] ml-16 sm:ml-24" 
-                          : "right-[50%] mr-16 sm:mr-24";
+                          ? "left-[50%] ml-8 sm:ml-24" 
+                          : "right-[50%] mr-8 sm:mr-24";
+
 
                         return (
                           <div key={lesson.id} className="relative w-full flex justify-center">
@@ -424,9 +428,6 @@ export default function Home() {
           );
         })}
       </div>
-
-      {/* Floating Chatbot Box */}
-      <Chatbot />
     </div>
   );
 }

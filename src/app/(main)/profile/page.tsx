@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+
 import { useUserStore } from '@/store/use-user-store';
 import { useAuthStore } from '@/store/use-auth-store';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -53,36 +54,93 @@ interface Friend {
   avatar: string;
   xp: number;
   streak: number;
-  isFollowing: boolean;
+  isFollower?: boolean;
+  is_follower?: boolean;
+  is_following?: boolean;
 }
 
-const INITIAL_FRIENDS: Friend[] = [
-  { id: 'f1', name: 'Kyaw Zin', username: 'kyawzin_dev', avatar: '🧑‍💻', xp: 620, streak: 5, isFollowing: true },
-  { id: 'f2', name: 'Su Su Hlaing', username: 'susu_code', avatar: '👩‍💻', xp: 480, streak: 3, isFollowing: true },
-  { id: 'f3', name: 'Min Thu', username: 'minthu_py', avatar: '🤖', xp: 350, streak: 2, isFollowing: false },
-  { id: 'f4', name: 'Hnin Yu', username: 'hnin_yu', avatar: '🐱', xp: 290, streak: 1, isFollowing: false },
-  { id: 'f5', name: 'Alex Johnson', username: 'alex_python', avatar: '🚀', xp: 750, streak: 7, isFollowing: false },
+const ALL_STUDENTS: Friend[] = [
+  // 12 Learners following this student
+  { id: '00000000-0000-0000-0000-000000000011', name: 'Kyaw Zin', username: 'kyawzin_dev', avatar: '🧑‍💻', xp: 620, streak: 5, isFollower: true },
+  { id: '00000000-0000-0000-0000-000000000012', name: 'Su Su Hlaing', username: 'susu_code', avatar: '👩‍💻', xp: 480, streak: 3, isFollower: true },
+  { id: '00000000-0000-0000-0000-000000000013', name: 'Min Thu', username: 'minthu_py', avatar: '🤖', xp: 350, streak: 2, isFollower: true },
+  { id: '00000000-0000-0000-0000-000000000014', name: 'Hnin Yu', username: 'hnin_yu', avatar: '🐱', xp: 290, streak: 1, isFollower: true },
+  { id: '00000000-0000-0000-0000-000000000015', name: 'Alex Johnson', username: 'alex_python', avatar: '🚀', xp: 750, streak: 7, isFollower: true },
+  { id: '00000000-0000-0000-0000-000000000016', name: 'Thida Aung', username: 'thida_py', avatar: '🌸', xp: 540, streak: 4, isFollower: true },
+  { id: '00000000-0000-0000-0000-000000000017', name: 'Myo Zaw', username: 'myozaw_dev', avatar: '⚡', xp: 410, streak: 3, isFollower: true },
+  { id: '00000000-0000-0000-0000-000000000018', name: 'Lin Lin', username: 'linlin_py', avatar: '🎨', xp: 320, streak: 2, isFollower: true },
+  { id: '00000000-0000-0000-0000-000000000019', name: 'Ko Phyo', username: 'kophyo_ai', avatar: '🧠', xp: 680, streak: 6, isFollower: true },
+  { id: '00000000-0000-0000-0000-000000000020', name: 'Sandar Moe', username: 'sandar_tech', avatar: '💻', xp: 390, streak: 2, isFollower: true },
+  { id: '00000000-0000-0000-0000-000000000021', name: 'Wai Yan', username: 'waiyan_py', avatar: '🦊', xp: 510, streak: 4, isFollower: true },
+  { id: '00000000-0000-0000-0000-000000000022', name: 'Zin Mar', username: 'zinmar_it', avatar: '✨', xp: 430, streak: 3, isFollower: true },
+  // Additional peers to discover
+  { id: '00000000-0000-0000-0000-000000000023', name: 'Aung Myint', username: 'aung_myint', avatar: '🎓', xp: 820, streak: 9, isFollower: false },
+  { id: '00000000-0000-0000-0000-000000000024', name: 'May Thet', username: 'maythet_dev', avatar: '🌟', xp: 590, streak: 5, isFollower: false },
 ];
 
 export default function DuolingoProfilePage() {
   const { username, profilePicture, xp, gems, streak, completedLessonIds, completedChallenges, setUsername, setProfilePicture, fetchProgress, language } = useUserStore();
   const authUser = useAuthStore((state) => state.user);
+  const token = useAuthStore((state) => state.token);
+  const targetUserId = authUser?.id || '00000000-0000-0000-0000-000000000002';
   const t = translations.profile;
 
   const [isMounted, setIsMounted] = useState(false);
   const [showAvatarModal, setShowAvatarModal] = useState(false);
   const [showEditNameModal, setShowEditNameModal] = useState(false);
   const [tempName, setTempName] = useState('');
-  const [socialTab, setSocialTab] = useState<'following' | 'followers'>('following');
+  const [socialTab, setSocialTab] = useState<'following' | 'followers' | 'discover'>('following');
   const [searchQuery, setSearchQuery] = useState('');
-  const [friendsList, setFriendsList] = useState<Friend[]>(INITIAL_FRIENDS);
+  const [followingIds, setFollowingIds] = useState<string[]>(['00000000-0000-0000-0000-000000000011', '00000000-0000-0000-0000-000000000012']);
+  const [socialData, setSocialData] = useState<{
+    following_count: number;
+    followers_count: number;
+    following_ids: string[];
+    followers: Friend[];
+    following: Friend[];
+    discover: Friend[];
+  } | null>(null);
+
+  const fetchSocial = useCallback(async () => {
+    try {
+      const res = await fetch(`http://localhost:8000/api/v1/users/${targetUserId}/social`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setSocialData(data);
+        if (Array.isArray(data.following_ids)) {
+          setFollowingIds(data.following_ids);
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('deepdive_following_ids', JSON.stringify(data.following_ids));
+          }
+        }
+      }
+    } catch (e) {
+      console.error('Failed to fetch real social data:', e);
+    }
+  }, [targetUserId, token]);
 
   useEffect(() => {
     setIsMounted(true);
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('deepdive_following_ids');
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed)) setFollowingIds(parsed);
+        } catch (e) {
+          // ignore
+        }
+      }
+    }
     if (authUser?.id) {
       fetchProgress(authUser.id);
     }
-  }, [authUser?.id, fetchProgress]);
+    fetchSocial();
+  }, [authUser?.id, fetchProgress, fetchSocial]);
+
+
 
   if (!isMounted) return null;
 
@@ -175,22 +233,71 @@ export default function DuolingoProfilePage() {
     },
   ];
 
-  const handleToggleFollow = (id: string) => {
-    setFriendsList((prev) =>
-      prev.map((f) => (f.id === id ? { ...f, isFollowing: !f.isFollowing } : f))
-    );
+  const handleToggleFollow = async (id: string) => {
+    const isCurrentlyFollowing = followingIds.includes(id);
+    const nextFollowing = isCurrentlyFollowing
+      ? followingIds.filter((item) => item !== id)
+      : [...followingIds, id];
+
+    // Optimistic UI update
+    setFollowingIds(nextFollowing);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('deepdive_following_ids', JSON.stringify(nextFollowing));
+    }
+
+    try {
+      const method = isCurrentlyFollowing ? 'DELETE' : 'POST';
+      const res = await fetch(`http://localhost:8000/api/v1/users/${targetUserId}/follow/${id}`, {
+        method,
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setSocialData(data);
+        if (Array.isArray(data.following_ids)) {
+          setFollowingIds(data.following_ids);
+        }
+      }
+    } catch (e) {
+      console.error('Failed to sync follow state with backend:', e);
+    }
   };
 
-  const filteredFriends = friendsList.filter((f) => {
-    const matchesSearch = f.name.toLowerCase().includes(searchQuery.toLowerCase()) || f.username.toLowerCase().includes(searchQuery.toLowerCase());
-    if (socialTab === 'following') return matchesSearch && f.isFollowing;
-    return matchesSearch;
+  const followingCount = socialData?.following_count ?? followingIds.length;
+  const followersCount = socialData?.followers_count ?? 12;
+
+  const scrollToSocialTab = (tab: 'following' | 'followers' | 'discover') => {
+    setSocialTab(tab);
+    const el = document.getElementById('friends-widget');
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
+  const allAvailableStudents: Friend[] = socialData
+    ? [...socialData.followers, ...socialData.following, ...socialData.discover].reduce((acc: Friend[], curr) => {
+        if (!acc.some((u) => u.id === curr.id)) acc.push(curr);
+        return acc;
+      }, [])
+    : ALL_STUDENTS;
+
+  const filteredFriends = allAvailableStudents.filter((s) => {
+    const matchesSearch =
+      s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      s.username.toLowerCase().includes(searchQuery.toLowerCase());
+    if (!matchesSearch) return false;
+
+    const isFollowing = followingIds.includes(s.id);
+    const isFollower = s.isFollower || s.is_follower;
+
+    if (socialTab === 'following') return isFollowing;
+    if (socialTab === 'followers') return isFollower;
+    return true; // 'discover' tab
   });
 
-  const followingCount = friendsList.filter((f) => f.isFollowing).length;
-  const followersCount = 12; // Social demo count
 
   const activeAvatarEmoji = AVATAR_OPTIONS.find((a) => a.emoji === profilePicture || a.id === profilePicture)?.emoji || '🦊';
+
 
   return (
     <div className="max-w-4xl mx-auto pb-24">
@@ -257,12 +364,25 @@ export default function DuolingoProfilePage() {
                 <Calendar size={15} className="text-gray-400" />
                 <span>{language === 'my' ? '၂၀၂၆ ခုနှစ် ဩဂုတ်လတွင် စတင်ခဲ့သည်' : 'Joined August 2026'}</span>
               </div>
-              <div className="flex items-center gap-1.5 cursor-pointer hover:text-[#0ba2b3]">
-                <span className="font-extrabold text-[#000313] dark:text-white">{followingCount}</span> {t.following[language]}
-              </div>
-              <div className="flex items-center gap-1.5 cursor-pointer hover:text-[#0ba2b3]">
-                <span className="font-extrabold text-[#000313] dark:text-white">{followersCount}</span> {t.followers[language]}
-              </div>
+              <button
+                type="button"
+                onClick={() => scrollToSocialTab('following')}
+                className="flex items-center gap-1.5 cursor-pointer hover:text-[#0ba2b3] transition group focus:outline-none"
+                title={language === 'my' ? 'လေ့လာဖော်များ ကြည့်ရှုမည်' : 'View Following'}
+              >
+                <span className="font-extrabold text-[#000313] dark:text-white group-hover:text-[#0ba2b3]">{followingCount}</span>
+                <span>{t.following[language]}</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => scrollToSocialTab('followers')}
+                className="flex items-center gap-1.5 cursor-pointer hover:text-[#0ba2b3] transition group focus:outline-none"
+                title={language === 'my' ? 'နောက်လိုက်များ ကြည့်ရှုမည်' : 'View Followers'}
+              >
+                <span className="font-extrabold text-[#000313] dark:text-white group-hover:text-[#0ba2b3]">{followersCount}</span>
+                <span>{t.followers[language]}</span>
+              </button>
+
             </div>
           </div>
         </div>
@@ -383,18 +503,21 @@ export default function DuolingoProfilePage() {
       </div>
 
       {/* 4. DUOLINGO FRIENDS / SOCIAL WIDGET */}
-      <div>
+      <div id="friends-widget" className="scroll-mt-8">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-2xl font-extrabold text-[#000313] dark:text-white">{t.friends[language]}</h2>
+          <h2 className="text-2xl font-extrabold text-[#000313] dark:text-white">
+            {t.friends?.[language] || (language === 'my' ? 'သူငယ်ချင်းများ' : 'Friends')}
+          </h2>
         </div>
 
         <div className="bg-white dark:bg-[#000313] border-2 border-[#00031333] dark:border-white/20 rounded-3xl p-6 shadow-sm">
           {/* Tabs & Search */}
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
-            <div className="flex p-1 bg-[#F8F8F8] dark:bg-[#060a1d] rounded-2xl border border-[#00031333] dark:border-white/20 w-full sm:w-auto">
+            <div className="flex p-1 bg-[#F8F8F8] dark:bg-[#060a1d] rounded-2xl border border-[#00031333] dark:border-white/20 w-full sm:w-auto overflow-x-auto">
               <button
+                type="button"
                 onClick={() => setSocialTab('following')}
-                className={`flex-1 sm:flex-none px-6 py-2 rounded-xl text-xs font-extrabold uppercase transition-all ${
+                className={`flex-1 sm:flex-none px-5 py-2 rounded-xl text-xs font-extrabold uppercase transition-all cursor-pointer whitespace-nowrap ${
                   socialTab === 'following'
                     ? 'bg-white dark:bg-[#000313] text-[#0ba2b3] shadow-sm'
                     : 'text-gray-500 hover:text-[#000313] dark:text-gray-400'
@@ -403,14 +526,26 @@ export default function DuolingoProfilePage() {
                 {t.following[language]} ({followingCount})
               </button>
               <button
+                type="button"
                 onClick={() => setSocialTab('followers')}
-                className={`flex-1 sm:flex-none px-6 py-2 rounded-xl text-xs font-extrabold uppercase transition-all ${
+                className={`flex-1 sm:flex-none px-5 py-2 rounded-xl text-xs font-extrabold uppercase transition-all cursor-pointer whitespace-nowrap ${
                   socialTab === 'followers'
                     ? 'bg-white dark:bg-[#000313] text-[#0ba2b3] shadow-sm'
                     : 'text-gray-500 hover:text-[#000313] dark:text-gray-400'
                 }`}
               >
-                {language === 'my' ? 'သူငယ်ချင်း ရှာဖွေပါ' : 'Find Friends'}
+                {t.followers[language]} ({followersCount})
+              </button>
+              <button
+                type="button"
+                onClick={() => setSocialTab('discover')}
+                className={`flex-1 sm:flex-none px-5 py-2 rounded-xl text-xs font-extrabold uppercase transition-all cursor-pointer whitespace-nowrap ${
+                  socialTab === 'discover'
+                    ? 'bg-white dark:bg-[#000313] text-[#0ba2b3] shadow-sm'
+                    : 'text-gray-500 hover:text-[#000313] dark:text-gray-400'
+                }`}
+              >
+                {language === 'my' ? 'ရှာဖွေပါ (Discover)' : 'Discover'}
               </button>
             </div>
 
@@ -430,53 +565,86 @@ export default function DuolingoProfilePage() {
           {/* Friends List */}
           <div className="divide-y-2 divide-[#00031333] dark:divide-white/20">
             {filteredFriends.length === 0 ? (
-              <div className="py-8 text-center text-gray-400 font-bold text-sm">
-                {language === 'my' ? `"${searchQuery}" နှင့် ကိုက်ညီသော ကျောင်းသား မရှိပါ` : `No students found matching "${searchQuery}".`}
+              <div className="py-10 text-center text-gray-400 font-bold text-sm">
+                {socialTab === 'following' ? (
+                  <div className="flex flex-col items-center gap-3">
+                    <p>{language === 'my' ? 'သင် Follow လုပ်ထားသော ကျောင်းသား မရှိသေးပါ' : 'You are not following anyone yet.'}</p>
+                    <button
+                      type="button"
+                      onClick={() => setSocialTab('followers')}
+                      className="px-4 py-2 bg-[#0ba2b3] hover:bg-[#1e91a3] text-white text-xs font-extrabold rounded-xl transition shadow-xs cursor-pointer"
+                    >
+                      {language === 'my' ? 'Followers စာရင်းမှ ရှာဖွေပါ' : 'Explore Followers'}
+                    </button>
+                  </div>
+                ) : (
+                  language === 'my'
+                    ? `"${searchQuery}" နှင့် ကိုက်ညီသော ကျောင်းသား မရှိပါ`
+                    : `No students found matching "${searchQuery}".`
+                )}
               </div>
             ) : (
-              filteredFriends.map((friend) => (
-                <div key={friend.id} className="py-3.5 flex items-center justify-between gap-4">
-                  <div className="flex items-center gap-3.5">
-                    <div className="w-12 h-12 rounded-full bg-[#F0F8FF] dark:bg-[#0a1128] border-2 border-[#84D8FF] flex items-center justify-center text-2xl shrink-0">
-                      {friend.avatar}
-                    </div>
-                    <div>
-                      <h4 className="font-extrabold text-sm text-[#000313] dark:text-white">{friend.name}</h4>
-                      <div className="flex items-center gap-3 text-xs font-bold text-gray-500 dark:text-gray-400">
-                        <span>@{friend.username}</span>
-                        <span>•</span>
-                        <span className="text-[#FFC800]">{friend.xp} XP</span>
-                        <span>•</span>
-                        <span className="text-[#FF9600]">🔥 {friend.streak}</span>
+              filteredFriends.map((friend) => {
+                const isFollowed = followingIds.includes(friend.id);
+
+                return (
+                  <div key={friend.id} className="py-3.5 flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-3.5">
+                      <div className="w-12 h-12 rounded-full bg-[#F0F8FF] dark:bg-[#0a1128] border-2 border-[#84D8FF] flex items-center justify-center text-2xl shrink-0">
+                        {friend.avatar}
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h4 className="font-extrabold text-sm text-[#000313] dark:text-white">{friend.name}</h4>
+                          {(friend.isFollower || friend.is_follower) && (
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-[#0ba2b3]/15 text-[#0ba2b3] border border-[#0ba2b3]/30">
+                              {language === 'my' ? 'သင့်ကို Follow လုပ်ထားသည်' : 'Follows you'}
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-3 text-xs font-bold text-gray-500 dark:text-gray-400 mt-0.5">
+                          <span>@{friend.username}</span>
+                          <span>•</span>
+                          <span className="text-[#FFC800]">{friend.xp} XP</span>
+                          <span>•</span>
+                          <span className="text-[#FF9600]">🔥 {friend.streak}</span>
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  {/* Follow / Unfollow Button */}
-                  <button
-                    onClick={() => handleToggleFollow(friend.id)}
-                    className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-extrabold uppercase transition-all shadow-[0_3px_0_rgba(0,0,0,0.1)] active:shadow-none active:translate-y-0.5 ${
-                      friend.isFollowing
-                        ? 'bg-[#F8F8F8] dark:bg-white/10 text-gray-600 dark:text-gray-300 hover:bg-red-50 hover:text-red-600'
-                        : 'bg-[#0ba2b3] hover:bg-[#1e91a3] text-white shadow-[#157a87]'
-                    }`}
-                  >
-                    {friend.isFollowing ? (
-                      <>
-                        <UserCheck size={14} /> {t.unfollow[language]}
-                      </>
-                    ) : (
-                      <>
-                        <UserPlus size={14} /> {t.follow[language]}
-                      </>
-                    )}
-                  </button>
-                </div>
-              ))
+                    {/* Follow / Unfollow Button */}
+                    <button
+                      type="button"
+                      onClick={() => handleToggleFollow(friend.id)}
+                      className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-extrabold uppercase transition-all shadow-[0_3px_0_rgba(0,0,0,0.1)] active:shadow-none active:translate-y-0.5 cursor-pointer ${
+                        isFollowed
+                          ? 'bg-[#F8F8F8] dark:bg-white/10 text-gray-600 dark:text-gray-300 hover:bg-red-50 hover:text-red-600 hover:border-red-200'
+                          : 'bg-[#0ba2b3] hover:bg-[#1e91a3] text-white shadow-[#157a87]'
+                      }`}
+                    >
+                      {isFollowed ? (
+                        <>
+                          <UserCheck size={14} /> {t.unfollow[language]}
+                        </>
+                      ) : (friend.isFollower || friend.is_follower) ? (
+                        <>
+                          <UserPlus size={14} /> {language === 'my' ? 'Follow ပြန်လုပ်မည်' : 'Follow Back'}
+                        </>
+                      ) : (
+                        <>
+                          <UserPlus size={14} /> {t.follow[language]}
+                        </>
+                      )}
+                    </button>
+
+                  </div>
+                );
+              })
             )}
           </div>
         </div>
       </div>
+
 
       {/* AVATAR PICKER MODAL */}
       <AnimatePresence>

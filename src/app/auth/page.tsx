@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   GraduationCap,
@@ -12,27 +12,83 @@ import {
   AlertCircle,
   CheckCircle2,
   Sparkles,
-  Globe2,
   ChevronDown,
   BookOpen,
-  Code2
+  Code2,
+  Eye,
+  EyeOff
 } from 'lucide-react';
+
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/use-auth-store';
+import { useUserStore } from '@/store/use-user-store';
+
+// Crisp Vector Flags (Myanmar & UK)
+const FlagIcon = ({ lang, className = 'w-5 h-3.5' }: { lang: 'en' | 'my'; className?: string }) => {
+  if (lang === 'my') {
+    return (
+      <span className={`inline-flex items-center justify-center shrink-0 rounded-[3px] overflow-hidden shadow-xs border border-black/10 select-none ${className}`}>
+        <svg viewBox="0 0 36 24" className="w-full h-full object-cover block" xmlns="http://www.w3.org/2000/svg">
+          <rect width="36" height="8" fill="#FECB00" />
+          <rect y="8" width="36" height="8" fill="#34B233" />
+          <rect y="16" width="36" height="8" fill="#EA2839" />
+          <polygon
+            points="18,3.5 20.6,11.2 28.5,11.2 22.1,15.8 24.5,23.3 18,18.7 11.5,23.3 13.9,15.8 7.5,11.2 15.4,11.2"
+            fill="#FFFFFF"
+          />
+        </svg>
+      </span>
+    );
+  }
+
+  // English (UK Flag)
+  return (
+    <span className={`inline-flex items-center justify-center shrink-0 rounded-[3px] overflow-hidden shadow-xs border border-black/10 select-none ${className}`}>
+      <svg viewBox="0 0 60 30" className="w-full h-full object-cover block" xmlns="http://www.w3.org/2000/svg">
+        <clipPath id="auth-uk-clip"><rect width="60" height="30" /></clipPath>
+        <g clipPath="url(#auth-uk-clip)">
+          <rect width="60" height="30" fill="#012169" />
+          <path d="M0,0 L60,30 M60,0 L0,30" stroke="#FFFFFF" strokeWidth="6" />
+          <path d="M0,0 L60,30 M60,0 L0,30" stroke="#C8102E" strokeWidth="2" />
+          <path d="M30,0 v30 M0,15 h60" stroke="#FFFFFF" strokeWidth="10" />
+          <path d="M30,0 v30 M0,15 h60" stroke="#C8102E" strokeWidth="6" />
+        </g>
+      </svg>
+    </span>
+  );
+};
 
 type AuthView = 'splash' | 'login' | 'signup';
 
 export default function DuolingoAuthPage() {
   const [view, setView] = useState<AuthView>('splash');
-  const [language, setLanguage] = useState<'my' | 'en'>('en');
+  const { language, setLanguage } = useUserStore();
+  const [mounted, setMounted] = useState(false);
+  const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
+  const langMenuRef = useRef<HTMLDivElement>(null);
   const { signIn, signUp, isLoading, error, clearError } = useAuthStore();
   const router = useRouter();
+
+  useEffect(() => {
+    setMounted(true);
+    const handleClickOutside = (event: MouseEvent) => {
+      if (langMenuRef.current && !langMenuRef.current.contains(event.target as Node)) {
+        setIsLangMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+
 
   // Form states
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [name, setName] = useState('');
   const [role, setRole] = useState<'student' | 'teacher'>('student');
+
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const openLogin = () => {
@@ -97,19 +153,78 @@ export default function DuolingoAuthPage() {
           </span>
         </div>
 
-        {/* Header Right Actions */}
-        <div className="flex items-center gap-4">
-          {/* Language Toggle Dropdown */}
+        {/* Header Right Actions: Language Switcher with Flags */}
+        <div className="relative" ref={langMenuRef}>
           <button
-            onClick={() => setLanguage((prev) => (prev === 'en' ? 'my' : 'en'))}
-            className="flex items-center gap-2 text-xs font-black uppercase text-gray-500 hover:text-gray-800 dark:hover:text-white px-3 py-2 rounded-xl transition"
+            type="button"
+            onClick={() => setIsLangMenuOpen((prev) => !prev)}
+            className="flex items-center gap-2.5 text-xs font-black uppercase tracking-wider text-[#000313] dark:text-white hover:text-[#0ba2b3] dark:hover:text-[#38bdf8] bg-white dark:bg-[#060a1d] border-2 border-[#00031320] dark:border-white/20 hover:border-[#0ba2b3] dark:hover:border-[#0ba2b3] px-3.5 py-2 rounded-2xl shadow-xs transition-all active:scale-95 select-none cursor-pointer"
+            title={(mounted ? language : 'en') === 'en' ? 'Switch Language' : 'ဘာသာစကားပြောင်းရန်'}
           >
-            <Globe2 size={18} className="text-gray-400" />
-            <span>{language === 'en' ? 'ENGLISH' : 'MYANMAR'}</span>
-            <ChevronDown size={14} />
+            <FlagIcon lang={mounted ? language : 'en'} className="w-5 h-3.5" />
+            <span>{(mounted ? language : 'en') === 'en' ? 'ENGLISH' : 'မြန်မာ'}</span>
+            <ChevronDown
+              size={15}
+              className={`text-gray-400 transition-transform duration-200 ${isLangMenuOpen ? 'rotate-180 text-[#0ba2b3]' : ''}`}
+            />
           </button>
+
+
+          {/* Dropdown Menu with Flags */}
+          <AnimatePresence>
+            {isLangMenuOpen && (
+              <motion.div
+                initial={{ opacity: 0, y: 8, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 8, scale: 0.95 }}
+                transition={{ duration: 0.15 }}
+                className="absolute right-0 top-full mt-2 w-52 bg-white dark:bg-[#060a1d] border-2 border-[#00031325] dark:border-white/20 rounded-2xl p-1.5 shadow-xl z-50 overflow-hidden"
+              >
+                {/* English Option with Flag */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setLanguage('en');
+                    setIsLangMenuOpen(false);
+                  }}
+                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-extrabold transition-all text-left cursor-pointer ${
+                    language === 'en'
+                      ? 'bg-[#0ba2b3]/10 text-[#0ba2b3] dark:text-[#38bdf8]'
+                      : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5'
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <FlagIcon lang="en" className="w-5 h-3.5" />
+                    <span>English</span>
+                  </div>
+                  {language === 'en' && <CheckCircle2 size={15} className="text-[#0ba2b3]" />}
+                </button>
+
+                {/* Myanmar Option with Flag */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setLanguage('my');
+                    setIsLangMenuOpen(false);
+                  }}
+                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-extrabold transition-all text-left cursor-pointer ${
+                    language === 'my'
+                      ? 'bg-[#0ba2b3]/10 text-[#0ba2b3] dark:text-[#38bdf8]'
+                      : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5'
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <FlagIcon lang="my" className="w-5 h-3.5" />
+                    <span>မြန်မာစာ (Myanmar)</span>
+                  </div>
+                  {language === 'my' && <CheckCircle2 size={15} className="text-[#0ba2b3]" />}
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </header>
+
 
       {/* 2. MAIN BODY CONTENT */}
       <main className="flex-1 flex items-center justify-center px-4 py-8">
@@ -128,11 +243,16 @@ export default function DuolingoAuthPage() {
                 transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
                 className="relative select-none"
               >
-                <div className="w-64 h-64 sm:w-80 sm:h-80 rounded-full bg-gradient-to-tr from-[#0ba2b3]/20 via-[#84D8FF]/30 to-emerald-200/40 dark:from-[#0ba2b3]/10 dark:to-blue-900/20 flex items-center justify-center border-4 border-dashed border-[#0ba2b3]/40">
-                  <span className="text-8xl sm:text-9xl filter drop-shadow-xl animate-pulse">
-                    🦉
-                  </span>
+                <div className="w-64 h-64 sm:w-80 sm:h-80 rounded-full bg-gradient-to-tr from-[#0ba2b3]/20 via-[#84D8FF]/30 to-emerald-200/40 dark:from-[#0ba2b3]/10 dark:to-blue-900/20 flex items-center justify-center border-4 border-dashed border-[#0ba2b3]/40 p-3">
+                  <motion.img
+                    src="/snake-mascot.png"
+                    alt="Python Snake Mascot"
+                    className="w-52 h-52 sm:w-64 sm:h-64 object-contain filter drop-shadow-2xl select-none"
+                    animate={{ y: [-4, 4, -4], rotate: [-1, 1, -1] }}
+                    transition={{ repeat: Infinity, duration: 3, ease: 'easeInOut' }}
+                  />
                 </div>
+
                 {/* Floating Skill Badges */}
                 <div className="absolute -top-2 -right-2 bg-white dark:bg-[#060a1d] border-2 border-[#84D8FF] px-4 py-2 rounded-2xl shadow-lg flex items-center gap-2 text-xs font-extrabold text-[#0ba2b3]">
                   <span>🐍</span> Python 3.12
@@ -292,14 +412,24 @@ export default function DuolingoAuthPage() {
               <div className="relative">
                 <Lock size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
                 <input
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   placeholder={language === 'my' ? 'စကားဝှက် (Password)' : 'Password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  className="w-full bg-[#F8F8F8] dark:bg-[#060a1d] border-2 border-[#E5E5E5] dark:border-white/20 rounded-2xl pl-11 pr-4 py-3 text-sm font-bold text-[#000313] dark:text-white outline-none focus:border-[#0ba2b3] transition"
+                  className="w-full bg-[#F8F8F8] dark:bg-[#060a1d] border-2 border-[#E5E5E5] dark:border-white/20 rounded-2xl pl-11 pr-11 py-3 text-sm font-bold text-[#000313] dark:text-white outline-none focus:border-[#0ba2b3] transition"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition p-1 rounded-lg focus:outline-none cursor-pointer"
+                  title={showPassword ? (language === 'my' ? 'စကားဝှက် ဝှက်မည်' : 'Hide password') : (language === 'my' ? 'စကားဝှက် ပြမည်' : 'Show password')}
+                  tabIndex={-1}
+                >
+                  {showPassword ? <EyeOff size={18} strokeWidth={2.2} /> : <Eye size={18} strokeWidth={2.2} />}
+                </button>
               </div>
+
 
               {/* Submit Button (Duolingo 3D Button) */}
               <button
