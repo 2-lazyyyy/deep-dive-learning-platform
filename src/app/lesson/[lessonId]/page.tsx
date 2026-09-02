@@ -15,6 +15,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Heart, X, BookOpen, Code, Image as ImageIcon, Video, ChevronLeft, ChevronRight, ChevronDown, CheckCircle2, Lock, Star, Target } from 'lucide-react';
 import Link from 'next/link';
 import { Chatbot } from '@/components/chatbot';
+import { LectureViewer } from '@/components/lecture-viewer';
 import { translations, getLocalizedLessonTitle, getLocalizedModuleTitle, getLocalizedUnitTitle, getLocalizedContentText, Language } from '@/lib/i18n';
 
 export default function LessonPage() {
@@ -436,30 +437,13 @@ export default function LessonPage() {
       {/* Main Content — Split Layout */}
       <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
         {/* LEFT: Lesson Content */}
-        <div className={`w-full lg:w-1/2 h-full lg:h-full overflow-y-auto border-b-2 lg:border-b-0 lg:border-r-2 border-[#00031333] dark:border-white/20 bg-white dark:bg-[#000313] ${mobileTab === 'lesson' ? 'block' : 'hidden'} lg:block`}>
-          <div className="p-8 max-w-xl mx-auto pb-24 lg:pb-8">
-            {/* Lesson Title & Badges */}
-            <div className="mb-6">
-              <div className="flex items-center gap-3 mb-5">
-                <span className="text-xs font-extrabold uppercase tracking-wider text-[#0ba2b3] bg-[#F0F8FF] dark:bg-[#0a1128] px-2.5 py-1 rounded-full">
-                  {getLocalizedUnitTitle(lesson.unitTitle || '', language).replace(/^Unit \d+:\s*/, '')}
-                </span>
-                <span className="text-xs font-extrabold uppercase tracking-wider text-[#0ba2b3] bg-[#F0F8FF] dark:bg-[#0a1128] px-2.5 py-1 rounded-full">
-                  {getLocalizedModuleTitle(lesson.moduleTitle || '', language)}
-                </span>
-              </div>
-              <h1 className="text-2xl font-extrabold text-[#000313] dark:text-white mb-4">{getLocalizedLessonTitle(lesson.title, language)}</h1>
-              <div className="flex items-center gap-3 mt-4">
-                <span className="text-xs font-bold text-[#0ba2b3]">+{lesson.xpReward} XP</span>
-              </div>
-            </div>
-
-            {/* Content Blocks */}
-            <div className="space-y-5">
-              {lesson.contentBlocks.map((block, idx) => (
-                <ContentBlockRenderer key={idx} block={block} language={language} />
-              ))}
-            </div>
+        <div className={`w-full lg:w-1/2 h-full lg:h-full overflow-y-auto border-b-2 lg:border-b-0 lg:border-r-2 border-[#00031333] dark:border-white/20 bg-[#FDFEFE] dark:bg-[#000313] ${mobileTab === 'lesson' ? 'block' : 'hidden'} lg:block`}>
+          <div className="p-6 sm:p-8 max-w-xl mx-auto pb-24 lg:pb-12">
+            <LectureViewer 
+              lesson={lesson} 
+              language={language} 
+              isPractice={isPractice} 
+            />
           </div>
         </div>
 
@@ -563,101 +547,4 @@ export default function LessonPage() {
       <Chatbot lessonTitle={lesson?.title} />
     </div>
   );
-}
-
-// Render a single content block
-function ContentBlockRenderer({ block, language }: { block: ContentBlock; language: Language }) {
-  switch (block.type) {
-    case 'text':
-      const contentToRender = getLocalizedContentText(block.content, language);
-      return (
-        <div className="text-[15px] text-[#000313] dark:text-white leading-[1.8] font-medium space-y-4">
-          {/* Simple markdown-like rendering */}
-          {contentToRender.split('\n').map((line, i) => {
-            if (!line.trim()) return null;
-            // Bold
-            const rendered = line.replace(
-              /\*\*(.*?)\*\*/g,
-              '<strong class="font-extrabold text-[#000313] dark:text-white">$1</strong>'
-            ).replace(
-              /`([^`]+)`/g,
-              '<code class="bg-[#F0F8FF] dark:bg-[#0a1128] border-2 border-[#84D8FF] text-[#0ba2b3] px-2 py-0.5 rounded-md text-[13px] font-mono font-bold">$1</code>'
-            );
-            return (
-              <p
-                key={i}
-                className="py-1"
-                dangerouslySetInnerHTML={{ __html: rendered }}
-              />
-            );
-          })}
-        </div>
-      );
-
-    case 'code':
-      return (
-        <div className="rounded-xl overflow-hidden border-2 border-[#84D8FF]">
-          <pre className="bg-[#F0F8FF] dark:bg-[#0a1128] text-[#0ba2b3] p-4 text-sm font-mono font-bold overflow-x-auto leading-relaxed">
-            {block.content}
-          </pre>
-        </div>
-      );
-
-    case 'image':
-      return (
-        <div className="rounded-xl overflow-hidden border-2 border-[#00031333] dark:border-white/20">
-          {block.content ? (
-            <img src={block.content} alt={block.caption || 'Lesson image'} className="w-full object-cover" />
-          ) : (
-            <div className="bg-[#F8F8F8] dark:bg-[#060a1d] h-[180px] flex flex-col items-center justify-center">
-              <ImageIcon size={32} className="text-[#000313] dark:text-white mb-2" />
-              <p className="text-xs font-bold text-[#000313] dark:text-white">Image URL not provided</p>
-            </div>
-          )}
-          {block.caption && (
-            <div className="px-4 py-2 bg-white dark:bg-[#000313]">
-              <p className="text-xs font-semibold text-[#000313] dark:text-white text-center">{block.caption}</p>
-            </div>
-          )}
-        </div>
-      );
-
-    case 'video':
-      const getEmbedUrl = (url: string) => {
-        if (!url) return '';
-        const ytMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&]+)/);
-        if (ytMatch && ytMatch[1]) {
-          return `https://www.youtube.com/embed/${ytMatch[1]}`;
-        }
-        return url;
-      };
-      
-      return (
-        <div className="rounded-xl overflow-hidden border-2 border-[#00031333] dark:border-white/20">
-          {block.content ? (
-            <div className="relative pt-[56.25%] bg-[#000313]">
-              <iframe 
-                src={getEmbedUrl(block.content)} 
-                className="absolute top-0 left-0 w-full h-full"
-                allowFullScreen
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              />
-            </div>
-          ) : (
-            <div className="bg-[#1E293B] h-[200px] flex flex-col items-center justify-center">
-              <Video size={40} className="text-[#0ba2b3] mb-2" />
-              <p className="text-xs font-bold text-[#6B7280] dark:text-gray-400">Video URL not provided</p>
-            </div>
-          )}
-          {block.caption && (
-            <div className="px-4 py-2 bg-white dark:bg-[#000313]">
-              <p className="text-xs font-semibold text-[#000313] dark:text-white text-center">{block.caption}</p>
-            </div>
-          )}
-        </div>
-      );
-
-    default:
-      return null;
-  }
 }

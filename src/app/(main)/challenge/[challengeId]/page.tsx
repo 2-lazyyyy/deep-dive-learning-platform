@@ -153,11 +153,13 @@ export default function ChallengeWorkspace() {
           <div className="flex-1 overflow-y-auto pr-2">
             <CodeSandbox
               key={`challenge-${challenge.id}-${retryCount}`}
+              lessonId={challenge.id}
               initialCode={challenge.initialCode || ''}
               expectedOutput={challenge.expectedOutput || ''}
               onSuccess={handleSuccess}
               onError={handleError}
             />
+
           </div>
         </div>
       </div>
