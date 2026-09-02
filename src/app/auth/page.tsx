@@ -14,8 +14,11 @@ import {
   Sparkles,
   ChevronDown,
   BookOpen,
-  Code2
+  Code2,
+  Eye,
+  EyeOff
 } from 'lucide-react';
+
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/use-auth-store';
 import { useUserStore } from '@/store/use-user-store';
@@ -82,8 +85,10 @@ export default function DuolingoAuthPage() {
   // Form states
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [name, setName] = useState('');
   const [role, setRole] = useState<'student' | 'teacher'>('student');
+
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const openLogin = () => {
@@ -402,14 +407,24 @@ export default function DuolingoAuthPage() {
               <div className="relative">
                 <Lock size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
                 <input
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   placeholder={language === 'my' ? 'စကားဝှက် (Password)' : 'Password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  className="w-full bg-[#F8F8F8] dark:bg-[#060a1d] border-2 border-[#E5E5E5] dark:border-white/20 rounded-2xl pl-11 pr-4 py-3 text-sm font-bold text-[#000313] dark:text-white outline-none focus:border-[#0ba2b3] transition"
+                  className="w-full bg-[#F8F8F8] dark:bg-[#060a1d] border-2 border-[#E5E5E5] dark:border-white/20 rounded-2xl pl-11 pr-11 py-3 text-sm font-bold text-[#000313] dark:text-white outline-none focus:border-[#0ba2b3] transition"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition p-1 rounded-lg focus:outline-none cursor-pointer"
+                  title={showPassword ? (language === 'my' ? 'စကားဝှက် ဝှက်မည်' : 'Hide password') : (language === 'my' ? 'စကားဝှက် ပြမည်' : 'Show password')}
+                  tabIndex={-1}
+                >
+                  {showPassword ? <EyeOff size={18} strokeWidth={2.2} /> : <Eye size={18} strokeWidth={2.2} />}
+                </button>
               </div>
+
 
               {/* Submit Button (Duolingo 3D Button) */}
               <button

@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react';
 import { useUserStore } from '@/store/use-user-store';
 import { useAuthStore } from '@/store/use-auth-store';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Moon, Sun, Volume2, VolumeX, Save, User, Bell, Sliders, CreditCard, Trash2, Camera, LogOut, CheckCircle, ExternalLink, ShieldCheck } from 'lucide-react';
+import { Moon, Sun, Volume2, VolumeX, Save, User, Bell, Sliders, CreditCard, Trash2, Camera, LogOut, CheckCircle, ExternalLink, ShieldCheck, Eye, EyeOff } from 'lucide-react';
+
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
@@ -36,7 +37,9 @@ export default function SettingsPage() {
   const [username, setUsername] = useState(storeUsername || authUser?.email?.split('@')[0] || 'student');
   const [email, setEmail] = useState(authUser?.email || 'student@deepdive.edu');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
+
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
@@ -156,15 +159,27 @@ export default function SettingsPage() {
                 <label className="font-extrabold text-sm text-[#000313] dark:text-white uppercase tracking-wider">
                   {t.settings.changePassword[language]}
                 </label>
-                <input 
-                  type="password" 
-                  placeholder={t.settings.passwordPlaceholder[language]}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full border-2 border-[#00031333] dark:border-white/20 rounded-xl px-4 py-3 font-bold text-[#000313] dark:text-white outline-none focus:border-[#0ba2b3] transition bg-transparent"
-                />
+                <div className="relative">
+                  <input 
+                    type={showPassword ? 'text' : 'password'} 
+                    placeholder={t.settings.passwordPlaceholder[language]}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full border-2 border-[#00031333] dark:border-white/20 rounded-xl pl-4 pr-11 py-3 font-bold text-[#000313] dark:text-white outline-none focus:border-[#0ba2b3] transition bg-transparent"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((prev) => !prev)}
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition p-1 rounded-lg focus:outline-none cursor-pointer"
+                    title={showPassword ? (language === 'my' ? 'စကားဝှက် ဝှက်မည်' : 'Hide password') : (language === 'my' ? 'စကားဝှက် ပြမည်' : 'Show password')}
+                    tabIndex={-1}
+                  >
+                    {showPassword ? <EyeOff size={18} strokeWidth={2.2} /> : <Eye size={18} strokeWidth={2.2} />}
+                  </button>
+                </div>
               </div>
             </div>
+
 
             <div className="flex items-center justify-between pt-2">
               <button 
