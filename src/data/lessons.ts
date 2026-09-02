@@ -20,7 +20,7 @@ export const units: Unit[] = [
         lessons: [
           // --- CODE FIX ---
           {
-            id: '1',
+            id: '30000000-0000-0000-0000-000000000001',
             moduleId: 'mod-1-1',
             lessonType: 'code_fix',
             title: 'Output ထုတ်ခြင်း (print)',
@@ -87,7 +87,7 @@ export const units: Unit[] = [
         lessons: [
           // --- CODE FIX ---
           {
-            id: '4',
+            id: '30000000-0000-0000-0000-000000000004',
             moduleId: 'mod-1-2',
             lessonType: 'code_fix',
             title: 'Variable တည်ဆောက်ခြင်း',
@@ -227,7 +227,7 @@ export const units: Unit[] = [
           },
           // --- CODE FIX ---
           {
-            id: '10',
+            id: '30000000-0000-0000-0000-000000000005',
             moduleId: 'mod-2-2',
             lessonType: 'code_fix',
             title: 'While Loop ရေးခြင်း',

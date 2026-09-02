@@ -2,7 +2,7 @@
 
 import { useUserStore } from '@/store/use-user-store';
 import { useLessonStore } from '@/store/use-lesson-store';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { LessonNode } from '@/components/lesson-node';
 
 import { Heart, Flame, Star, Trophy, Target, Gem, Award, Shield, Crown, MessageCircle } from 'lucide-react';
@@ -10,6 +10,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Chatbot } from '@/components/chatbot';
+import { translations, getLocalizedUnitTitle } from '@/lib/i18n';
 
 // Duolingo color pairs per unit
 const unitThemes = [
@@ -19,21 +20,41 @@ const unitThemes = [
   { bg: 'bg-[#0ba2b3]', border: 'border-[#1e91a3]', color: '#0ba2b3', colorDark: '#1e91a3', text: 'text-white' },
 ];
 
-const pythonTips = [
-  "Tip: Use list comprehensions for cleaner code!",
-  "Tip: 'enumerate()' gives you both index and value in loops.",
-  "Tip: Use 'zip()' to iterate over multiple lists simultaneously.",
-  "Tip: f-strings (f'Hello {name}') are the fastest way to format strings.",
-  "Tip: 'any()' and 'all()' are great for checking boolean conditions.",
-  "Tip: Set comprehensions {x for x in list} remove duplicates easily.",
-  "Tip: Use 'collections.Counter' for easy frequency counting.",
-  "Tip: 'dict.get(key, default)' is safer than 'dict[key]'.",
-];
+const pythonTips = {
+  en: [
+    "Tip: Use list comprehensions for cleaner code!",
+    "Tip: 'enumerate()' gives you both index and value in loops.",
+    "Tip: Use 'zip()' to iterate over multiple lists simultaneously.",
+    "Tip: f-strings (f'Hello {name}') are the fastest way to format strings.",
+    "Tip: 'dict.get(key, default)' is safer than 'dict[key]'.",
+  ],
+  my: [
+    "အကြံပြုချက်: သန့်ရှင်းသောကုဒ်အတွက် list comprehensions ကို အသုံးပြုပါ!",
+    "အကြံပြုချက်: loop များတွင် 'enumerate()' ဖြင့် index ရော value ပါ ရယူနိုင်ပါသည်။",
+    "အကြံပြုချက်: list များကို တစ်ပြိုင်နက် loop ပတ်ရန် 'zip()' ကို အသုံးပြုပါ။",
+    "အကြံပြုချက်: f-strings (f'Hello {name}') သည် string format ပြုလုပ်ရန် အမြန်ဆုံးနည်းလမ်း ဖြစ်သည်။",
+    "အကြံပြုချက်: 'dict[key]' ထက် 'dict.get(key, default)' သုံးခြင်းက ပိုမိုလုံခြုံစိတ်ချရပါသည်။",
+  ]
+};
 
 const InteractiveMascot = ({ positionClass }: { positionClass: string }) => {
+  const language = useUserStore((state) => state.language);
   const [mascotImg, setMascotImg] = useState('/mascot1.svg');
   const [isAnimating, setIsAnimating] = useState(false);
   const [currentTip, setCurrentTip] = useState('');
+  const mascotRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (mascotRef.current && !mascotRef.current.contains(event.target as Node)) {
+        setCurrentTip('');
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   const handleClick = () => {
     if (isAnimating) return;
@@ -55,7 +76,8 @@ const InteractiveMascot = ({ positionClass }: { positionClass: string }) => {
     // Pick a random Python tip
     let nextTip = currentTip;
     while (nextTip === currentTip) {
-      nextTip = pythonTips[Math.floor(Math.random() * pythonTips.length)];
+      const list = pythonTips[language] || pythonTips['en'];
+      nextTip = list[Math.floor(Math.random() * list.length)];
     }
     setCurrentTip(nextTip);
     
@@ -66,6 +88,7 @@ const InteractiveMascot = ({ positionClass }: { positionClass: string }) => {
 
   return (
     <div 
+      ref={mascotRef}
       className={`absolute top-1/2 -translate-y-1/2 ${positionClass} z-20 cursor-pointer`}
       onClick={handleClick}
     >
@@ -73,8 +96,16 @@ const InteractiveMascot = ({ positionClass }: { positionClass: string }) => {
         src={mascotImg} 
         alt="Interactive Mascot" 
         className="w-48 h-48 sm:w-64 sm:h-64 object-contain drop-shadow-2xl select-none relative z-10 hover:scale-105 transition-transform" 
-        animate={isAnimating ? { scale: [1, 1.2, 0.9, 1.1, 1], rotate: [0, -10, 10, -5, 0] } : {}}
-        transition={{ duration: 0.5 }}
+        animate={
+          isAnimating 
+            ? { scale: [1, 1.2, 0.9, 1.1, 1], rotate: [0, -10, 10, -5, 0], y: 0 } 
+            : { y: [-8, 8, -8] }
+        }
+        transition={
+          isAnimating 
+            ? { duration: 0.5 } 
+            : { repeat: Infinity, duration: 4, ease: "easeInOut" }
+        }
       />
       <AnimatePresence>
         {currentTip && (
@@ -95,7 +126,7 @@ const InteractiveMascot = ({ positionClass }: { positionClass: string }) => {
 };
 
 export default function Home() {
-  const { hearts, xp, streak, gems, completedLessonIds } = useUserStore();
+  const { hearts, xp, streak, gems, completedLessonIds, language } = useUserStore();
   const { units, getAllLessons } = useLessonStore();
   const allLessons = getAllLessons();
   const router = useRouter();
@@ -104,19 +135,22 @@ export default function Home() {
 
   useEffect(() => {
     setIsMounted(true);
+    // Fetch dynamic lessons & sync user progress from backend
+    useLessonStore.getState().fetchLessons();
+    useUserStore.getState().fetchProgress();
   }, []);
 
-  // Determine lesson status based on completion
+  // Determine lesson status based on completion (All unlocked for exploration & demo)
   const getLessonStatus = (lessonId: string, lessonIndex: number) => {
     if (completedLessonIds.includes(lessonId)) return 'completed' as const;
 
-    const previousLessons = allLessons.slice(0, lessonIndex);
-    const allPreviousCompleted = previousLessons.every((l) =>
-      completedLessonIds.includes(l.id)
-    );
+    const firstUncompletedIndex = allLessons.findIndex((l) => !completedLessonIds.includes(l.id));
+    if (lessonIndex === firstUncompletedIndex || (firstUncompletedIndex === -1 && lessonIndex === 0)) {
+      return 'current' as const;
+    }
 
-    if (allPreviousCompleted) return 'current' as const;
-    return 'locked' as const;
+    // All lessons are unlocked for demo presentation
+    return 'unlocked' as const;
   };
 
   // Snake path zigzag offsets
@@ -165,7 +199,7 @@ export default function Home() {
         {/* Progress Summary */}
         <div className="border-2 border-[#00031333] dark:border-white/20 p-4 rounded-xl bg-white dark:bg-[#000313]">
           <p className="text-sm font-bold text-[#000313] dark:text-white uppercase tracking-wider mb-2">
-            Progress
+            {language === 'my' ? 'လေ့လာမှု တိုးတက်မှု' : 'Progress'}
           </p>
           <div className="w-full bg-[#00031333] dark:bg-white/20 rounded-full h-3 overflow-hidden">
             <motion.div
@@ -183,7 +217,7 @@ export default function Home() {
             </motion.div>
           </div>
           <p className="text-xs text-[#000313] dark:text-white font-semibold mt-2">
-            {completedLessonIds.length} / {allLessons.length} lessons completed
+            {completedLessonIds.length} / {allLessons.length} {language === 'my' ? 'သင်ခန်းစာများ ပြီးစီး' : 'lessons completed'}
           </p>
         </div>
 
@@ -195,7 +229,9 @@ export default function Home() {
           <div className="flex items-center justify-between">
             <div>
               <h3 className="font-extrabold text-lg" style={{ color: currentLeague.color }}>{currentLeague.name}</h3>
-              <p className="text-sm font-semibold text-[#6B7280] dark:text-gray-400">Top 20 advance to next league</p>
+              <p className="text-sm font-semibold text-[#6B7280] dark:text-gray-400">
+                {language === 'my' ? 'ထိပ်ဆုံး ၂၀ ဦး နောက် League သို့ တက်မည်' : 'Top 20 advance to next league'}
+              </p>
             </div>
             <div className="w-12 h-12 rounded-xl flex items-center justify-center shadow-sm border-2 border-[#00031311] dark:border-white/10" style={{ backgroundColor: `${currentLeague.color}15` }}>
               <currentLeague.icon size={28} style={{ color: currentLeague.color }} />
@@ -227,11 +263,15 @@ export default function Home() {
           className="border-2 border-[#00031333] dark:border-white/20 p-4 rounded-xl bg-white dark:bg-[#000313] hover:bg-gray-50 dark:hover:bg-white/5 transition cursor-pointer"
         >
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-extrabold text-[#000313] dark:text-white text-lg">Daily Quests</h3>
+            <h3 className="font-extrabold text-[#000313] dark:text-white text-lg">
+              {language === 'my' ? 'နေ့စဉ် မစ်ရှင်များ' : 'Daily Quests'}
+            </h3>
           </div>
           <div className="flex items-center gap-3">
             <div className="flex-1">
-              <p className="text-sm font-bold text-[#000313] dark:text-white mb-1">Earn 50 XP</p>
+              <p className="text-sm font-bold text-[#000313] dark:text-white mb-1">
+                {language === 'my' ? 'XP ၅၀ ရယူပါ' : 'Earn 50 XP'}
+              </p>
               <div className="w-full bg-[#00031333] dark:bg-white/20 rounded-full h-2.5 overflow-hidden">
                 <div className="bg-[#0ba2b3] h-full rounded-full w-[40%]" />
               </div>
@@ -270,7 +310,7 @@ export default function Home() {
             return Math.abs(offset) >= 55 && idx !== unitLessons.length - 1;
           });
           
-          if (targetMascotGlobalIdx === -1 && unitLessons.length > 1) {
+          if (targetMascotGlobalIdx === -1 && unitLessons.length > 0) {
             targetMascotGlobalIdx = 0;
           }
           
@@ -292,7 +332,7 @@ export default function Home() {
                       UNIT {unitIdx + 1}
                     </p>
                     <h2 className="text-lg font-extrabold">
-                      Module {unitIdx + 1}: {moduleTitle}
+                      {getLocalizedUnitTitle(unit.title, language).replace(/^Unit \d+:\s*/, '')}
                     </h2>
                   </div>
 

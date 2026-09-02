@@ -9,27 +9,50 @@ import { ResultModal } from '@/components/result-modal';
 import { HeartsModal } from '@/components/hearts-modal';
 import { useUserStore } from '@/store/use-user-store';
 import { useLessonStore } from '@/store/use-lesson-store';
+import { useAuthStore } from '@/store/use-auth-store';
 import { ContentBlock } from '@/types';
-import { motion } from 'framer-motion';
-import { ArrowLeft, Heart, X, BookOpen, Code, Image as ImageIcon, Video, ChevronLeft, ChevronRight, Star, Target } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ArrowLeft, Heart, X, BookOpen, Code, Image as ImageIcon, Video, ChevronLeft, ChevronRight, ChevronDown, CheckCircle2, Lock, Star, Target } from 'lucide-react';
 import Link from 'next/link';
+import { translations, getLocalizedLessonTitle, getLocalizedModuleTitle, getLocalizedUnitTitle, getLocalizedContentText, Language } from '@/lib/i18n';
 
 export default function LessonPage() {
   const params = useParams();
   const router = useRouter();
-  const lessonId = params.lessonId as string;
+  const routeParam = params.lessonId as string;
   const [isMounted, setIsMounted] = useState(false);
   const [mobileTab, setMobileTab] = useState<'lesson' | 'code'>('lesson');
+  const [isLessonMenuOpen, setIsLessonMenuOpen] = useState(false);
+
+  const { fetchProgress } = useUserStore();
 
   useEffect(() => {
     setIsMounted(true);
-  }, []);
+    fetchProgress();
+    useLessonStore.getState().fetchLessons();
+  }, [fetchProgress]);
   const { units, getLessonById, getNextLessonId, getAllLessons } = useLessonStore();
-  const lesson = getLessonById(lessonId);
+  const lesson = getLessonById(routeParam);
+  const lessonId = lesson?.id || routeParam;
   const allLessons = getAllLessons();
   const currentIndex = allLessons.findIndex((l) => l.id === lessonId);
 
-  const { hearts, xp, addXp, reduceHeart, completeLesson, completedLessonIds } = useUserStore();
+  const getCleanLessonUrl = (targetId: string) => {
+    const idx = allLessons.findIndex((l) => l.id === targetId);
+    return idx !== -1 ? `/lesson/${idx + 1}` : `/lesson/${targetId}`;
+  };
+
+  // Automatically replace long UUID URL with clean /lesson/N in address bar
+  useEffect(() => {
+    if (routeParam && !/^\d+$/.test(routeParam) && allLessons.length > 0) {
+      const idx = allLessons.findIndex((l) => l.id === routeParam);
+      if (idx !== -1) {
+        router.replace(`/lesson/${idx + 1}`);
+      }
+    }
+  }, [routeParam, allLessons, router]);
+
+  const { hearts, xp, addXp, reduceHeart, completeLesson, completedLessonIds, language } = useUserStore();
 
   let currentUnit = units[0];
   let currentModule = units[0].modules[0];
@@ -48,19 +71,14 @@ export default function LessonPage() {
   const isLastInModule = currentModule?.lessons[currentModule.lessons.length - 1].id === lessonId;
 
   const lessonIndex = currentUnitLessons.findIndex(l => l.id === lessonId);
-  const globalFirstUncompletedIndex = allLessons.findIndex(l => !completedLessonIds.includes(l.id));
-  const maxGlobalAccessibleIndex = globalFirstUncompletedIndex === -1 ? allLessons.length - 1 : globalFirstUncompletedIndex;
+  const unitNumber = currentUnit?.orderIndex || (currentUnit as any)?.order_index || (currentUnit?.title?.match(/Unit\s*(\d+)/i)?.[1]) || (units.findIndex(u => u.id === currentUnit?.id) + 1);
 
-  const isLessonLocked = (id: string) => {
-    const idx = allLessons.findIndex(l => l.id === id);
-    return idx > maxGlobalAccessibleIndex;
-  };
+  // All lessons are unlocked for demonstration and evaluation
+  const isLessonLocked = (_id: string) => false;
 
   // For arrows navigation
   const prevLesson = lessonIndex > 0 ? currentUnitLessons[lessonIndex - 1] : null;
-  const nextLesson = (lessonIndex < currentUnitLessons.length - 1 && !isLessonLocked(currentUnitLessons[lessonIndex + 1].id))
-    ? currentUnitLessons[lessonIndex + 1]
-    : null;
+  const nextLesson = lessonIndex < currentUnitLessons.length - 1 ? currentUnitLessons[lessonIndex + 1] : null;
 
   const [showResult, setShowResult] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
@@ -68,23 +86,64 @@ export default function LessonPage() {
   const [retryCount, setRetryCount] = useState(0);
   const [isFinished, setIsFinished] = useState(false);
 
-  const xpReward = lesson?.xpReward || 0;
+  const isPractice = completedLessonIds.includes(lessonId);
+  const xpReward = isPractice ? 5 : (lesson?.xpReward || 0);
 
-  const handleSuccess = useCallback(() => {
+  const handleSuccess = useCallback(async () => {
     setIsCorrect(true);
     setShowResult(true);
     addXp(xpReward);
     completeLesson(lessonId);
-  }, [lessonId, xpReward, addXp, completeLesson]);
 
-  const handleError = useCallback(() => {
-    reduceHeart();
+    const authUser = useAuthStore.getState().user;
+    const currentUserId = authUser?.id || '00000000-0000-0000-0000-000000000002';
+    const token = useAuthStore.getState().token;
+
+    if (lesson?.lessonType !== 'code_fix') {
+      try {
+        const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+
+        await fetch(`http://localhost:8000/api/v1/users/${currentUserId}/progress/update`, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({ lesson_id: lessonId, passed: true, is_practice: isPractice })
+        });
+      } catch (e) {
+        console.error("Failed to update progress on backend", e);
+      }
+    }
+  }, [lessonId, xpReward, addXp, completeLesson, lesson?.lessonType, isPractice]);
+
+  const handleError = useCallback(async () => {
+    if (!isPractice) {
+      reduceHeart();
+    }
     setIsCorrect(false);
     setShowResult(true);
-    if (hearts <= 1) {
+    if (!isPractice && hearts <= 1) {
       setTimeout(() => setShowHeartsModal(true), 1500);
     }
-  }, [reduceHeart, hearts]);
+    
+    const authUser = useAuthStore.getState().user;
+    const currentUserId = authUser?.id || '00000000-0000-0000-0000-000000000002';
+    const token = useAuthStore.getState().token;
+
+    if (lesson?.lessonType !== 'code_fix') {
+      try {
+        const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+
+        await fetch(`http://localhost:8000/api/v1/users/${currentUserId}/progress/update`, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({ lesson_id: lessonId, passed: false, is_practice: isPractice })
+        });
+      } catch (e) {
+        console.error("Failed to update progress on backend", e);
+      }
+    }
+  }, [hearts, reduceHeart, lessonId, lesson?.lessonType, isPractice]);
 
   const handleContinue = useCallback(() => {
     setShowResult(false);
@@ -194,99 +253,180 @@ export default function LessonPage() {
 
   return (
     <div className="h-screen flex flex-col bg-[#F8F8F8] dark:bg-[#060a1d]">
-      <div className="flex items-center justify-between px-3 md:px-6 py-4 bg-white dark:bg-[#000313] border-b-2 border-[#00031333] dark:border-white/20 gap-2 md:gap-4 h-[76px]">
-        {/* Left: Exit, Hearts, and Progress */}
-        <div className="flex items-center gap-3 md:gap-6 flex-1 max-w-[800px]">
-          <Link href="/">
-            <div className="w-10 h-10 rounded-xl border-2 border-[#00031333] dark:border-white/20 flex items-center justify-center text-[#000313] dark:text-white hover:bg-[#F8F8F8] dark:bg-[#060a1d] cursor-pointer transition-colors">
-              <X size={24} strokeWidth={3} />
+      {/* Duolingo Lesson Top Navigation Bar */}
+      <div className="w-full flex items-center justify-between px-3 sm:px-6 py-3 bg-white dark:bg-[#000313] border-b-2 border-[#00031333] dark:border-white/20 h-[76px] gap-2 sm:gap-4 shrink-0 z-30">
+        {/* Left Side: Exit Button & Hearts */}
+        <div className="flex items-center gap-2.5 sm:gap-4 shrink-0">
+          <Link href="/" className="shrink-0">
+            <div className="w-10 h-10 rounded-xl border-2 border-[#00031333] dark:border-white/20 flex items-center justify-center text-[#000313] dark:text-white hover:bg-[#F8F8F8] dark:bg-[#060a1d] cursor-pointer transition-colors" title={language === "my" ? "ထွက်မည်" : "Exit Lesson"}>
+              <X size={22} strokeWidth={3} />
             </div>
           </Link>
-          <div className="flex items-center gap-1.5 text-[#FC4B0B] font-extrabold text-xl whitespace-nowrap">
-            <Heart fill="currentColor" size={28} /> {hearts}
-          </div>
-          
-          {/* Progress Dots */}
-          <div className="flex items-center justify-start flex-1 ml-2 md:ml-4 overflow-x-auto py-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-            <div className="flex items-center min-w-full relative px-1">
-              <div className="absolute left-1 right-1 h-1 bg-[#00031333] dark:bg-white/20 rounded-full z-0 top-1/2 -translate-y-1/2" />
-              <div className="flex items-center justify-between w-full relative z-10 gap-3 md:gap-4">
-                {currentUnitLessons.map((l, idx) => {
-                  const isCurrent = idx === lessonIndex;
-                  const isCompleted = completedLessonIds.includes(l.id);
-                  const isLocked = isLessonLocked(l.id);
 
-                  return (
-                    <Link 
-                      key={l.id} 
-                      href={isLocked ? '#' : `/lesson/${l.id}`} 
-                      onClick={(e) => { if (isLocked) e.preventDefault(); }} 
-                      title={l.title}
+          <div className="flex items-center gap-1.5 text-[#FC4B0B] font-extrabold text-lg sm:text-xl shrink-0 whitespace-nowrap">
+            <Heart fill="currentColor" size={24} />
+            <span>{hearts}</span>
+          </div>
+        </div>
+
+        {/* Center: Connected Circular Progress Nodes / Dots (Original Design) */}
+        <div className="flex-1 min-w-0 mx-2 sm:mx-4 overflow-x-auto py-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+          <div className="flex items-center min-w-full relative px-2">
+            <div className="absolute left-2 right-2 h-1 bg-[#00031333] dark:bg-white/20 rounded-full z-0 top-1/2 -translate-y-1/2" />
+            <div className="flex items-center justify-between w-full relative z-10 gap-2 sm:gap-3">
+              {currentUnitLessons.map((l, idx) => {
+                const isCurrent = idx === lessonIndex;
+                const isCompleted = completedLessonIds.includes(l.id);
+                const isLocked = isLessonLocked(l.id);
+
+                return (
+                  <Link 
+                    key={l.id} 
+                    href={isLocked ? '#' : `/lesson/${l.id}`} 
+                    onClick={(e) => { if (isLocked) e.preventDefault(); }} 
+                    title={l.title}
+                    className="shrink-0"
+                  >
+                    <div
+                      className={`rounded-full border-2 transition-all cursor-pointer flex items-center justify-center ${
+                        isLocked 
+                          ? 'opacity-30 bg-white dark:bg-[#000313] border-[#00031333] dark:border-white/20 w-4 h-4' 
+                          : isCurrent
+                            ? 'bg-white dark:bg-[#000313] border-[#0ba2b3] w-5 h-5 shadow-[0_0_0_4px_rgba(11,162,179,0.25)] ring-2 ring-[#0ba2b3]/30'
+                            : isCompleted
+                              ? 'bg-[#0ba2b3] border-[#0ba2b3] w-4 h-4'
+                              : 'bg-white dark:bg-[#000313] border-[#00031333] dark:border-white/20 w-4 h-4'
+                      }`}
                     >
-                      <div
-                        className={`w-4 h-4 rounded-full border-2 transition-all cursor-pointer ${isLocked ? 'opacity-30 bg-white dark:bg-[#000313] border-[#00031333] dark:border-white/20' : ''} ${!isLocked && isCurrent
-                            ? 'bg-white dark:bg-[#000313] border-[#0ba2b3] w-5 h-5 shadow-[0_0_0_4px_rgba(28,176,246,0.2)]'
-                            : !isLocked && isCompleted
-                              ? 'bg-[#0ba2b3] border-[#0ba2b3]'
-                              : !isLocked
-                                ? 'bg-white dark:bg-[#000313] border-[#00031333] dark:border-white/20'
-                                : ''
-                          }`}
-                      />
-                    </Link>
-                  );
-                })}
-              </div>
+                      {isCompleted && (
+                        <div className="w-1.5 h-1.5 bg-white rounded-full" />
+                      )}
+                    </div>
+                  </Link>
+                );
+              })}
             </div>
           </div>
         </div>
 
-        {/* Right: Dropdowns & Arrows */}
-        <div className="flex items-center justify-end gap-4 flex-1">
-          {/* Dropdowns */}
-          <div className="hidden md:flex items-center gap-3">
-            <select
-              className="px-4 py-2 rounded-xl border-2 border-[#00031333] dark:border-white/20 font-bold text-[#000313] dark:text-white bg-white dark:bg-[#000313] outline-none cursor-pointer focus:border-[#0ba2b3] hover:bg-[#F8F8F8] dark:bg-[#060a1d] transition"
-              value={currentUnit.id}
-              onChange={(e) => {
-                const unit = units.find(u => u.id === e.target.value);
-                if (unit && unit.modules.length > 0 && unit.modules[0].lessons.length > 0) {
-                  const targetLessonId = unit.modules[0].lessons[0].id;
-                  if (!isLessonLocked(targetLessonId)) {
-                    router.push(`/lesson/${targetLessonId}`);
-                  }
-                }
-              }}
+        {/* Right Controls: Sleek Interactive Lesson Navigator Pill & Arrows */}
+        <div className="flex items-center gap-2 shrink-0 relative">
+          {/* Modern Interactive Pill Button */}
+          <div className="relative">
+            <button
+              onClick={() => setIsLessonMenuOpen((prev) => !prev)}
+              className="flex items-center gap-2 px-3 sm:px-4 py-2 rounded-2xl border-2 border-[#00031320] dark:border-white/20 bg-white dark:bg-[#000313] hover:border-[#0ba2b3] dark:hover:border-[#0ba2b3] shadow-sm hover:shadow transition-all group active:translate-y-0.5 select-none"
             >
-              {units.map(u => {
-                const firstLessonId = u.modules[0]?.lessons[0]?.id;
-                const isLocked = firstLessonId ? isLessonLocked(firstLessonId) : false;
-                return <option key={u.id} value={u.id} disabled={isLocked}>{u.title.replace('Unit', 'Module')} {isLocked ? '🔒' : ''}</option>;
-              })}
-            </select>
-            <select
-              className="px-4 py-2 rounded-xl border-2 border-[#00031333] dark:border-white/20 font-bold text-[#000313] dark:text-white bg-white dark:bg-[#000313] outline-none cursor-pointer focus:border-[#0ba2b3] hover:bg-[#F8F8F8] dark:bg-[#060a1d] transition appearance-none"
-              value={lessonId}
-              onChange={(e) => {
-                router.push(`/lesson/${e.target.value}`);
-              }}
-            >
-              {currentUnitLessons.map((l, i) => {
-                const isLocked = isLessonLocked(l.id);
-                return (
-                  <option key={l.id} value={l.id} disabled={isLocked}>L{i + 1}: {l.title} {isLocked ? '🔒' : ''}</option>
-                );
-              })}
-            </select>
+              <BookOpen size={16} className="text-[#0ba2b3] group-hover:scale-110 transition-transform shrink-0" />
+              <div className="flex items-center gap-1.5 text-xs sm:text-sm font-black text-[#000313] dark:text-white">
+                <span className="text-gray-500 dark:text-gray-400 font-extrabold">Unit {unitNumber} •</span>
+                <span className="text-[#0ba2b3]">L{lessonIndex + 1}</span>
+                <span className="text-gray-400 font-medium">/{currentUnitLessons.length}</span>
+              </div>
+              <ChevronDown size={14} className={`text-gray-400 transition-transform duration-200 ${isLessonMenuOpen ? 'rotate-180 text-[#0ba2b3]' : ''}`} />
+            </button>
+
+            {/* Floating Beautiful Lesson Drawer / Popover Menu */}
+            <AnimatePresence>
+              {isLessonMenuOpen && (
+                <>
+                  {/* Backdrop to dismiss on click outside */}
+                  <div
+                    className="fixed inset-0 z-40"
+                    onClick={() => setIsLessonMenuOpen(false)}
+                  />
+
+                  <motion.div
+                    initial={{ opacity: 0, y: 8, scale: 0.96 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 8, scale: 0.96 }}
+                    transition={{ duration: 0.15 }}
+                    className="absolute right-0 top-full mt-2 w-72 sm:w-80 bg-white dark:bg-[#000313] border-2 border-[#00031333] dark:border-white/20 rounded-3xl p-3 shadow-2xl z-50 overflow-hidden"
+                  >
+                    {/* Popover Header: Current Unit & Module Info */}
+                    <div className="p-2 border-b-2 border-gray-100 dark:border-white/10 mb-2">
+                      <span className="text-[10px] font-black uppercase tracking-wider text-[#0ba2b3]">
+                        {currentUnit.title}
+                      </span>
+                      <h4 className="text-xs font-bold text-gray-500 dark:text-gray-400 truncate mt-0.5">
+                        {getLocalizedModuleTitle(currentModule?.title || 'Lessons', language)}
+                      </h4>
+                    </div>
+
+                    {/* Scrollable Lesson Items */}
+                    <div className="max-h-64 overflow-y-auto flex flex-col gap-1 pr-1">
+                      {currentUnitLessons.map((l, i) => {
+                        const isCurrent = l.id === lessonId;
+                        const isCompleted = completedLessonIds.includes(l.id);
+                        const isLocked = isLessonLocked(l.id);
+
+                        return (
+                          <button
+                            key={l.id}
+                            disabled={isLocked}
+                            onClick={() => {
+                              setIsLessonMenuOpen(false);
+                              router.push(getCleanLessonUrl(l.id));
+                            }}
+                            className={`w-full flex items-center justify-between p-2.5 rounded-xl text-left transition-all text-xs font-bold ${
+                              isCurrent
+                                ? 'bg-[#0ba2b3]/10 border-2 border-[#0ba2b3] text-[#0ba2b3]'
+                                : isLocked
+                                ? 'opacity-40 cursor-not-allowed text-gray-400 dark:text-gray-600'
+                                : 'hover:bg-gray-100 dark:hover:bg-white/5 text-[#000313] dark:text-white'
+                            }`}
+                          >
+                            <div className="flex items-center gap-2 truncate">
+                              {isCompleted ? (
+                                <CheckCircle2 size={16} className="text-[#0ba2b3] shrink-0" />
+                              ) : isLocked ? (
+                                <Lock size={14} className="text-gray-400 shrink-0" />
+                              ) : (
+                                <span className={`w-4 h-4 rounded-full border-2 flex items-center justify-center text-[9px] font-black shrink-0 ${
+                                  isCurrent ? 'border-[#0ba2b3] text-[#0ba2b3]' : 'border-gray-300 dark:border-gray-600'
+                                }`}>
+                                  {i + 1}
+                                </span>
+                              )}
+                              <span className="truncate">{getLocalizedLessonTitle(l.title, language)}</span>
+                            </div>
+
+                            <span className="text-[10px] font-extrabold text-gray-400 shrink-0 ml-2">
+                              +{l.xpReward || 15} XP
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </motion.div>
+                </>
+              )}
+            </AnimatePresence>
           </div>
 
-          {/* Navigation Arrows */}
-          <div className="flex items-center gap-2">
-            <Link href={prevLesson ? `/lesson/${prevLesson.id}` : '#'} className={`w-10 h-10 rounded-xl border-2 flex items-center justify-center transition-colors ${prevLesson ? 'border-[#00031333] dark:border-white/20 text-[#000313] dark:text-white hover:bg-[#F8F8F8] dark:bg-[#060a1d] cursor-pointer' : 'border-[#F8F8F8] text-[#00031333] cursor-not-allowed'}`}>
-              <ChevronLeft size={24} strokeWidth={3} />
+          {/* Prev/Next Tactile 3D Buttons */}
+          <div className="flex items-center gap-1.5 shrink-0">
+            <Link
+              href={prevLesson ? getCleanLessonUrl(prevLesson.id) : '#'}
+              className={`w-9 h-9 sm:w-10 sm:h-10 rounded-2xl border-2 flex items-center justify-center transition-all ${
+                prevLesson 
+                  ? 'border-[#00031325] dark:border-white/20 text-[#000313] dark:text-white hover:bg-gray-100 dark:hover:bg-white/10 hover:border-[#0ba2b3] cursor-pointer shadow-sm active:translate-y-0.5' 
+                  : 'border-transparent text-gray-300 dark:text-gray-700 cursor-not-allowed opacity-40'
+              }`}
+              title={language === "my" ? "ရှေ့သင်ခန်းစာ" : "Previous Lesson"}
+            >
+              <ChevronLeft size={20} strokeWidth={3} />
             </Link>
-            <Link href={nextLesson ? `/lesson/${nextLesson.id}` : '#'} className={`w-10 h-10 rounded-xl border-2 flex items-center justify-center transition-colors ${nextLesson ? 'border-[#00031333] dark:border-white/20 text-[#000313] dark:text-white hover:bg-[#F8F8F8] dark:bg-[#060a1d] cursor-pointer' : 'border-[#F8F8F8] text-[#00031333] cursor-not-allowed'}`}>
-              <ChevronRight size={24} strokeWidth={3} />
+            <Link
+              href={nextLesson ? getCleanLessonUrl(nextLesson.id) : '#'}
+              className={`w-9 h-9 sm:w-10 sm:h-10 rounded-2xl border-2 flex items-center justify-center transition-all ${
+                nextLesson 
+                  ? 'border-[#00031325] dark:border-white/20 text-[#000313] dark:text-white hover:bg-gray-100 dark:hover:bg-white/10 hover:border-[#0ba2b3] cursor-pointer shadow-sm active:translate-y-0.5' 
+                  : 'border-transparent text-gray-300 dark:text-gray-700 cursor-not-allowed opacity-40'
+              }`}
+              title={language === "my" ? "နောက်သင်ခန်းစာ" : "Next Lesson"}
+            >
+              <ChevronRight size={20} strokeWidth={3} />
             </Link>
           </div>
         </div>
@@ -301,13 +441,13 @@ export default function LessonPage() {
             <div className="mb-6">
               <div className="flex items-center gap-3 mb-5">
                 <span className="text-xs font-extrabold uppercase tracking-wider text-[#0ba2b3] bg-[#F0F8FF] dark:bg-[#0a1128] px-2.5 py-1 rounded-full">
-                  {lesson.unitTitle?.replace(/^Unit \d+:\s*/, '')}
+                  {getLocalizedUnitTitle(lesson.unitTitle || '', language).replace(/^Unit \d+:\s*/, '')}
                 </span>
                 <span className="text-xs font-extrabold uppercase tracking-wider text-[#0ba2b3] bg-[#F0F8FF] dark:bg-[#0a1128] px-2.5 py-1 rounded-full">
-                  {lesson.moduleTitle}
+                  {getLocalizedModuleTitle(lesson.moduleTitle || '', language)}
                 </span>
               </div>
-              <h1 className="text-2xl font-extrabold text-[#000313] dark:text-white mb-4">{lesson.title}</h1>
+              <h1 className="text-2xl font-extrabold text-[#000313] dark:text-white mb-4">{getLocalizedLessonTitle(lesson.title, language)}</h1>
               <div className="flex items-center gap-3 mt-4">
                 <span className="text-xs font-bold text-[#0ba2b3]">+{lesson.xpReward} XP</span>
               </div>
@@ -316,7 +456,7 @@ export default function LessonPage() {
             {/* Content Blocks */}
             <div className="space-y-5">
               {lesson.contentBlocks.map((block, idx) => (
-                <ContentBlockRenderer key={idx} block={block} />
+                <ContentBlockRenderer key={idx} block={block} language={language} />
               ))}
             </div>
           </div>
@@ -330,10 +470,10 @@ export default function LessonPage() {
               <Code size={18} className="text-[#0ba2b3]" />
               <h2 className="font-extrabold text-[#000313] dark:text-white text-sm uppercase tracking-wider">
                 {lesson.lessonType === 'code_fix'
-                  ? 'Code Editor'
+                  ? (language === 'my' ? 'ကုဒ်ရေးသားရန်နေရာ (Code Editor)' : 'Code Editor')
                   : lesson.lessonType === 'fill_blanks'
-                    ? 'Fill in the Blanks'
-                    : 'Choose the Answer'}
+                    ? (language === 'my' ? 'ကွက်လပ်ဖြည့်ပါ (Fill in the Blanks)' : 'Fill in the Blanks')
+                    : (language === 'my' ? 'အဖြေမှန်ရွေးချယ်ပါ (Multiple Choice)' : 'Choose the Answer')}
               </h2>
             </div>
 
@@ -342,10 +482,12 @@ export default function LessonPage() {
               {lesson.lessonType === 'code_fix' && (
                 <CodeSandbox
                   key={`${lesson.id}-${retryCount}`}
+                  lessonId={lesson.id}
                   initialCode={(lesson as any).initialCode}
                   expectedOutput={(lesson as any).expectedOutput}
                   onSuccess={handleSuccess}
                   onError={handleError}
+                  isPractice={isPractice}
                 />
               )}
 
@@ -385,7 +527,7 @@ export default function LessonPage() {
               : 'text-[#000313] dark:text-white/70 hover:bg-[#F8F8F8] dark:hover:bg-white/5 border-t-4 border-transparent'
           }`}
         >
-          Lesson
+          {language === 'my' ? 'သင်ခန်းစာ' : 'Lesson'}
         </button>
         <button
           onClick={() => setMobileTab('code')}
@@ -395,7 +537,7 @@ export default function LessonPage() {
               : 'text-[#000313] dark:text-white/70 hover:bg-[#F8F8F8] dark:hover:bg-white/5 border-t-4 border-transparent'
           }`}
         >
-          Code
+          {language === 'my' ? 'လေ့ကျင့်ခန်း' : 'Code'}
         </button>
       </div>
 
@@ -404,7 +546,7 @@ export default function LessonPage() {
         <ResultModal
           isOpen={true}
           isSuccess={isCorrect}
-          xpEarned={isCorrect ? (lesson?.xpReward || 0) : 0}
+          xpEarned={isCorrect ? xpReward : 0}
           onContinue={handleContinue}
           onRetry={() => {
             setShowResult(false);
@@ -420,13 +562,14 @@ export default function LessonPage() {
 }
 
 // Render a single content block
-function ContentBlockRenderer({ block }: { block: ContentBlock }) {
+function ContentBlockRenderer({ block, language }: { block: ContentBlock; language: Language }) {
   switch (block.type) {
     case 'text':
+      const contentToRender = getLocalizedContentText(block.content, language);
       return (
         <div className="text-[15px] text-[#000313] dark:text-white leading-[1.8] font-medium space-y-4">
           {/* Simple markdown-like rendering */}
-          {block.content.split('\n').map((line, i) => {
+          {contentToRender.split('\n').map((line, i) => {
             if (!line.trim()) return null;
             // Bold
             const rendered = line.replace(

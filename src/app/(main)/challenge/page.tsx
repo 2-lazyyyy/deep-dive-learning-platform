@@ -5,10 +5,12 @@ import { useChallengeStore } from '@/store/use-challenge-store';
 import { motion } from 'framer-motion';
 import { Swords, CheckCircle, Star, Gem, Lock } from 'lucide-react';
 import Link from 'next/link';
+import { translations } from '@/lib/i18n';
 
 export default function ChallengeDashboard() {
-  const { completedChallenges } = useUserStore();
+  const { completedChallenges, language } = useUserStore();
   const { challenges } = useChallengeStore();
+  const t = translations.challenge;
 
   const getDifficultyColor = (diff: string) => {
     switch (diff.toLowerCase()) {
@@ -24,7 +26,7 @@ export default function ChallengeDashboard() {
       {/* Header */}
       <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-extrabold text-[#000313] dark:text-white">Coding Challenges</h1>
+          <h1 className="text-3xl font-extrabold text-[#000313] dark:text-white">{t.title[language]}</h1>
         </div>
       </div>
 
@@ -33,8 +35,8 @@ export default function ChallengeDashboard() {
         {challenges.length === 0 ? (
           <div className="col-span-full bg-white dark:bg-[#000313] border-2 border-[#00031333] dark:border-white/20 border-dashed rounded-2xl p-12 text-center text-[#6B7280] dark:text-gray-400">
             <Swords size={48} className="mx-auto mb-4 opacity-30" />
-            <h3 className="font-extrabold text-lg text-[#000313] dark:text-white">No challenges available</h3>
-            <p className="font-bold text-sm">Wait for your teachers to create new challenges.</p>
+            <h3 className="font-extrabold text-lg text-[#000313] dark:text-white">{t.noChallenges[language]}</h3>
+            <p className="font-bold text-sm">{t.waitTeacher[language]}</p>
           </div>
         ) : (
           challenges.map((challenge, idx) => {
@@ -66,12 +68,12 @@ export default function ChallengeDashboard() {
                   </div>
 
                   <p className="text-sm font-bold text-[#6B7280] dark:text-gray-400 mb-4 flex-1">
-                    Published: <span className="text-[#000313] dark:text-white ml-1">{challenge.date}</span>
+                    {language === 'my' ? 'ထုတ်ဝေသည့်ရက်:' : 'Published:'} <span className="text-[#000313] dark:text-white ml-1">{challenge.date}</span>
                   </p>
 
                   <div className="flex items-center gap-2 mb-6">
                     <span className={`text-xs font-extrabold uppercase px-3 py-1 rounded-full border-2 ${getDifficultyColor(challenge.difficulty)}`}>
-                      {challenge.difficulty}
+                      {t[challenge.difficulty.toLowerCase() as 'easy' | 'medium' | 'hard']?.[language] || challenge.difficulty}
                     </span>
                   </div>
 
@@ -87,7 +89,7 @@ export default function ChallengeDashboard() {
                     
                     {!isCompleted && !isLocked && (
                       <span className="text-[#0ba2b3] font-extrabold text-sm uppercase tracking-wider">
-                        Solve
+                        {t.startChallenge[language]}
                       </span>
                     )}
                   </div>

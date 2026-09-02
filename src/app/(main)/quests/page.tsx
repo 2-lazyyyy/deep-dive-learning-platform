@@ -4,31 +4,44 @@ import { useUserStore } from '@/store/use-user-store';
 import { motion } from 'framer-motion';
 import { Target, Star, Gem, CheckCircle, CalendarDays, Award } from 'lucide-react';
 import { useState } from 'react';
+import { translations } from '@/lib/i18n';
 
-// Mock data for quests
+// Quest definitions with translation keys
 const dailyQuests = [
-  { id: 1, title: 'Earn 50 XP', target: 50, rewardGems: 10, rewardXp: 0, currentProgress: (xp: number) => xp },
-  { id: 2, title: 'Complete 3 Lessons', target: 3, rewardGems: 15, rewardXp: 50, currentProgress: (xp: number, lessons: number) => lessons },
-  { id: 3, title: 'Score a perfect lesson', target: 1, rewardGems: 20, rewardXp: 0, currentProgress: () => 0 },
+  { id: 1, key: 'earn50Xp', target: 50, rewardGems: 10, rewardXp: 0, currentProgress: (xp: number) => xp },
+  { id: 2, key: 'complete3Lessons', target: 3, rewardGems: 15, rewardXp: 50, currentProgress: (xp: number, lessons: number) => lessons },
+  { id: 3, key: 'scorePerfect', target: 1, rewardGems: 20, rewardXp: 0, currentProgress: () => 0 },
 ];
 
 const monthlyQuests = [
-  { id: 4, title: 'Earn 1000 XP', target: 1000, rewardGems: 100, rewardXp: 500, currentProgress: (xp: number) => xp },
-  { id: 5, title: 'Reach a 7-day streak', target: 7, rewardGems: 50, rewardXp: 200, currentProgress: (xp: number, lessons: number, streak: number) => streak },
+  { id: 4, key: 'earn1000Xp', target: 1000, rewardGems: 100, rewardXp: 500, currentProgress: (xp: number) => xp },
+  { id: 5, key: 'reach7Streak', target: 7, rewardGems: 50, rewardXp: 200, currentProgress: (xp: number, lessons: number, streak: number) => streak },
 ];
 
 export default function QuestsPage() {
-  const { xp, gems, streak, completedLessonIds, addGems, addXp } = useUserStore();
+  const { xp, gems, streak, completedLessonIds, addGems, addXp, fetchProgress, language } = useUserStore();
+  const t = translations.quests;
   const [activeTab, setActiveTab] = useState<'daily' | 'monthly'>('daily');
   const [claimedIds, setClaimedIds] = useState<number[]>([]);
 
   const questsToDisplay = activeTab === 'daily' ? dailyQuests : monthlyQuests;
 
-  const handleClaim = (questId: number, rGems: number, rXp: number) => {
+  const handleClaim = async (questId: number, rGems: number, rXp: number) => {
     if (claimedIds.includes(questId)) return;
     addGems(rGems);
     addXp(rXp);
     setClaimedIds((prev) => [...prev, questId]);
+
+    try {
+      await fetch('http://localhost:8000/api/v1/users/00000000-0000-0000-0000-000000000002/rewards/claim', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ gems: rGems, xp: rXp })
+      });
+      await fetchProgress();
+    } catch (e) {
+      console.error('Failed to persist quest reward:', e);
+    }
   };
 
   return (
@@ -36,7 +49,7 @@ export default function QuestsPage() {
       {/* Header */}
       <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-extrabold text-[#000313] dark:text-white">Quests</h1>
+          <h1 className="text-3xl font-extrabold text-[#000313] dark:text-white">{t.title[language]}</h1>
         </div>
         <div className="flex gap-4">
           <div className="flex items-center gap-2 bg-[#F0F8FF] dark:bg-[#0a1128] px-4 py-2 rounded-xl text-[#FFC800] font-bold">
@@ -58,7 +71,7 @@ export default function QuestsPage() {
               : 'bg-white dark:bg-[#000313] text-[#000313] dark:text-white border-[#00031333] dark:border-white/20 hover:bg-[#F8F8F8] dark:bg-[#060a1d]'
           }`}
         >
-          Daily Quests
+          {t.daily[language]}
         </button>
         <button
           onClick={() => setActiveTab('monthly')}
@@ -68,7 +81,7 @@ export default function QuestsPage() {
               : 'bg-white dark:bg-[#000313] text-[#000313] dark:text-white border-[#00031333] dark:border-white/20 hover:bg-[#F8F8F8] dark:bg-[#060a1d]'
           }`}
         >
-          Monthly Quests
+          {t.monthly[language]}
         </button>
       </div>
 
@@ -102,7 +115,7 @@ export default function QuestsPage() {
 
                 <div className="flex-1">
                   <h3 className={`font-extrabold text-lg mb-2 ${isClaimed ? 'text-[#00031380]' : 'text-[#000313] dark:text-white'}`}>
-                    {quest.title}
+                    {t[quest.key as keyof typeof t]?.[language] || quest.key}
                   </h3>
                   
                   {/* Progress Bar */}
@@ -139,7 +152,7 @@ export default function QuestsPage() {
 
                 {isClaimed ? (
                   <button disabled className="bg-[#00031333] dark:bg-white/20 text-[#000313] dark:text-white font-bold px-6 py-2.5 rounded-xl text-sm w-full">
-                    CLAIMED
+                    {t.claimed[language]}
                   </button>
                 ) : isCompleted ? (
                   <motion.button
@@ -148,7 +161,7 @@ export default function QuestsPage() {
                     onClick={() => handleClaim(quest.id, quest.rewardGems, quest.rewardXp)}
                     className="bg-[#0ba2b3] hover:bg-[#1e91a3] text-white font-extrabold px-6 py-2.5 rounded-xl border-b-4 border-[#1e91a3] active:border-b-0 active:translate-y-1 transition-all text-sm w-full"
                   >
-                    CLAIM
+                    {t.claim[language]}
                   </motion.button>
                 ) : null}
               </div>

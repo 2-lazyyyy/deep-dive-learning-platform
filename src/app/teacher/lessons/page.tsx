@@ -14,10 +14,14 @@ import {
   Trash2,
   Edit2
 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export default function TeacherLessonsPage() {
   const { units, addUnit, updateUnit, deleteUnit, addModule, updateModule, deleteModule, addLesson, updateLesson, deleteLesson } = useLessonStore();
+  
+  useEffect(() => {
+    useLessonStore.getState().fetchLessons();
+  }, []);
   const [expandedUnit, setExpandedUnit] = useState<string | null>(units[0]?.id ?? null);
   const [expandedModule, setExpandedModule] = useState<string | null>(null);
   const [selectedLesson, setSelectedLesson] = useState<string | null>(null);
@@ -195,7 +199,7 @@ export default function TeacherLessonsPage() {
                                 <Layers size={12} className="text-[#0ba2b3]" />
                               </div>
                               <p className="font-semibold text-[#000313] dark:text-white text-sm">
-                                Module {modIdx + 1}: {mod.title}
+                                {mod.title.startsWith('Module') ? mod.title : `Module ${modIdx + 1}: ${mod.title}`}
                               </p>
                             </div>
                             <div className="flex items-center gap-2">

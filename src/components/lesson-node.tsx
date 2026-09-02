@@ -3,11 +3,12 @@
 import { motion } from 'framer-motion';
 import { Lock, Check, Star, Code } from 'lucide-react';
 import Link from 'next/link';
+import { useUserStore } from '@/store/use-user-store';
 
 interface LessonNodeProps {
   lessonId: string;
   lessonNumber: number;
-  status: 'completed' | 'current' | 'locked';
+  status: 'completed' | 'current' | 'locked' | 'unlocked';
   offsetX?: number;
   color?: string;
   colorDark?: string;
@@ -21,10 +22,11 @@ export const LessonNode = ({
   status,
   offsetX = 0,
   color = '#0ba2b3',
-  colorDark = '#46A302',
+  colorDark = '#1e91a3',
   isLast = false,
   nextOffsetX = 0,
 }: LessonNodeProps) => {
+  const language = useUserStore((state) => state.language);
   const isAccessible = status !== 'locked';
 
   const getColors = () => {
@@ -32,6 +34,8 @@ export const LessonNode = ({
       case 'completed':
         return { bg: color, shadow: colorDark };
       case 'current':
+        return { bg: color, shadow: colorDark };
+      case 'unlocked':
         return { bg: color, shadow: colorDark };
       case 'locked':
         return { bg: '', shadow: '' };
@@ -134,7 +138,7 @@ export const LessonNode = ({
               boxShadow: `0 4px 0 0 ${colorDark}`,
             }}
           >
-            START
+            {language === 'my' ? 'စတင်မည်' : 'START'}
           </div>
         </motion.div>
       )}
@@ -145,7 +149,7 @@ export const LessonNode = ({
   return (
     <div className="relative flex flex-col items-center py-4 w-full">
       {isAccessible ? (
-        <Link href={`/lesson/${lessonId}`} className="z-10">{node}</Link>
+        <Link href={`/lesson/${lessonNumber}`} className="z-10">{node}</Link>
       ) : (
         <div className="z-10">{node}</div>
       )}

@@ -4,6 +4,7 @@ import { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle, XCircle } from 'lucide-react';
 import { Check, X } from 'lucide-react';
+import { useUserStore } from '@/store/use-user-store';
 
 interface MultipleChoiceExerciseProps {
   question: string;
@@ -20,6 +21,7 @@ export const MultipleChoiceExercise = ({
   onSuccess,
   onError,
 }: MultipleChoiceExerciseProps) => {
+  const language = useUserStore((state) => state.language);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [result, setResult] = useState<'none' | 'correct' | 'wrong'>('none');
 
@@ -140,12 +142,12 @@ export const MultipleChoiceExercise = ({
       >
         {result === 'correct' ? (
           <span className="flex items-center justify-center gap-2">
-            <Check size={20} /> CONTINUE
+            <Check size={20} /> {language === 'my' ? 'ရှေ့သို့ ဆက်သွားမည်' : 'CONTINUE'}
           </span>
         ) : result === 'wrong' ? (
-          'TRY AGAIN'
+          language === 'my' ? 'ပြန်ကြိုးစားမည်' : 'TRY AGAIN'
         ) : (
-          'CHECK'
+          language === 'my' ? 'အဖြေ စစ်မည်' : 'CHECK'
         )}
       </motion.button>
     </div>
