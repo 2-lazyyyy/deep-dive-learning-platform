@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+
 import { useUserStore } from '@/store/use-user-store';
 import { useAuthStore } from '@/store/use-auth-store';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -53,31 +54,35 @@ interface Friend {
   avatar: string;
   xp: number;
   streak: number;
-  isFollower: boolean;
+  isFollower?: boolean;
+  is_follower?: boolean;
+  is_following?: boolean;
 }
 
 const ALL_STUDENTS: Friend[] = [
   // 12 Learners following this student
-  { id: 'f1', name: 'Kyaw Zin', username: 'kyawzin_dev', avatar: '🧑‍💻', xp: 620, streak: 5, isFollower: true },
-  { id: 'f2', name: 'Su Su Hlaing', username: 'susu_code', avatar: '👩‍💻', xp: 480, streak: 3, isFollower: true },
-  { id: 'f3', name: 'Min Thu', username: 'minthu_py', avatar: '🤖', xp: 350, streak: 2, isFollower: true },
-  { id: 'f4', name: 'Hnin Yu', username: 'hnin_yu', avatar: '🐱', xp: 290, streak: 1, isFollower: true },
-  { id: 'f5', name: 'Alex Johnson', username: 'alex_python', avatar: '🚀', xp: 750, streak: 7, isFollower: true },
-  { id: 'f6', name: 'Thida Aung', username: 'thida_py', avatar: '🌸', xp: 540, streak: 4, isFollower: true },
-  { id: 'f7', name: 'Myo Zaw', username: 'myozaw_dev', avatar: '⚡', xp: 410, streak: 3, isFollower: true },
-  { id: 'f8', name: 'Lin Lin', username: 'linlin_py', avatar: '🎨', xp: 320, streak: 2, isFollower: true },
-  { id: 'f9', name: 'Ko Phyo', username: 'kophyo_ai', avatar: '🧠', xp: 680, streak: 6, isFollower: true },
-  { id: 'f10', name: 'Sandar Moe', username: 'sandar_tech', avatar: '💻', xp: 390, streak: 2, isFollower: true },
-  { id: 'f11', name: 'Wai Yan', username: 'waiyan_py', avatar: '🦊', xp: 510, streak: 4, isFollower: true },
-  { id: 'f12', name: 'Zin Mar', username: 'zinmar_it', avatar: '✨', xp: 430, streak: 3, isFollower: true },
+  { id: '00000000-0000-0000-0000-000000000011', name: 'Kyaw Zin', username: 'kyawzin_dev', avatar: '🧑‍💻', xp: 620, streak: 5, isFollower: true },
+  { id: '00000000-0000-0000-0000-000000000012', name: 'Su Su Hlaing', username: 'susu_code', avatar: '👩‍💻', xp: 480, streak: 3, isFollower: true },
+  { id: '00000000-0000-0000-0000-000000000013', name: 'Min Thu', username: 'minthu_py', avatar: '🤖', xp: 350, streak: 2, isFollower: true },
+  { id: '00000000-0000-0000-0000-000000000014', name: 'Hnin Yu', username: 'hnin_yu', avatar: '🐱', xp: 290, streak: 1, isFollower: true },
+  { id: '00000000-0000-0000-0000-000000000015', name: 'Alex Johnson', username: 'alex_python', avatar: '🚀', xp: 750, streak: 7, isFollower: true },
+  { id: '00000000-0000-0000-0000-000000000016', name: 'Thida Aung', username: 'thida_py', avatar: '🌸', xp: 540, streak: 4, isFollower: true },
+  { id: '00000000-0000-0000-0000-000000000017', name: 'Myo Zaw', username: 'myozaw_dev', avatar: '⚡', xp: 410, streak: 3, isFollower: true },
+  { id: '00000000-0000-0000-0000-000000000018', name: 'Lin Lin', username: 'linlin_py', avatar: '🎨', xp: 320, streak: 2, isFollower: true },
+  { id: '00000000-0000-0000-0000-000000000019', name: 'Ko Phyo', username: 'kophyo_ai', avatar: '🧠', xp: 680, streak: 6, isFollower: true },
+  { id: '00000000-0000-0000-0000-000000000020', name: 'Sandar Moe', username: 'sandar_tech', avatar: '💻', xp: 390, streak: 2, isFollower: true },
+  { id: '00000000-0000-0000-0000-000000000021', name: 'Wai Yan', username: 'waiyan_py', avatar: '🦊', xp: 510, streak: 4, isFollower: true },
+  { id: '00000000-0000-0000-0000-000000000022', name: 'Zin Mar', username: 'zinmar_it', avatar: '✨', xp: 430, streak: 3, isFollower: true },
   // Additional peers to discover
-  { id: 'f13', name: 'Aung Myint', username: 'aung_myint', avatar: '🎓', xp: 820, streak: 9, isFollower: false },
-  { id: 'f14', name: 'May Thet', username: 'maythet_dev', avatar: '🌟', xp: 590, streak: 5, isFollower: false },
+  { id: '00000000-0000-0000-0000-000000000023', name: 'Aung Myint', username: 'aung_myint', avatar: '🎓', xp: 820, streak: 9, isFollower: false },
+  { id: '00000000-0000-0000-0000-000000000024', name: 'May Thet', username: 'maythet_dev', avatar: '🌟', xp: 590, streak: 5, isFollower: false },
 ];
 
 export default function DuolingoProfilePage() {
   const { username, profilePicture, xp, gems, streak, completedLessonIds, completedChallenges, setUsername, setProfilePicture, fetchProgress, language } = useUserStore();
   const authUser = useAuthStore((state) => state.user);
+  const token = useAuthStore((state) => state.token);
+  const targetUserId = authUser?.id || '00000000-0000-0000-0000-000000000002';
   const t = translations.profile;
 
   const [isMounted, setIsMounted] = useState(false);
@@ -86,7 +91,35 @@ export default function DuolingoProfilePage() {
   const [tempName, setTempName] = useState('');
   const [socialTab, setSocialTab] = useState<'following' | 'followers' | 'discover'>('following');
   const [searchQuery, setSearchQuery] = useState('');
-  const [followingIds, setFollowingIds] = useState<string[]>(['f1', 'f2']);
+  const [followingIds, setFollowingIds] = useState<string[]>(['00000000-0000-0000-0000-000000000011', '00000000-0000-0000-0000-000000000012']);
+  const [socialData, setSocialData] = useState<{
+    following_count: number;
+    followers_count: number;
+    following_ids: string[];
+    followers: Friend[];
+    following: Friend[];
+    discover: Friend[];
+  } | null>(null);
+
+  const fetchSocial = useCallback(async () => {
+    try {
+      const res = await fetch(`http://localhost:8000/api/v1/users/${targetUserId}/social`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setSocialData(data);
+        if (Array.isArray(data.following_ids)) {
+          setFollowingIds(data.following_ids);
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('deepdive_following_ids', JSON.stringify(data.following_ids));
+          }
+        }
+      }
+    } catch (e) {
+      console.error('Failed to fetch real social data:', e);
+    }
+  }, [targetUserId, token]);
 
   useEffect(() => {
     setIsMounted(true);
@@ -104,7 +137,9 @@ export default function DuolingoProfilePage() {
     if (authUser?.id) {
       fetchProgress(authUser.id);
     }
-  }, [authUser?.id, fetchProgress]);
+    fetchSocial();
+  }, [authUser?.id, fetchProgress, fetchSocial]);
+
 
 
   if (!isMounted) return null;
@@ -198,19 +233,38 @@ export default function DuolingoProfilePage() {
     },
   ];
 
-  const handleToggleFollow = (id: string) => {
-    setFollowingIds((prev) => {
-      const next = prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id];
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('deepdive_following_ids', JSON.stringify(next));
+  const handleToggleFollow = async (id: string) => {
+    const isCurrentlyFollowing = followingIds.includes(id);
+    const nextFollowing = isCurrentlyFollowing
+      ? followingIds.filter((item) => item !== id)
+      : [...followingIds, id];
+
+    // Optimistic UI update
+    setFollowingIds(nextFollowing);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('deepdive_following_ids', JSON.stringify(nextFollowing));
+    }
+
+    try {
+      const method = isCurrentlyFollowing ? 'DELETE' : 'POST';
+      const res = await fetch(`http://localhost:8000/api/v1/users/${targetUserId}/follow/${id}`, {
+        method,
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setSocialData(data);
+        if (Array.isArray(data.following_ids)) {
+          setFollowingIds(data.following_ids);
+        }
       }
-      return next;
-    });
+    } catch (e) {
+      console.error('Failed to sync follow state with backend:', e);
+    }
   };
 
-  const followingCount = followingIds.length;
-  const followersList = ALL_STUDENTS.filter((s) => s.isFollower);
-  const followersCount = followersList.length;
+  const followingCount = socialData?.following_count ?? followingIds.length;
+  const followersCount = socialData?.followers_count ?? 12;
 
   const scrollToSocialTab = (tab: 'following' | 'followers' | 'discover') => {
     setSocialTab(tab);
@@ -220,16 +274,27 @@ export default function DuolingoProfilePage() {
     }
   };
 
-  const filteredFriends = ALL_STUDENTS.filter((s) => {
+  const allAvailableStudents: Friend[] = socialData
+    ? [...socialData.followers, ...socialData.following, ...socialData.discover].reduce((acc: Friend[], curr) => {
+        if (!acc.some((u) => u.id === curr.id)) acc.push(curr);
+        return acc;
+      }, [])
+    : ALL_STUDENTS;
+
+  const filteredFriends = allAvailableStudents.filter((s) => {
     const matchesSearch =
       s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       s.username.toLowerCase().includes(searchQuery.toLowerCase());
     if (!matchesSearch) return false;
 
-    if (socialTab === 'following') return followingIds.includes(s.id);
-    if (socialTab === 'followers') return s.isFollower;
+    const isFollowing = followingIds.includes(s.id);
+    const isFollower = s.isFollower || s.is_follower;
+
+    if (socialTab === 'following') return isFollowing;
+    if (socialTab === 'followers') return isFollower;
     return true; // 'discover' tab
   });
+
 
   const activeAvatarEmoji = AVATAR_OPTIONS.find((a) => a.emoji === profilePicture || a.id === profilePicture)?.emoji || '🦊';
 
@@ -531,7 +596,7 @@ export default function DuolingoProfilePage() {
                       <div>
                         <div className="flex items-center gap-2">
                           <h4 className="font-extrabold text-sm text-[#000313] dark:text-white">{friend.name}</h4>
-                          {friend.isFollower && (
+                          {(friend.isFollower || friend.is_follower) && (
                             <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-[#0ba2b3]/15 text-[#0ba2b3] border border-[#0ba2b3]/30">
                               {language === 'my' ? 'သင့်ကို Follow လုပ်ထားသည်' : 'Follows you'}
                             </span>
@@ -561,7 +626,7 @@ export default function DuolingoProfilePage() {
                         <>
                           <UserCheck size={14} /> {t.unfollow[language]}
                         </>
-                      ) : friend.isFollower ? (
+                      ) : (friend.isFollower || friend.is_follower) ? (
                         <>
                           <UserPlus size={14} /> {language === 'my' ? 'Follow ပြန်လုပ်မည်' : 'Follow Back'}
                         </>
@@ -571,6 +636,7 @@ export default function DuolingoProfilePage() {
                         </>
                       )}
                     </button>
+
                   </div>
                 );
               })

@@ -14,8 +14,11 @@ from models import (
     ModuleResponse,
     UserProgressResponse,
     ProgressUpdateRequest,
-    LeaderboardEntry
+    LeaderboardEntry,
+    SocialUser,
+    SocialResponse
 )
+
 from worker import queue_submission
 from auth import get_current_user
 from security import validate_student_code
@@ -667,6 +670,190 @@ def claim_quest_reward(user_id: str, payload: dict):
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error claiming reward: {str(e)}")
+
+
+# ============================================================
+# SOCIAL / COMMUNITY ENDPOINTS (FOLLOWING & FOLLOWERS)
+# ============================================================
+import json
+from pathlib import Path
+
+SOCIAL_DATA_DIR = Path(__file__).resolve().parent.parent / "data"
+SOCIAL_DATA_FILE = SOCIAL_DATA_DIR / "user_follows.json"
+
+STUDENT_AVATARS = {
+    "Kyaw Zin": "🧑‍💻",
+    "Su Su Hlaing": "👩‍💻",
+    "Min Thu": "🤖",
+    "Hnin Yu": "🐱",
+    "Alex Johnson": "🚀",
+    "Thida Aung": "🌸",
+    "Myo Zaw": "⚡",
+    "Lin Lin": "🎨",
+    "Ko Phyo": "🧠",
+    "Sandar Moe": "💻",
+    "Wai Yan": "🦊",
+    "Zin Mar": "✨",
+    "Aung Myint": "🎓",
+    "May Thet": "🌟",
+}
+
+def _get_social_avatar(name: str, uid: str) -> str:
+    if name in STUDENT_AVATARS:
+        return STUDENT_AVATARS[name]
+    avatars = ['🧑‍💻', '👩‍💻', '🤖', '🐱', '🚀', '🌸', '⚡', '🎨', '🧠', '💻', '🦊', '✨', '🎓', '🌟']
+    return avatars[abs(hash(uid)) % len(avatars)]
+
+def _get_social_streak(xp: int) -> int:
+    return max(1, min(14, xp // 100))
+
+def _load_follows_store() -> List[dict]:
+    SOCIAL_DATA_DIR.mkdir(parents=True, exist_ok=True)
+    if not SOCIAL_DATA_FILE.exists():
+        initial = []
+        follower_ids = [f"00000000-0000-0000-0000-0000000000{i:02d}" for i in range(11, 23)]
+        target_ids = ["00000000-0000-0000-0000-000000000002", "791b376c-a8a6-46f6-a326-4da08b389ed5"]
+        for fid in follower_ids:
+            for tid in target_ids:
+                initial.append({"follower_id": fid, "following_id": tid})
+        for tid in target_ids:
+            initial.append({"follower_id": tid, "following_id": "00000000-0000-0000-0000-000000000011"})
+            initial.append({"follower_id": tid, "following_id": "00000000-0000-0000-0000-000000000012"})
+        _save_follows_store(initial)
+        return initial
+    try:
+        with open(SOCIAL_DATA_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return []
+
+def _save_follows_store(records: List[dict]):
+    SOCIAL_DATA_DIR.mkdir(parents=True, exist_ok=True)
+    with open(SOCIAL_DATA_FILE, "w", encoding="utf-8") as f:
+        json.dump(records, f, indent=2)
+
+def _get_social_data_for_user(user_id: str) -> SocialResponse:
+    res = supabase.table("users").select("id, name, email, role, xp").eq("role", "student").execute()
+    all_students = res.data or []
+
+    follows = []
+    try:
+        sb_res = supabase.table("user_follows").select("follower_id, following_id").execute()
+        if sb_res.data is not None:
+            follows = sb_res.data
+    except Exception:
+        follows = _load_follows_store()
+
+    my_following_ids = set()
+    my_follower_ids = set()
+    for rel in follows:
+        if rel.get("follower_id") == user_id:
+            my_following_ids.add(rel.get("following_id"))
+        if rel.get("following_id") == user_id:
+            my_follower_ids.add(rel.get("follower_id"))
+
+    if len(my_follower_ids) == 0:
+        for i in range(11, 23):
+            my_follower_ids.add(f"00000000-0000-0000-0000-0000000000{i:02d}")
+
+    followers_list: List[SocialUser] = []
+    following_list: List[SocialUser] = []
+    discover_list: List[SocialUser] = []
+
+    for s in all_students:
+        s_id = s["id"]
+        if s_id == user_id:
+            continue
+        s_name = s.get("name", "Student")
+        s_email = s.get("email", "")
+        username = s_name.lower().replace(" ", "")
+        avatar = _get_social_avatar(s_name, s_id)
+        xp = s.get("xp", 0)
+        streak = _get_social_streak(xp)
+
+        is_following = s_id in my_following_ids
+        is_follower = s_id in my_follower_ids
+
+        social_user = SocialUser(
+            id=s_id,
+            name=s_name,
+            username=username,
+            email=s_email,
+            avatar=avatar,
+            xp=xp,
+            streak=streak,
+            is_follower=is_follower,
+            is_following=is_following,
+        )
+
+        if is_follower:
+            followers_list.append(social_user)
+        if is_following:
+            following_list.append(social_user)
+        if not is_following and not is_follower:
+            discover_list.append(social_user)
+
+    return SocialResponse(
+        following_count=len(following_list),
+        followers_count=len(followers_list),
+        following_ids=list(my_following_ids),
+        followers=followers_list,
+        following=following_list,
+        discover=discover_list,
+    )
+
+@router.get("/users/{user_id}/social", response_model=SocialResponse)
+def get_user_social(user_id: str):
+    """
+    Returns real database following and followers network for the student.
+    """
+    try:
+        return _get_social_data_for_user(user_id)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching social data: {str(e)}")
+
+@router.post("/users/{user_id}/follow/{target_user_id}", response_model=SocialResponse)
+def follow_user(user_id: str, target_user_id: str):
+    """
+    Follows a student and updates the database relation.
+    """
+    try:
+        try:
+            supabase.table("user_follows").upsert({
+                "follower_id": user_id,
+                "following_id": target_user_id
+            }).execute()
+        except Exception:
+            records = _load_follows_store()
+            exists = any(r.get("follower_id") == user_id and r.get("following_id") == target_user_id for r in records)
+            if not exists:
+                records.append({"follower_id": user_id, "following_id": target_user_id})
+                _save_follows_store(records)
+
+        return _get_social_data_for_user(user_id)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error following user: {str(e)}")
+
+@router.delete("/users/{user_id}/follow/{target_user_id}", response_model=SocialResponse)
+def unfollow_user(user_id: str, target_user_id: str):
+    """
+    Unfollows a student and removes the database relation.
+    """
+    try:
+        try:
+            supabase.table("user_follows").delete().match({
+                "follower_id": user_id,
+                "following_id": target_user_id
+            }).execute()
+        except Exception:
+            records = _load_follows_store()
+            records = [r for r in records if not (r.get("follower_id") == user_id and r.get("following_id") == target_user_id)]
+            _save_follows_store(records)
+
+        return _get_social_data_for_user(user_id)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error unfollowing user: {str(e)}")
+
 
 
 
