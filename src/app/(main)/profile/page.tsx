@@ -385,8 +385,11 @@ export default function DuolingoProfilePage() {
       {/* 4. DUOLINGO FRIENDS / SOCIAL WIDGET */}
       <div>
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-2xl font-extrabold text-[#000313] dark:text-white">{t.friends[language]}</h2>
+          <h2 className="text-2xl font-extrabold text-[#000313] dark:text-white">
+            {t.friends?.[language] || (language === 'my' ? 'သူငယ်ချင်းများ' : 'Friends')}
+          </h2>
         </div>
+
 
         <div className="bg-white dark:bg-[#000313] border-2 border-[#00031333] dark:border-white/20 rounded-3xl p-6 shadow-sm">
           {/* Tabs & Search */}

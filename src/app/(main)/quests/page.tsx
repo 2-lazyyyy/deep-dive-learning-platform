@@ -1,10 +1,12 @@
 'use client';
 
 import { useUserStore } from '@/store/use-user-store';
+import { useAuthStore } from '@/store/use-auth-store';
 import { motion } from 'framer-motion';
 import { Target, Star, Gem, CheckCircle, CalendarDays, Award } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { translations } from '@/lib/i18n';
+
 
 // Quest definitions with translation keys
 const dailyQuests = [
@@ -24,25 +26,59 @@ export default function QuestsPage() {
   const [activeTab, setActiveTab] = useState<'daily' | 'monthly'>('daily');
   const [claimedIds, setClaimedIds] = useState<number[]>([]);
 
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = JSON.parse(localStorage.getItem('deepdive_claimed_quests') || '[]');
+        if (Array.isArray(saved)) setClaimedIds(saved);
+      } catch {}
+    }
+  }, []);
+
   const questsToDisplay = activeTab === 'daily' ? dailyQuests : monthlyQuests;
 
   const handleClaim = async (questId: number, rGems: number, rXp: number) => {
     if (claimedIds.includes(questId)) return;
+
+    const nextClaimed = [...claimedIds, questId];
+    setClaimedIds(nextClaimed);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('deepdive_claimed_quests', JSON.stringify(nextClaimed));
+    }
+
+    // Optimistically award gems & XP
     addGems(rGems);
     addXp(rXp);
-    setClaimedIds((prev) => [...prev, questId]);
+
+    const authUser = useAuthStore.getState().user;
+    const targetUserId = authUser?.id || '00000000-0000-0000-0000-000000000002';
+    const token = useAuthStore.getState().token;
 
     try {
-      await fetch('http://localhost:8000/api/v1/users/00000000-0000-0000-0000-000000000002/rewards/claim', {
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
+      const res = await fetch(`http://localhost:8000/api/v1/users/${targetUserId}/rewards/claim`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ gems: rGems, xp: rXp })
       });
-      await fetchProgress();
+
+      if (res.ok) {
+        const data = await res.json();
+        // Synchronize store with confirmed backend values
+        useUserStore.setState({
+          gems: data.gems,
+          xp: data.xp
+        });
+      } else {
+        await fetchProgress(targetUserId);
+      }
     } catch (e) {
       console.error('Failed to persist quest reward:', e);
     }
   };
+
 
   return (
     <div className="max-w-4xl mx-auto pb-20">

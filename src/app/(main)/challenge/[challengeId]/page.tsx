@@ -4,6 +4,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useChallengeStore } from '@/store/use-challenge-store';
 import { CodeSandbox } from '@/components/code-sandbox';
 import { useUserStore } from '@/store/use-user-store';
+import { useAuthStore } from '@/store/use-auth-store';
 import { ResultModal } from '@/components/result-modal';
 import { useState, useCallback } from 'react';
 import { ArrowLeft, BookOpen, Code, Swords, Star, Gem } from 'lucide-react';
@@ -17,19 +18,41 @@ export default function ChallengeWorkspace() {
   const { getChallengeById } = useChallengeStore();
   const challenge = getChallengeById(challengeId);
 
-  const { completeChallenge, addXp, addGems } = useUserStore();
+  const { completeChallenge, addXp, addGems, language } = useUserStore();
   const [showResult, setShowResult] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
   const [mobileTab, setMobileTab] = useState<'lesson' | 'code'>('lesson');
 
-  const handleSuccess = useCallback(() => {
+  const handleSuccess = useCallback(async () => {
     if (!challenge) return;
     setIsCorrect(true);
     setShowResult(true);
     completeChallenge(challenge.id);
+    const earnedGems = Math.floor(challenge.xpReward / 10);
     addXp(challenge.xpReward);
-    addGems(Math.floor(challenge.xpReward / 10)); // Reward logic
+    addGems(earnedGems);
+
+    const authUser = useAuthStore.getState().user;
+    const targetUserId = authUser?.id || '00000000-0000-0000-0000-000000000002';
+    const token = useAuthStore.getState().token;
+
+    try {
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
+      const res = await fetch(`http://localhost:8000/api/v1/users/${targetUserId}/rewards/claim`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ gems: earnedGems, xp: challenge.xpReward })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        useUserStore.setState({ gems: data.gems, xp: data.xp });
+      }
+    } catch (e) {
+      console.error('Failed to persist challenge reward to backend:', e);
+    }
   }, [challenge, completeChallenge, addXp, addGems]);
 
   const handleError = useCallback(() => {

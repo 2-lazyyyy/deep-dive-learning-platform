@@ -99,6 +99,8 @@ export const translations = {
     achievements: { en: 'Achievements', my: 'အောင်လက်မှတ် ဆုတံဆိပ်များ' },
     following: { en: 'Following', my: 'လေ့လာဖော်များ (Following)' },
     followers: { en: 'Followers', my: 'နောက်လိုက်များ (Followers)' },
+    friends: { en: 'Friends', my: 'သူငယ်ချင်းများ (Friends)' },
+
     changeAvatar: { en: 'Change Avatar', my: 'Avatar ရုပ်ပုံ ပြောင်းမည်' },
     editProfile: { en: 'Edit Profile', my: 'ပရိုဖိုင် ပြင်ဆင်မည်' },
     editName: { en: 'Edit Name', my: 'အမည် ပြင်ဆင်မည်' },
