@@ -16,4 +16,4 @@ taskkill /F /FI "WINDOWTITLE eq DeepDive*" >nul 2>&1
 echo.
 echo [OK] All DeepDive Learn services have been stopped successfully!
 echo.
-timeout /t 3 /nobreak >nul
+ping 127.0.0.1 -n 3 >nul
