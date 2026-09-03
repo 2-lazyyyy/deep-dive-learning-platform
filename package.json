@@ -4,10 +4,13 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "start:all": "run.bat",
+    "stop:all": "stop.bat",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"
   },
+
   "dependencies": {
     "@monaco-editor/react": "^4.7.0",
     "@supabase/supabase-js": "^2.111.0",
